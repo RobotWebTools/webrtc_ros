@@ -1,1 +1,4 @@
 src/
+.gclient
+.gclient_entries
+depot_tools/

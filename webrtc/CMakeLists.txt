@@ -321,21 +321,38 @@ target_link_libraries(jingle webrtc usrsctp srtp gthread-2.0 gobject-2.0 rt)
 
 
 add_executable(peerconnection_server
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/server/main.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/server/data_socket.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/server/peer_channel.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/server/utils.cc"
+  "src/talk/examples/peerconnection/server/main.cc"
+  "src/talk/examples/peerconnection/server/data_socket.cc"
+  "src/talk/examples/peerconnection/server/peer_channel.cc"
+  "src/talk/examples/peerconnection/server/utils.cc"
 )
 target_link_libraries(peerconnection_server jingle)
 
 add_executable(peerconnection_client
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/client/linux/main.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/client/conductor.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/client/defaults.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/client/linux/main_wnd.cc"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/talk/examples/peerconnection/client/peer_connection_client.cc"
+  "src/talk/examples/peerconnection/client/linux/main.cc"
+  "src/talk/examples/peerconnection/client/conductor.cc"
+  "src/talk/examples/peerconnection/client/defaults.cc"
+  "src/talk/examples/peerconnection/client/linux/main_wnd.cc"
+  "src/talk/examples/peerconnection/client/peer_connection_client.cc"
 )
 target_link_libraries(peerconnection_client jingle ${GTK2_LIBRARIES})
+
+
+add_executable(stunserver
+  "src/talk/examples/stunserver/stunserver_main.cc"
+)
+target_link_libraries(stunserver jingle)
+
+
+add_executable(turnserver
+  "src/talk/examples/turnserver/turnserver_main.cc"
+)
+target_link_libraries(turnserver jingle)
+
+add_executable(relayserver
+  "src/talk/examples/turnserver/turnserver_main.cc"
+)
+target_link_libraries(relayserver jingle)
 
 
 

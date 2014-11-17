@@ -12,14 +12,11 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(OPENSSL REQUIRED openssl)
 pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
 
-###################################################
-## Declare things to be passed to other projects ##
-###################################################
-
-
 catkin_package(
-  INCLUDE_DIRS src
-  LIBRARIES jingle webrtc
+  INCLUDE_DIRS
+    src
+    "src/third_party/jsoncpp/source/include"
+  LIBRARIES jingle webrtc usrsctp srtp opus yuv jsoncpp
   DEPENDS
 )
 
@@ -314,7 +311,7 @@ add_definitions(-DSRTP_RELATIVE_PATH)
 add_definitions(-DUSE_SYSTEM_LIBSRTP)
 add_definitions(-DLIBPEERCONNECTION_LIB)
 add_library(jingle ${JINGLE_SRCS})
-target_link_libraries(jingle webrtc usrsctp srtp gthread-2.0 gobject-2.0 rt)
+target_link_libraries(jingle webrtc usrsctp srtp gthread-2.0 gobject-2.0 rt ${GTK2_LIBRARIES})
 
 
 
@@ -337,7 +334,6 @@ add_executable(peerconnection_client
 )
 target_link_libraries(peerconnection_client jingle ${GTK2_LIBRARIES})
 
-
 add_executable(stunserver
   "src/talk/examples/stunserver/stunserver_main.cc"
 )
@@ -353,7 +349,6 @@ add_executable(relayserver
   "src/talk/examples/turnserver/turnserver_main.cc"
 )
 target_link_libraries(relayserver jingle)
-
 
 
 #############

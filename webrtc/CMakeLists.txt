@@ -356,12 +356,22 @@ target_link_libraries(relayserver jingle)
 #############
 
 ## Mark executables and/or libraries for installation
-#install(FILES ${JACO_COMM_LIB} ${JACO_USB_LIB}
-#  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#)
+install(TARGETS opus yuv jsoncpp usrsctp webrtc jingle peerconnection_server peerconnection_client stunserver turnserver relayserver
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 ## Copy header files
-#install(DIRECTORY include/${PROJECT_NAME}/
-#  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
-#)
+install(DIRECTORY src/talk
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+install(DIRECTORY src/webrtc
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)
+install(DIRECTORY src/third_party
+  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+)

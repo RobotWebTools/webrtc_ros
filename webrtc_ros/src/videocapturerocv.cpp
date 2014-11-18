@@ -72,6 +72,8 @@ namespace scy {
     cv::Mat yuv(orig.rows, orig.cols, CV_8UC4);
     cv::cvtColor(orig, yuv, CV_BGR2YUV_I420);
 
+    ROS_INFO("Got frame %dx%d", orig.cols, orig.rows);
+
     cricket::CapturedFrame frame;
     frame.width = orig.cols;
     frame.height = orig.rows;

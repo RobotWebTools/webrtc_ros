@@ -84,6 +84,10 @@
                 console.log("Create answer error:", error);
             }, mediaConstraints); // type error  ); //}, null          
         }
+        else if (data.search("answer") != -1) {
+            console.log("Got answer:", dataJson);
+            pc.setRemoteDescription(new RTCSessionDescription(dataJson), onRemoteSdpSucces, onRemoteSdpError);
+        }
         else {
             console.log("Adding ICE candiate ", dataJson);
             var candidate = new RTCIceCandidate({sdpMLineIndex: dataJson.sdpMLineIndex, candidate: dataJson.candidate});
@@ -171,6 +175,7 @@
                             otherPeers[parseInt(parsed[1])] = parsed[0];
                         }
                     }
+                    connectToPeer();
                     startHangingGet();
                     request = null;
                 }
@@ -179,6 +184,20 @@
             trace("error: " + e.description);
         }
     }
+    
+    function connectToPeer() {
+        peer_id = 1;
+        createPeerConnection(peer_id);
+        pc.createOffer(function(sessionDescription) {
+            console.log("Create offer:", sessionDescription);
+            pc.setLocalDescription(sessionDescription);
+            var data = JSON.stringify(sessionDescription);
+            sendToPeer(peer_id, data);
+        }, function(error) { // error
+            console.log("Create answer error:", error);
+        }, mediaConstraints); // type error  );
+    }
+    
     
     function signIn() {
       try {

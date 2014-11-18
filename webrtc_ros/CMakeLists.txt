@@ -6,6 +6,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
   webrtc
+  image_transport
 )
 
 
@@ -45,7 +46,7 @@ add_definitions(-DLINUX_ALSA)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS cv_bridge roscpp webrtc
+  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport
 )
 
 ###########
@@ -66,6 +67,7 @@ add_executable(webrtc_ros_server
   src/defaults.cc
   src/main_wnd.cc
   src/peer_connection_client.cc
+  src/videocapturerocv.cpp
 )
 
 

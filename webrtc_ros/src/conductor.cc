@@ -26,6 +26,7 @@
  */
 
 #include "webrtc_ros/conductor.h"
+#include "webrtc_ros/videocapturerocv.h"
 
 #include <utility>
 
@@ -334,6 +335,7 @@ cricket::VideoCapturer* Conductor::OpenVideoCaptureDevice() {
     LOG(LS_ERROR) << "Can't create device manager";
     return NULL;
   }
+  dev_manager->SetVideoDeviceCapturerFactory(new scy::VideoCapturerFactoryOCV());
   std::vector<cricket::Device> devs;
   if (!dev_manager->GetVideoCaptureDevices(&devs)) {
     LOG(LS_ERROR) << "Can't enumerate video devices";

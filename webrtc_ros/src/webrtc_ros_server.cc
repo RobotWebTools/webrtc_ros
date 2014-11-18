@@ -25,6 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ros/ros.h>
 #include <gtk/gtk.h>
 
 #include "webrtc_ros/conductor.h"
@@ -54,8 +55,11 @@ class CustomSocketServer : public rtc::PhysicalSocketServer {
       while (gtk_events_pending())
         gtk_main_iteration();
 
+      if(ros::ok())
+	ros::spinOnce();
+
     if (!wnd_->IsWindow() && !conductor_->connection_active() &&
-        client_ != NULL && !client_->is_connected()) {
+        client_ != NULL && !client_->is_connected() && !ros::ok()) {
       thread_->Quit();
     }
     return rtc::PhysicalSocketServer::Wait(0/*cms == -1 ? 1 : cms*/,
@@ -70,6 +74,7 @@ class CustomSocketServer : public rtc::PhysicalSocketServer {
 };
 
 int main(int argc, char* argv[]) {
+  ros::init(argc, argv, "webrtc_ros_server");
   gtk_init(&argc, &argv);
   g_type_init();
   g_thread_init(NULL);
@@ -89,6 +94,8 @@ int main(int argc, char* argv[]) {
 
   GtkMainWnd wnd(FLAG_server, FLAG_port, FLAG_autoconnect, FLAG_autocall);
   wnd.Create();
+
+  ros::AsyncSpinner spinner(2);
 
   rtc::AutoThread auto_thread;
   rtc::Thread* thread = rtc::Thread::Current();

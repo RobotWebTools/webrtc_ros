@@ -1,0 +1,46 @@
+<html>
+<head>
+<script>
+  var connection = new WebSocket('ws://localhost:8080/ws');
+
+  connection.onopen = function () {
+  console.log('pinging');
+  connection.send('PingPingPing123450'); // Send the message 'Ping' to the server
+  connection.send('test2');
+  connection.send('test3: PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450-------THE END!'); // Send the message 'Ping' to the server
+  var cars = [65, 78, 88, 67];
+  connection.send(cars);
+
+var c=document.getElementById("myCanvas");
+var canvas_context=c.getContext("2d");
+var img = canvas_context.getImageData(0, 0, 400, 320);
+var binary = new Uint8Array(img.data.length);
+for (var i = 0; i < img.data.length; i++) {
+  binary[i] = img.data[i];
+}
+//connection.send(binary.buffer);
+//connection.send(binary.buffer);
+
+var img = canvas_context.getImageData(0, 0, 1024, 768);
+binary = new Uint8Array(img.data.length);
+for (var i = 0; i < img.data.length; i++) {
+  binary[i] = img.data[i];
+}
+//connection.send(binary.buffer);
+  };
+
+  // Log errors
+  connection.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+  };
+
+  // Log messages from the server
+  connection.onmessage = function (e) {
+  console.log('Server: ' + e.data);
+  };
+</script>
+</head>
+<body>
+ <canvas id="myCanvas"></canvas>
+</body>
+</html>

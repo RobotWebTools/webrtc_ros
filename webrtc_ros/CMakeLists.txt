@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   webrtc
   image_transport
+  nodelet
+  cpp_web_server
 )
 
 
@@ -18,7 +20,7 @@ link_directories(${GTK2_LIBRARY_DIRS})
 add_definitions(${GTK2_CFLAGS_OTHER})
 
 
-set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
+#set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
 add_definitions(-DDEBUG)
 add_definitions(-D_DEBUG)
 add_definitions(-DPOSIX)
@@ -46,7 +48,7 @@ add_definitions(-DLINUX_ALSA)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport
+  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet cpp_web_server
 )
 
 ###########
@@ -61,22 +63,38 @@ include_directories(
 
 
 ## Declare a cpp executable
-add_executable(webrtc_ros_server
-  src/webrtc_ros_server.cc
-  src/conductor.cc
-  src/defaults.cc
-  src/main_wnd.cc
-  src/peer_connection_client.cc
-  src/videocapturerocv.cpp
+#add_executable(webrtc_ros_client
+#  src/webrtc_ros_client.cc
+#  src/conductor.cc
+#  src/defaults.cc
+#  src/main_wnd.cc
+#  src/peer_connection_client.cc
+#  src/videocapturerocv.cpp
+#)
+#target_link_libraries(webrtc_ros_client
+#  ${catkin_LIBRARIES}
+#  ${GTK2_LIBRARIES}
+#  gthread-2.0
+#)
+
+
+
+add_library(webrtc_ros_server
+  src/webrtc_ros_server.cpp
+)
+target_link_libraries(webrtc_ros_server
+  ${catkin_LIBRARIES}
+)
+
+add_executable(webrtc_ros_server_node
+  src/webrtc_ros_server_node.cpp
+)
+target_link_libraries(webrtc_ros_server_node
+  webrtc_ros_server
 )
 
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(webrtc_ros_server
-  ${catkin_LIBRARIES}
-  ${GTK2_LIBRARIES}
-  gthread-2.0
-)
 
 #############
 ## Install ##

@@ -23,7 +23,7 @@ void WebsocketHttpRequestHandler::operator()(const HttpRequest &request, boost::
   std::string upgrade_header = request.get_header_value_or_default("Upgrade", "");
   std::string websocket_key = request.get_header_value_or_default("Sec-WebSocket-Key", "");
 
-  if(connection_header.compare("Upgrade") == 0 && upgrade_header.compare("websocket") == 0
+  if(connection_header.find("Upgrade") != std::string::npos && upgrade_header.compare("websocket") == 0
      && websocket_key.size() > 0) {
     std::string concat_key = websocket_key + KEY_MAGIC_STRING;
 

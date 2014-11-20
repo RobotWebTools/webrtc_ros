@@ -42,7 +42,6 @@ void WebsocketHttpRequestHandler::operator()(const HttpRequest &request, boost::
     std::string base64_key(bptr->data, bptr->length-1);
     BIO_free_all(b64);
 
-    std::cout << concat_key << " -> " << base64_key << std::endl;
 
     cpp_web_server::HttpReply::builder(cpp_web_server::HttpReply::switching_protocols)
       .header("Upgrade", "websocket")
@@ -50,7 +49,6 @@ void WebsocketHttpRequestHandler::operator()(const HttpRequest &request, boost::
       .header("Sec-WebSocket-Version", "13")
       .header("Sec-WebSocket-Accept", base64_key)
       .write(connection);
-    std::cout << connection_header << " -> " << upgrade_header << std::endl;
 
     WebsocketConnectionPtr websocket_connection(new WebsocketConnection(connection));
     WebsocketConnection::MessageHandler message_handler = handler_(request, websocket_connection);

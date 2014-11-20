@@ -92,7 +92,6 @@ boost::tribool WebsocketFrameParser::consume(WebsocketFrame& frame, char input)
     frame.header_bytes[1] = input;
     if(frame.header.len < 126){
       frame.length = frame.header.len;
-      std::cout << "small: " << frame.length  << ", " << frame.header.opcode<< std::endl;
       frame.content.reserve(frame.length);
       frame.content.resize(0);
       if(frame.header.mask)
@@ -142,7 +141,6 @@ boost::tribool WebsocketFrameParser::consume(WebsocketFrame& frame, char input)
     return boost::indeterminate;
   case length_1bytes_left:
     frame.length |= ((uint64_t)(input&0xFF) << 0);
-    std::cout << "big: " << frame.length << ", " << frame.header.opcode << std::endl;
     frame.content.reserve(frame.length);
     frame.content.resize(0);
     if(frame.header.mask)

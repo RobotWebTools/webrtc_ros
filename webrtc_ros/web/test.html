@@ -1,33 +1,81 @@
 <html>
 <head>
+<title>WebRTC ROS</title>
 <script>
-  var connection = new WebSocket('ws://localhost:8080/ws');
+  RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+  RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
+  RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+  getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+  URL = window.webkitURL || window.URL;
+
+  var mediaConstraints = {'mandatory': {
+      'OfferToReceiveAudio': true,
+      'OfferToReceiveVideo': true }};
+
+  var pc;
+  var pcOptions = {
+      optional: [
+          {DtlsSrtpKeyAgreement: true}
+      ]
+  }
+
+
+  var connection = new WebSocket('ws://localhost:8080/webrtc');
 
   connection.onopen = function () {
-  console.log('pinging');
-  connection.send('PingPingPing123450'); // Send the message 'Ping' to the server
-  connection.send('test2');
-  connection.send('test3: PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450PingPingPing123450-------THE END!'); // Send the message 'Ping' to the server
-  var cars = [65, 78, 88, 67];
-  connection.send(cars);
+        try {
+            pc = new RTCPeerConnection(null, pcOptions);
+            pc.onicecandidate = function(event) {
+                if (event.candidate) {
+                    var candidate = {
+                        sdpMLineIndex: event.candidate.sdpMLineIndex,
+                        sdpMid: event.candidate.sdpMid,
+                        candidate: event.candidate.candidate
+                    };
+                    connection.send(JSON.stringify(candidate));
+                } else {
+                  console.log("End of candidates.");
+                }
+            };
+            pc.onconnecting = onSessionConnecting;
+            pc.onopen = onSessionOpened;
+            pc.onaddstream = onRemoteStreamAdded;
+            pc.onremovestream = onRemoteStreamRemoved;
 
-var c=document.getElementById("myCanvas");
-var canvas_context=c.getContext("2d");
-var img = canvas_context.getImageData(0, 0, 400, 320);
-var binary = new Uint8Array(img.data.length);
-for (var i = 0; i < img.data.length; i++) {
-  binary[i] = img.data[i];
-}
-//connection.send(binary.buffer);
-//connection.send(binary.buffer);
+            pc.createOffer(function(sessionDescription) {
+                console.log("Create offer:", sessionDescription);
+                pc.setLocalDescription(sessionDescription);
+                var data = JSON.stringify(sessionDescription);
+                connection.send(data);
+            }, function(error) { // error
+                console.log("Create answer error:", error);
+            }, mediaConstraints); // type error  );
 
-var img = canvas_context.getImageData(0, 0, 1024, 768);
-binary = new Uint8Array(img.data.length);
-for (var i = 0; i < img.data.length; i++) {
-  binary[i] = img.data[i];
-}
-//connection.send(binary.buffer);
+        }
+        catch (e) {
+            console.log("Failed to create, exception: " + e.message);
+        }
+
   };
+
+    function onRemoteStreamAdded(event) {
+      console.log(event);
+      console.log("Remote stream added:", URL.createObjectURL(event.stream));
+      var remoteVideoElement = document.getElementById('video');
+      remoteVideoElement.src = URL.createObjectURL(event.stream);
+      remoteVideoElement.play();
+    }
+    function onSessionConnecting(message) {
+        console.log("Session connecting.");
+    }
+    
+    function onSessionOpened(message) {
+        console.log("Session opened.");
+    }
+    
+    function onRemoteStreamRemoved(event) {
+        console.log("Remote stream removed.");
+    }
 
   // Log errors
   connection.onerror = function (error) {
@@ -36,11 +84,31 @@ for (var i = 0; i < img.data.length; i++) {
 
   // Log messages from the server
   connection.onmessage = function (e) {
-  console.log('Server: ' + e.data);
+    console.log('Server: ' + e.data);
+    var dataJson = JSON.parse(e.data);
+
+    if (e.data.search("answer") != -1) {
+      console.log("Got answer:", dataJson);
+      pc.setRemoteDescription(new RTCSessionDescription(dataJson), onRemoteSdpSucces, onRemoteSdpError);
+    }
+    else {
+      console.log("Adding ICE candiate ", dataJson);
+      var candidate = new RTCIceCandidate({sdpMLineIndex: dataJson.sdpMLineIndex, candidate: dataJson.candidate});
+      pc.addIceCandidate(candidate);
+    }
   };
+  function onRemoteSdpError(event) {
+    console.error('onRemoteSdpError', event.name, event.message);
+  }
+  
+  function onRemoteSdpSucces() {
+    console.log('onRemoteSdpSucces');
+  } 
 </script>
 </head>
 <body>
- <canvas id="myCanvas"></canvas>
+    <div id="container">
+        <video id="video"></video>
+    </div>
 </body>
 </html>

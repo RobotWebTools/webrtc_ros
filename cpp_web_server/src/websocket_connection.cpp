@@ -18,7 +18,6 @@ bool WebsocketConnection::sendMessage(const WebsocketMessage& message){
   if(frame.fromMessage(message)){
     return sendFrame(frame);
   }
-  std::cout << "encode failed"<< std::endl;
   return false;
 }
 
@@ -28,7 +27,6 @@ bool WebsocketConnection::sendFrame(WebsocketFrame& frame){
     connection_->write_and_clear(buffer);
     return true;
   }
-  std::cout << "send failed"<< std::endl;
   return false;
 }
 
@@ -47,9 +45,7 @@ void WebsocketConnection::handle_read(const char* begin, const char* end) {
       frame_parser_.reset();
       boost::tribool message_result = frame_buffer_.consume(message_, frame_);
 
-      std::cout << "Frame: size: " << frame_.content.size() << ", opcode: " << frame_.header.opcode << ", fin: " << frame_.header.fin << std::endl;
       if(message_result){
-	std::cout << "Read Message: " << message_.type << ", size: " << message_.content.size() << std::endl;
 	if(handler_)
 	  handler_(message_);
       }
@@ -57,7 +53,6 @@ void WebsocketConnection::handle_read(const char* begin, const char* end) {
     else if(!frame_result){
       frame_parser_.reset();
       message_.type = WebsocketMessage::type_unknown;
-      std::cout << "Failed: " << std::endl;
     }
   }
   connection_->async_read(boost::bind(&WebsocketConnection::static_handle_read, WebsocketConnectionWeakPtr(shared_from_this()), _1, _2));

@@ -1,5 +1,5 @@
-#ifndef SCY_VideoCaturerOCV_H
-#define SCY_VideoCaturerOCV_H
+#ifndef WEBRTC_ROS_ROS_VIDEO_CAPTURER_H_
+#define WEBRTC_ROS_ROS_VIDEO_CAPTURER_H_
 
 #include "talk/media/base/videocapturer.h"
 #include "talk/media/base/videocapturerfactory.h"
@@ -10,22 +10,19 @@
 #include <opencv2/core/core.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-namespace scy { 
+namespace webrtc_ros {
 
 
-  class VideoCapturerOCV : 
+  class RosVideoCapturer :
     public cricket::VideoCapturer
     {
     public:
-      VideoCapturerOCV(int deviceId);
-      virtual ~VideoCapturerOCV();
+      RosVideoCapturer();
+      virtual ~RosVideoCapturer();
 
-      // Overrides from VideoCapture.
-      void onFrameCaptured(const sensor_msgs::ImageConstPtr& msg);
+      void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
-      // cricket::VideoCapturer implementation.
-      virtual cricket::CaptureState Start(
-					  const cricket::VideoFormat& capture_format) OVERRIDE;
+      virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) OVERRIDE;
       virtual void Stop() OVERRIDE;
       virtual bool IsRunning() OVERRIDE;
       virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs) OVERRIDE;
@@ -34,21 +31,19 @@ namespace scy {
       virtual bool IsScreencast() const OVERRIDE;
 
     private:
-      DISALLOW_COPY_AND_ASSIGN(VideoCapturerOCV);
+      DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);
       image_transport::Subscriber sub;
     };
 
 
-  class VideoCapturerFactoryOCV : public cricket::VideoDeviceCapturerFactory 
+  class RosVideoCapturerFactory : public cricket::VideoDeviceCapturerFactory
   {
   public:
-    VideoCapturerFactoryOCV() {}
-    virtual ~VideoCapturerFactoryOCV() {}
+    RosVideoCapturerFactory() {}
+    virtual ~RosVideoCapturerFactory() {}
 
     virtual cricket::VideoCapturer* Create(const cricket::Device& device) {
-      // XXX: WebRTC uses device name to instantiate the capture, which is always 0.
-      //return new VideoCapturerOCV(webrtc::strtoi<int>(device.id));
-      return new VideoCapturerOCV(0);
+      return new RosVideoCapturer();
     }
   };
 

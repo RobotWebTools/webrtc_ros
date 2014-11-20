@@ -82,7 +82,7 @@ include_directories(
 add_library(webrtc_ros_server
   src/webrtc_ros_server.cpp
   src/webrtc_client.cpp
-  src/videocapturerocv.cpp
+  src/ros_video_capturer.cpp
 )
 target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}

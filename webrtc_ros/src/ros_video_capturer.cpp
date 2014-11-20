@@ -1,12 +1,9 @@
-#include "webrtc_ros/videocapturerocv.h"
+#include "webrtc_ros/ros_video_capturer.h"
 
-using std::endl;
-
-
-namespace scy {
+namespace webrtc_ros {
 
 
-  VideoCapturerOCV::VideoCapturerOCV(int deviceId)
+  RosVideoCapturer::RosVideoCapturer()
   {
     // Default supported formats. Use ResetSupportedFormats to over write.
     std::vector<cricket::VideoFormat> formats;
@@ -21,25 +18,23 @@ namespace scy {
   }
 
 
-  VideoCapturerOCV::~VideoCapturerOCV() 
+  RosVideoCapturer::~RosVideoCapturer()
   {
   }
 
 
-  cricket::CaptureState VideoCapturerOCV::Start(const cricket::VideoFormat& capture_format)
+  cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& capture_format)
   {
-    try { 
-      std::cout << "Start" << endl;
+    try {
+      ROS_INFO("Starting ROS subscriber");
       if (capture_state() == cricket::CS_RUNNING) {
-	std::cout << "Start called when it's already started." << endl;
+	ROS_WARN("Start called when it's already started.");
 	return capture_state();
       }
 
-      // TODO: Honour VideoFormat
-
       ros::NodeHandle nh;
       image_transport::ImageTransport it(nh);
-      sub = it.subscribe("image", 1, &VideoCapturerOCV::onFrameCaptured, this);
+      sub = it.subscribe("image", 1, &RosVideoCapturer::imageCallback, this);
 
       SetCaptureFormat(&capture_format);
       return cricket::CS_RUNNING;
@@ -48,31 +43,27 @@ namespace scy {
   }
 
 
-  void VideoCapturerOCV::Stop()
+  void RosVideoCapturer::Stop()
   {
-    try { 
-      std::cout << "Stop" << endl;
+    try {
+      ROS_INFO("Stopping ROS subscriber");
       if (capture_state() == cricket::CS_STOPPED) {
-	std::cout << "Stop called when it's already stopped." << endl;
+	ROS_WARN("Stop called when it's already stopped.");
 	return;
       }
       sub.shutdown();
       SetCaptureFormat(NULL);
       SetCaptureState(cricket::CS_STOPPED);
-      return;
     } catch (...) {}
-    return;
   }
 
 
-  void VideoCapturerOCV::onFrameCaptured(const sensor_msgs::ImageConstPtr& msg) 
+  void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   {
     cv::Mat orig = cv_bridge::toCvShare(msg, "bgr8")->image;
 
     cv::Mat yuv(orig.rows, orig.cols, CV_8UC4);
     cv::cvtColor(orig, yuv, CV_BGR2YUV_I420);
-
-    ROS_INFO("Got frame %dx%d", orig.cols, orig.rows);
 
     cricket::CapturedFrame frame;
     frame.width = orig.cols;
@@ -85,13 +76,13 @@ namespace scy {
   }
 
 
-  bool VideoCapturerOCV::IsRunning()
+  bool RosVideoCapturer::IsRunning()
   {
     return capture_state() == cricket::CS_RUNNING;
   }
 
 
-  bool VideoCapturerOCV::GetPreferredFourccs(std::vector<uint32>* fourccs)
+  bool RosVideoCapturer::GetPreferredFourccs(std::vector<uint32>* fourccs)
   {
     if (!fourccs)
       return false;
@@ -100,13 +91,11 @@ namespace scy {
   }
 
 
-  bool VideoCapturerOCV::GetBestCaptureFormat(const cricket::VideoFormat& desired, cricket::VideoFormat* best_format)
+  bool RosVideoCapturer::GetBestCaptureFormat(const cricket::VideoFormat& desired, cricket::VideoFormat* best_format)
   {
     if (!best_format)
       return false;
 
-    // VideoCapturerOCV does not support capability enumeration.
-    // Use the desired format as the best format.
     best_format->width = desired.width;
     best_format->height = desired.height;
     best_format->fourcc = cricket::FOURCC_I420;
@@ -115,7 +104,7 @@ namespace scy {
   }
 
 
-  bool VideoCapturerOCV::IsScreencast() const 
+  bool RosVideoCapturer::IsScreencast() const 
   {
     return false;
   }

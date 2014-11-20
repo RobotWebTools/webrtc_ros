@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_client.h>
-#include "webrtc_ros/videocapturerocv.h"
+#include "webrtc_ros/ros_video_capturer.h"
 #include "webrtc/base/json.h"
 #include "talk/media/devices/devicemanager.h"
 #include "talk/app/webrtc/videosourceinterface.h"
@@ -84,7 +84,7 @@ static cricket::VideoCapturer* OpenVideoCaptureDevice() {
     ROS_ERROR("Can't create device manager");
     return NULL;
   }
-  dev_manager->SetVideoDeviceCapturerFactory(new scy::VideoCapturerFactoryOCV());
+  dev_manager->SetVideoDeviceCapturerFactory(new webrtc_ros::RosVideoCapturerFactory());
   std::vector<cricket::Device> devs;
   if (!dev_manager->GetVideoCaptureDevices(&devs)) {
     ROS_ERROR("Can't enumerate video devices");

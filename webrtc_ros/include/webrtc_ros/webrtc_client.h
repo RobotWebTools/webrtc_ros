@@ -55,8 +55,8 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
 
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;
   webrtc::FakeConstraints constraints_;
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
+  rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
 
   friend WebrtcClientObserverProxy;
 };

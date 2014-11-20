@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_client.h>
-#include "webrtc_ros/ros_video_capturer.h"
+#include "webrtc_ros/ros_media_device_manager.h"
 #include "webrtc/base/json.h"
 #include "talk/media/devices/devicemanager.h"
 #include "talk/app/webrtc/videosourceinterface.h"
@@ -78,26 +78,6 @@ class DummySetSessionDescriptionObserver
 };
 
 static cricket::VideoCapturer* OpenVideoCaptureDevice() {
-  rtc::scoped_ptr<cricket::DeviceManagerInterface> dev_manager(
-      cricket::DeviceManagerFactory::Create());
-  if (!dev_manager->Init()) {
-    ROS_ERROR("Can't create device manager");
-    return NULL;
-  }
-  dev_manager->SetVideoDeviceCapturerFactory(new webrtc_ros::RosVideoCapturerFactory());
-  std::vector<cricket::Device> devs;
-  if (!dev_manager->GetVideoCaptureDevices(&devs)) {
-    ROS_ERROR("Can't enumerate video devices");
-    return NULL;
-  }
-  std::vector<cricket::Device>::iterator dev_it = devs.begin();
-  cricket::VideoCapturer* capturer = NULL;
-  for (; dev_it != devs.end(); ++dev_it) {
-    capturer = dev_manager->CreateVideoCapturer(*dev_it);
-    if (capturer != NULL)
-      break;
-  }
-  return capturer;
 }
 
 
@@ -147,7 +127,12 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
           peer_connection_factory_->CreateAudioTrack(
               "audio_label", peer_connection_factory_->CreateAudioSource(NULL)));
 
-      cricket::VideoCapturer* capturer = OpenVideoCaptureDevice();
+      ros::NodeHandle nh;
+      image_transport::ImageTransport it(nh);
+      RosMediaDeviceManager dev_manager(it);
+      cricket::Device device("image", "image");
+      cricket::VideoCapturer* capturer = dev_manager.CreateVideoCapturer(device);
+
       rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
           peer_connection_factory_->CreateVideoTrack(
               "video_label",

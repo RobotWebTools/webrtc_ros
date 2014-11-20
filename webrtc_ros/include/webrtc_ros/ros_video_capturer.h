@@ -17,7 +17,7 @@ namespace webrtc_ros {
     public cricket::VideoCapturer
     {
     public:
-      RosVideoCapturer();
+      RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic);
       virtual ~RosVideoCapturer();
 
       void imageCallback(const sensor_msgs::ImageConstPtr& msg);
@@ -32,23 +32,15 @@ namespace webrtc_ros {
 
     private:
       DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);
-      image_transport::Subscriber sub;
+
+      image_transport::ImageTransport it_;
+      const std::string topic_;
+      image_transport::Subscriber sub_;
     };
 
 
-  class RosVideoCapturerFactory : public cricket::VideoDeviceCapturerFactory
-  {
-  public:
-    RosVideoCapturerFactory() {}
-    virtual ~RosVideoCapturerFactory() {}
 
-    virtual cricket::VideoCapturer* Create(const cricket::Device& device) {
-      return new RosVideoCapturer();
-    }
-  };
-
-
-} // namespace scy
+}
 
 
 #endif

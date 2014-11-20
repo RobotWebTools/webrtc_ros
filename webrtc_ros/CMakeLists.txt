@@ -63,22 +63,13 @@ include_directories(
 
 
 ## Declare a cpp executable
-#add_executable(webrtc_ros_client
-#  src/webrtc_ros_client.cc
-#  src/conductor.cc
-#  src/defaults.cc
-#  src/main_wnd.cc
-#  src/peer_connection_client.cc
-#  src/videocapturerocv.cpp
-#)
-#target_link_libraries(webrtc_ros_client
-#  ${catkin_LIBRARIES}
-#  ${GTK2_LIBRARIES}
-#  gthread-2.0
-#)
 
 
 
+add_library(ros_webrtc_devices
+  src/ros_video_capturer.cpp
+  src/ros_media_device_manager.cpp
+)
 add_library(webrtc_ros_server
   src/webrtc_ros_server.cpp
   src/webrtc_client.cpp
@@ -86,6 +77,7 @@ add_library(webrtc_ros_server
 )
 target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}
+  ros_webrtc_devices
 )
 
 add_executable(webrtc_ros_server_node

@@ -3,8 +3,9 @@
 namespace webrtc_ros {
 
 
-  RosVideoCapturer::RosVideoCapturer()
-  {
+  RosVideoCapturer::RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic)
+    : it_(it), topic_(topic) {
+
     // Default supported formats. Use ResetSupportedFormats to over write.
     std::vector<cricket::VideoFormat> formats;
     formats.push_back(cricket::VideoFormat(1280, 720,
@@ -32,9 +33,7 @@ namespace webrtc_ros {
 	return capture_state();
       }
 
-      ros::NodeHandle nh;
-      image_transport::ImageTransport it(nh);
-      sub = it.subscribe("image", 1, &RosVideoCapturer::imageCallback, this);
+      sub_ = it_.subscribe(topic_, 1, &RosVideoCapturer::imageCallback, this);
 
       SetCaptureFormat(&capture_format);
       return cricket::CS_RUNNING;
@@ -51,7 +50,7 @@ namespace webrtc_ros {
 	ROS_WARN("Stop called when it's already stopped.");
 	return;
       }
-      sub.shutdown();
+      sub_.shutdown();
       SetCaptureFormat(NULL);
       SetCaptureState(cricket::CS_STOPPED);
     } catch (...) {}

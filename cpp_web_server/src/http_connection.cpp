@@ -59,8 +59,15 @@ void HttpConnection::handle_read_raw(ReadHandler callback,
   if(!e){
     callback(buffer_.data(), buffer_.data() + bytes_transferred);
   }
+  else {
+    last_error_ = e;
+  }
 }
 void HttpConnection::async_read(ReadHandler callback) {
+  if (last_error_)
+  {
+    boost::throw_exception(boost::system::system_error(last_error_));
+  }
   socket_.async_read_some(boost::asio::buffer(buffer_),
 			  strand_.wrap(boost::bind(&HttpConnection::handle_read_raw, shared_from_this(),
 						   callback,
@@ -107,9 +114,9 @@ void HttpConnection::write(const std::vector<boost::asio::const_buffer> &buffers
 // Must be called while holding write lock
 void HttpConnection::write_pending()
 {
-  if (last_write_error_)
+  if (last_error_)
   {
-    boost::throw_exception(boost::system::system_error(last_write_error_));
+    boost::throw_exception(boost::system::system_error(last_error_));
   }
   write_in_progress_ = true;
   boost::asio::async_write(socket_, pending_write_buffers_,
@@ -134,7 +141,7 @@ void HttpConnection::handle_write(const boost::system::error_code &e,
   }
   else
   {
-    last_write_error_ = e;
+    last_error_ = e;
   }
 }
 

@@ -24,7 +24,7 @@ static void ros_connection_logger(cpp_web_server::HttpServerRequestHandler forwa
 cpp_web_server::WebsocketConnection::MessageHandler WebrtcRosServer::handle_webrtc_websocket(const cpp_web_server::HttpRequest& request,
 											     cpp_web_server::WebsocketConnectionPtr websocket) {
   ROS_INFO_STREAM("Handling new WebRTC websocket");
-  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(websocket));
+  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, websocket));
   clients_.push_back(client);
   return client->createMessageHandler();
 }

@@ -69,7 +69,7 @@ private:
   bool write_in_progress_;
   std::vector<boost::asio::const_buffer> pending_write_buffers_;
   std::vector<ResourcePtr> pending_write_resources_;
-  boost::system::error_code last_write_error_;
+  boost::system::error_code last_error_;
   ReadHandler read_handler_;
 };
 

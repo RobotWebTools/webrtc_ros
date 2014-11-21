@@ -20,8 +20,8 @@ catkin_package(
   DEPENDS
 )
 
-add_definitions(-DDEBUG)
-add_definitions(-D_DEBUG)
+#add_definitions(-DDEBUG)
+#add_definitions(-D_DEBUG)
 
 
 include_directories(

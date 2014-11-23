@@ -37,6 +37,7 @@ std::string IceCandidateMessage::toJson() {
   Json::FastWriter writer;
   Json::Value message_json;
 
+  message_json[WebrtcRosMessage::kMessageTypeFieldName] = kIceCandidateType;
   message_json[kSdpMidFieldName] = sdp_mid;
   message_json[kSdpMlineIndexFieldName] = sdp_mline_index;
   message_json[kCandidateFieldName] = candidate;

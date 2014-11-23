@@ -28,6 +28,9 @@ public:
 
   typedef boost::function<void(const WebsocketMessage& message)> MessageHandler;
 
+  bool sendTextMessage(const std::string& content);
+  bool sendPingMessage(const std::string& content = "");
+
   bool sendMessage(const WebsocketMessage& message);
   bool sendFrame(WebsocketFrame& frame);
 

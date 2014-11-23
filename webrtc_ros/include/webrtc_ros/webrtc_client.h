@@ -43,6 +43,8 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
 
 
  private:
+  bool initPeerConnection();
+
   void ping_timer_callback(const ros::TimerEvent&);
 
   static void static_handle_message(boost::weak_ptr<WebrtcClient> weak_this,
@@ -63,6 +65,7 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   webrtc::FakeConstraints constraints_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> stream_;
 
   ros::Timer ping_timer_;
 

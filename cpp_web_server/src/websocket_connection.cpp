@@ -13,6 +13,20 @@ void WebsocketConnection::set_message_handler(MessageHandler& handler) {
   handler_ = handler;
 }
 
+bool WebsocketConnection::sendTextMessage(const std::string& content) {
+  cpp_web_server::WebsocketMessage m;
+  m.type = cpp_web_server::WebsocketMessage::type_text;
+  m.content = content;
+  return sendMessage(m);
+}
+bool WebsocketConnection::sendPingMessage(const std::string& content) {
+  cpp_web_server::WebsocketMessage m;
+  m.type = cpp_web_server::WebsocketMessage::type_ping;
+  m.content = content;
+  return sendMessage(m);
+}
+
+
 bool WebsocketConnection::sendMessage(const WebsocketMessage& message){
   WebsocketFrame frame;
   if(frame.fromMessage(message)){

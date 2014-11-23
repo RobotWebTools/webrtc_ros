@@ -10,7 +10,8 @@
 
   var mediaConstraints = {'mandatory': {
       'OfferToReceiveAudio': true,
-      'OfferToReceiveVideo': true }};
+      'OfferToReceiveVideo': true
+  }};
 
   var pc;
   var pcOptions = {
@@ -23,6 +24,8 @@
   var connection = new WebSocket('ws://localhost:8080/webrtc');
 
   connection.onopen = function () {
+        var data = JSON.stringify({"type": "configure", "subscribed_video_topic": "/usb_cam/image_raw"});
+        connection.send(data);
         try {
             pc = new RTCPeerConnection(null, pcOptions);
             pc.onicecandidate = function(event) {
@@ -42,16 +45,6 @@
             pc.onopen = onSessionOpened;
             pc.onaddstream = onRemoteStreamAdded;
             pc.onremovestream = onRemoteStreamRemoved;
-
-            pc.createOffer(function(sessionDescription) {
-                console.log("Create offer:", sessionDescription);
-                pc.setLocalDescription(sessionDescription);
-                var data = JSON.stringify(sessionDescription);
-                connection.send(data);
-            }, function(error) { // error
-                console.log("Create answer error:", error);
-            }, mediaConstraints); // type error  );
-
         }
         catch (e) {
             console.log("Failed to create, exception: " + e.message);
@@ -88,17 +81,28 @@
     console.log('Server: ' + e.data);
     var dataJson = JSON.parse(e.data);
 
-    if (e.data.search("answer") != -1) {
-      console.log("Got answer:", dataJson);
+    if (dataJson['type'] == 'offer') {
+      console.log("Got offer:", dataJson);
+
       pc.setRemoteDescription(new RTCSessionDescription(dataJson), onRemoteSdpSucces, onRemoteSdpError);
+
+      pc.createAnswer(function(sessionDescription) {
+          console.log("Create answer:", sessionDescription);
+          pc.setLocalDescription(sessionDescription);
+          var data = JSON.stringify(sessionDescription);
+          connection.send(data);
+      }, function(error) { // error
+          console.log("Create answer error:", error);
+      }, mediaConstraints);
     }
-    else {
+    else if(dataJson['type'] == 'ice_candidate'){
       console.log("Adding ICE candiate ", dataJson);
       var candidate = new RTCIceCandidate({sdpMLineIndex: dataJson.sdpMLineIndex, candidate: dataJson.candidate});
       pc.addIceCandidate(candidate);
     }
   };
   function onRemoteSdpError(event) {
+    console.error('onRemoteSdpError', event);
     console.error('onRemoteSdpError', event.name, event.message);
   }
   

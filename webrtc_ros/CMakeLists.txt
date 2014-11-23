@@ -73,6 +73,7 @@ add_library(ros_webrtc_devices
 
 add_library(webrtc_ros_messages
   src/webrtc_ros_message.cpp
+  src/configure_message.cpp
   src/sdp_message.cpp
   src/ice_candidate_message.cpp
 )

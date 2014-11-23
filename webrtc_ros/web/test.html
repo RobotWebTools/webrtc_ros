@@ -20,12 +20,15 @@
       ]
   }
 
+  var connection = new WebSocket('ws://'+window.location.hostname+':8080/webrtc');
 
-  var connection = new WebSocket('ws://localhost:8080/webrtc');
+  function configure() {
+      subscribed_video_topic_name = document.getElementById("subscribed_video_topic_name").value;
+      var data = JSON.stringify({"type": "configure", "subscribed_video_topic": subscribed_video_topic_name});
+      connection.send(data);
+  }
 
   connection.onopen = function () {
-        var data = JSON.stringify({"type": "configure", "subscribed_video_topic": "/usb_cam/image_raw"});
-        connection.send(data);
         try {
             pc = new RTCPeerConnection(null, pcOptions);
             pc.onicecandidate = function(event) {
@@ -62,11 +65,11 @@
     function onSessionConnecting(message) {
         console.log("Session connecting.");
     }
-    
+
     function onSessionOpened(message) {
         console.log("Session opened.");
     }
-    
+
     function onRemoteStreamRemoved(event) {
         console.log("Remote stream removed.");
     }
@@ -78,7 +81,6 @@
 
   // Log messages from the server
   connection.onmessage = function (e) {
-    console.log('Server: ' + e.data);
     var dataJson = JSON.parse(e.data);
 
     if (dataJson['type'] == 'offer') {
@@ -105,15 +107,21 @@
     console.error('onRemoteSdpError', event);
     console.error('onRemoteSdpError', event.name, event.message);
   }
-  
+
   function onRemoteSdpSucces() {
     console.log('onRemoteSdpSucces');
-  } 
+  }
 </script>
 </head>
 <body>
     <div id="container">
         <video id="video"></video>
+	<br>
+	<form  onsubmit="configure();return false;">
+	  Subscribed Video Topic: <input type="text" id="subscribed_video_topic_name" value="/image_raw">
+	  <br>
+	  <input type="submit" value="Configure">
+	</form>
     </div>
 </body>
 </html>

@@ -70,6 +70,14 @@ add_library(ros_webrtc_devices
   src/ros_video_capturer.cpp
   src/ros_media_device_manager.cpp
 )
+
+add_library(webrtc_ros_messages
+  src/webrtc_ros_message.cpp
+  src/sdp_message.cpp
+  src/ice_candidate_message.cpp
+)
+
+
 add_library(webrtc_ros_server
   src/webrtc_ros_server.cpp
   src/webrtc_client.cpp
@@ -78,6 +86,7 @@ add_library(webrtc_ros_server
 target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}
   ros_webrtc_devices
+  webrtc_ros_messages
 )
 
 add_executable(webrtc_ros_server_node

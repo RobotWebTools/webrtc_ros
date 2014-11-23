@@ -28,9 +28,10 @@
             pc.onicecandidate = function(event) {
                 if (event.candidate) {
                     var candidate = {
-                        sdpMLineIndex: event.candidate.sdpMLineIndex,
-                        sdpMid: event.candidate.sdpMid,
-                        candidate: event.candidate.candidate
+                        sdp_mline_index: event.candidate.sdpMLineIndex,
+                        sdp_mid: event.candidate.sdpMid,
+                        candidate: event.candidate.candidate,
+                        type: 'ice_candidate'
                     };
                     connection.send(JSON.stringify(candidate));
                 } else {

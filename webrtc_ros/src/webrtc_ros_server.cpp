@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <webrtc_ros/webrtc_ros_server.h>
 #include <cpp_web_server/http_reply.hpp>
 #include <cpp_web_server/websocket_request_handler.hpp>
@@ -37,7 +38,8 @@ WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
   int port;
   pnh_.param("port", port, 8080);
 
-
+  handler_group_.addHandlerForPath("/", cpp_web_server::HttpReply::from_file(cpp_web_server::HttpReply::ok, "text/html",
+									     ros::package::getPath("webrtc_ros")+"/web/test.html"));
   handler_group_.addHandlerForPath("/webrtc", cpp_web_server::WebsocketHttpRequestHandler(boost::bind(&WebrtcRosServer::handle_webrtc_websocket, this, _1, _2)));
   server_.reset(new cpp_web_server::HttpServer("0.0.0.0", boost::lexical_cast<std::string>(port),
 					       boost::bind(ros_connection_logger, handler_group_, _1, _2, _3, _4), 1));

@@ -10,6 +10,7 @@
 
 
 #include <boost/lexical_cast.hpp>
+#include <fstream>
 #include "cpp_web_server/http_reply.hpp"
 
 namespace cpp_web_server
@@ -247,10 +248,25 @@ std::vector<boost::asio::const_buffer> HttpReply::to_buffers(const std::vector<H
 
 HttpServerRequestHandler HttpReply::stock_reply(HttpReply::status_type status)
 {
-  std::string content = stock_replies::to_string(status);
+  return static_reply(status, "text/html", stock_replies::to_string(status));
+}
+
+HttpServerRequestHandler HttpReply::from_file(HttpReply::status_type status,
+					      const std::string& content_type,
+					      const std::string& filename)
+{
+  std::ifstream file_stream(filename.c_str());
+  std::stringstream file_buffer;
+  file_buffer << file_stream.rdbuf();
+  return static_reply(status, content_type, file_buffer.str());
+}
+HttpServerRequestHandler HttpReply::static_reply(HttpReply::status_type status,
+						 const std::string& content_type,
+						 const std::string& content)
+{
   std::vector<HttpHeader> headers;
   headers.push_back(HttpHeader("Content-Length", boost::lexical_cast<std::string>(content.size())));
-  headers.push_back(HttpHeader("Content-Type", "text/html"));
+  headers.push_back(HttpHeader("Content-Type", content_type));
   return StaticHttpRequestHandler(status, headers, content);
 }
 

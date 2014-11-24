@@ -41,6 +41,14 @@ struct HttpReply
 
   static HttpServerRequestHandler stock_reply(status_type status);
 
+  static HttpServerRequestHandler from_file(HttpReply::status_type status,
+					    const std::string& content_type,
+					    const std::string& filename);
+
+  static HttpServerRequestHandler static_reply(status_type status,
+					       const std::string& content_type,
+					       const std::string& content);
+
   static ReplyBuilder builder(status_type status);
 };
 

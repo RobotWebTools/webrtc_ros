@@ -20,7 +20,7 @@
       ]
   }
 
-  var connection = new WebSocket('ws://'+window.location.hostname+':8080/webrtc');
+  var connection = new WebSocket('ws://'+window.location.host+'/webrtc');
 
   function configure() {
       subscribed_video_topic_name = document.getElementById("subscribed_video_topic_name").value;

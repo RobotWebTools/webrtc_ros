@@ -11,6 +11,7 @@
 #include "talk/app/webrtc/mediastreaminterface.h"
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/test/fakeconstraints.h"
+#include "webrtc_ros/configure_message.h"
 
 namespace webrtc_ros {
 
@@ -70,6 +71,7 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   cpp_web_server::WebsocketConnectionPtr signaling_channel_;
 
   RosMediaDeviceManager ros_media_device_manager_;
+  ConfigureMessage last_configuration_;
 
   boost::shared_ptr<RosVideoRenderer> video_renderer_;
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;

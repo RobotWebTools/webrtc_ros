@@ -21,11 +21,20 @@
   }
 
   var connection = new WebSocket('ws://'+window.location.host+'/webrtc');
+  var configuration = {"type": "configure"};
 
   function configure() {
       subscribed_video_topic_name = document.getElementById("subscribed_video_topic_name").value;
-      var data = JSON.stringify({"type": "configure", "subscribed_video_topic": subscribed_video_topic_name});
+      published_video_topic_name = document.getElementById("published_video_topic_name").value;
+      publish_video = document.getElementById("publish_video").checked;
+      configuration["subscribed_video_topic"] = subscribed_video_topic_name;
+      if(publish_video)
+        configuration["published_video_topic"] = published_video_topic_name;
+      else
+        configuration["published_video_topic"] = "";
+      var data = JSON.stringify(configuration);
       connection.send(data);
+      console.log("Sent configure: ", configuration);
   }
 
   connection.onopen = function () {
@@ -79,6 +88,17 @@
   console.log('WebSocket Error ' + error);
   };
 
+  function sendAnswer() {
+    pc.createAnswer(function(sessionDescription) {
+        console.log("Create answer:", sessionDescription);
+        pc.setLocalDescription(sessionDescription);
+        var data = JSON.stringify(sessionDescription);
+        connection.send(data);
+    }, function(error) { // error
+        console.log("Create answer error:", error);
+    }, mediaConstraints);
+  }
+
   // Log messages from the server
   connection.onmessage = function (e) {
     var dataJson = JSON.parse(e.data);
@@ -88,23 +108,21 @@
 
       pc.setRemoteDescription(new RTCSessionDescription(dataJson), onRemoteSdpSucces, onRemoteSdpError);
 
-      navigator.getUserMedia({"video": true}, function (stream) {
-        var remoteVideoElement = document.getElementById('local-video');
-        remoteVideoElement.src = URL.createObjectURL(stream);
-        remoteVideoElement.play();
+      console.log(configuration["published_video_topic"], " - hello");
+      if(configuration["published_video_topic"] && configuration["published_video_topic"].length > 0) {
+        navigator.getUserMedia({"video": true}, function (stream) {
+          var remoteVideoElement = document.getElementById('local-video');
+          remoteVideoElement.src = URL.createObjectURL(stream);
+          remoteVideoElement.play();
 
-        pc.addStream(stream);
-        pc.createAnswer(function(sessionDescription) {
-            console.log("Create answer:", sessionDescription);
-            pc.setLocalDescription(sessionDescription);
-            var data = JSON.stringify(sessionDescription);
-            connection.send(data);
-        }, function(error) { // error
-            console.log("Create answer error:", error);
-        }, mediaConstraints);
-      }, function(error) {
-        console.error(error);
-      });
+          pc.addStream(stream);
+          sendAnswer();
+        }, function(error) {
+          console.error(error);
+        });
+      }
+      else
+        sendAnswer();
     }
     else if(dataJson['type'] == 'ice_candidate'){
       console.log("Adding ICE candiate ", dataJson);
@@ -128,7 +146,11 @@
         <video id="local-video"></video>
 	<br>
 	<form  onsubmit="configure();return false;">
-	  Subscribed Video Topic: <input type="text" id="subscribed_video_topic_name" value="/image_raw">
+	  Subscribed Video Topic: <input type="text" id="subscribed_video_topic_name" value="/camera/image_raw">
+	  <br>
+	  Published Video Topic:
+	  <input type="checkbox" id="publish_video">
+	  <input type="text" id="published_video_topic_name" value="/webrtc_video/image_raw">
 	  <br>
 	  <input type="submit" value="Configure">
 	</form>

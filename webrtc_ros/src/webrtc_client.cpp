@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_client.h>
 #include "webrtc_ros/webrtc_ros_message.h"
-#include "webrtc_ros/configure_message.h"
 #include "webrtc_ros/sdp_message.h"
 #include "webrtc_ros/ice_candidate_message.h"
 #include "webrtc/base/json.h"
@@ -154,6 +153,8 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
 	return;
       }
 
+      last_configuration_ = message;
+
       if(!initPeerConnection()) {
 	ROS_WARN("Failed to initialize peer connection");
 	return;
@@ -269,9 +270,9 @@ void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream)
   webrtc::VideoTrackVector video_tracks = media_stream->GetVideoTracks();
   webrtc::AudioTrackVector audio_tracks = media_stream->GetAudioTracks();
   ROS_DEBUG("Got remote stream video: %ld, audio: %ld", video_tracks.size(), audio_tracks.size());
-  if(video_tracks.size() > 0) {
+  if(video_tracks.size() > 0 && !last_configuration_.published_video_topic.empty()) {
     ROS_DEBUG_STREAM("Got remote video track, kind=" << video_tracks[0]->kind() << ", id=" << video_tracks[0]->id());
-    cricket::Device device("/webrtc_video", "/webrtc_video");
+    cricket::Device device(last_configuration_.published_video_topic, last_configuration_.published_video_topic);
     video_renderer_ = boost::shared_ptr<RosVideoRenderer>(ros_media_device_manager_.CreateVideoRenderer(device));
     video_tracks[0]->AddRenderer(video_renderer_.get());
   }

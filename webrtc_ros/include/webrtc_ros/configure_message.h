@@ -12,6 +12,8 @@ class ConfigureMessage
  public:
   static std::string kSubscribedVideoTopicFieldName;
   static std::string kSubscribedAudioTopicFieldName;
+  static std::string kPublishedVideoTopicFieldName;
+  static std::string kPublishedAudioTopicFieldName;
   static std::string kConfigureType;
 
   static bool isConfigure(const Json::Value& message_json);
@@ -20,11 +22,11 @@ class ConfigureMessage
   std::string toJson();
 
   ConfigureMessage();
-  ConfigureMessage(const std::string& subscribed_video_topic,
-		   const std::string& subscribed_audio_topic);
 
   std::string subscribed_video_topic;
   std::string subscribed_audio_topic;
+  std::string published_video_topic;
+  std::string published_audio_topic;
 };
 
 }

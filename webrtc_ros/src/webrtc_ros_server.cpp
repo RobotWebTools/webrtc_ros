@@ -4,6 +4,7 @@
 #include <cpp_web_server/http_reply.hpp>
 #include <cpp_web_server/websocket_request_handler.hpp>
 #include "webrtc/base/ssladapter.h"
+#include <boost/foreach.hpp>
 
 namespace webrtc_ros {
 
@@ -48,14 +49,18 @@ WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
 
 }
 WebrtcRosServer::~WebrtcRosServer(){
+  BOOST_FOREACH(WebrtcClientWeakPtr client_weak, clients_) {
+    boost::shared_ptr<WebrtcClient> client = client_weak.lock();
+    if(client)
+      client->invalidate();
+  }
   rtc::CleanupSSL();
 }
 
 void WebrtcRosServer::spin() {
   server_->run();
   ROS_INFO("Waiting For connections");
-  ros::MultiThreadedSpinner spinner(1);
-  spinner.spin();
+  ros::spin();
   server_->stop();
 }
 

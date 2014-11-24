@@ -16,12 +16,14 @@
 namespace webrtc_ros {
 
 class WebrtcClient;
+typedef boost::shared_ptr<WebrtcClient> WebrtcClientPtr;
+typedef boost::weak_ptr<WebrtcClient> WebrtcClientWeakPtr;
 
 class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
   public webrtc::CreateSessionDescriptionObserver
 {
  public:
-  WebrtcClientObserverProxy(boost::weak_ptr<WebrtcClient> client_weak);
+  WebrtcClientObserverProxy(WebrtcClientWeakPtr client_weak);
 
   void OnSuccess(webrtc::SessionDescriptionInterface*);
   void OnFailure(const std::string&);
@@ -32,7 +34,7 @@ class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
   void OnIceCandidate(const webrtc::IceCandidateInterface*);
 
  private:
-  boost::weak_ptr<WebrtcClient> client_weak_;
+  WebrtcClientWeakPtr client_weak_;
 
 };
 
@@ -51,13 +53,13 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
 
 
  private:
-  boost::shared_ptr<WebrtcClient> keep_alive_this_;
+  WebrtcClientPtr keep_alive_this_;
 
   bool initPeerConnection();
 
   void ping_timer_callback(const ros::TimerEvent&);
 
-  static void static_handle_message(boost::weak_ptr<WebrtcClient> weak_this,
+  static void static_handle_message(WebrtcClientWeakPtr weak_this,
 				    const cpp_web_server::WebsocketMessage& message);
   void handle_message(const cpp_web_server::WebsocketMessage& message);
 
@@ -73,11 +75,11 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   RosMediaDeviceManager ros_media_device_manager_;
   ConfigureMessage last_configuration_;
 
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   boost::shared_ptr<RosVideoRenderer> video_renderer_;
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;
   webrtc::FakeConstraints peer_connection_constraints_;
   webrtc::FakeConstraints media_constraints_;
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::MediaStreamInterface> stream_;
 

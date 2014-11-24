@@ -9,21 +9,21 @@
 
 namespace webrtc_ros {
 
-WebrtcClientObserverProxy::WebrtcClientObserverProxy(boost::weak_ptr<WebrtcClient> client_weak)
+WebrtcClientObserverProxy::WebrtcClientObserverProxy(WebrtcClientWeakPtr client_weak)
   : client_weak_(client_weak) {}
 
 void WebrtcClientObserverProxy::OnSuccess(webrtc::SessionDescriptionInterface* description) {
-  boost::shared_ptr<WebrtcClient> client = client_weak_.lock();
+  WebrtcClientPtr client = client_weak_.lock();
   if(client)
     client->OnSessionDescriptionSuccess(description);
 }
 void WebrtcClientObserverProxy::OnFailure(const std::string& error) {
-  boost::shared_ptr<WebrtcClient> client = client_weak_.lock();
+  WebrtcClientPtr client = client_weak_.lock();
   if(client)
     client->OnSessionDescriptionFailure(error);
 }
 void WebrtcClientObserverProxy::OnAddStream(webrtc::MediaStreamInterface* media_stream){
-  boost::shared_ptr<WebrtcClient> client = client_weak_.lock();
+  WebrtcClientPtr client = client_weak_.lock();
   if(client)
     client->OnAddRemoteStream(media_stream);
 }
@@ -34,7 +34,7 @@ void WebrtcClientObserverProxy::OnDataChannel(webrtc::DataChannelInterface*){
 void WebrtcClientObserverProxy::OnRenegotiationNeeded(){
 }
 void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterface* candidate){
-  boost::shared_ptr<WebrtcClient> client = client_weak_.lock();
+  WebrtcClientPtr client = client_weak_.lock();
   if(client)
     client->OnIceCandidate(candidate);
 }
@@ -72,7 +72,7 @@ bool WebrtcClient::valid() {
 bool WebrtcClient::initPeerConnection() {
   if(!peer_connection_) {
     webrtc::PeerConnectionInterface::IceServers servers;
-    webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(boost::weak_ptr<WebrtcClient>(shared_from_this()));
+    webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(WebrtcClientWeakPtr(shared_from_this()));
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(servers,
 								      &peer_connection_constraints_,
 								      NULL,
@@ -92,7 +92,7 @@ bool WebrtcClient::initPeerConnection() {
 
 
 cpp_web_server::WebsocketConnection::MessageHandler WebrtcClient::createMessageHandler() {
-  return boost::bind(&WebrtcClient::static_handle_message, boost::weak_ptr<WebrtcClient>(shared_from_this()), _1);
+  return boost::bind(&WebrtcClient::static_handle_message, WebrtcClientWeakPtr(shared_from_this()), _1);
 }
 
 void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event) {
@@ -127,9 +127,9 @@ class DummySetSessionDescriptionObserver
   ~DummySetSessionDescriptionObserver() {}
 };
 
-void WebrtcClient::static_handle_message(boost::weak_ptr<WebrtcClient> weak_this,
+void WebrtcClient::static_handle_message(WebrtcClientWeakPtr weak_this,
 					 const cpp_web_server::WebsocketMessage& message) {
-  boost::shared_ptr<WebrtcClient> _this = weak_this.lock();
+  WebrtcClientPtr _this = weak_this.lock();
   if(_this)
     _this->handle_message(message);
 }

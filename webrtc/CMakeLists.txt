@@ -272,7 +272,7 @@ add_definitions(-DLINUX_PULSE)
 add_definitions(-DLINUX_ALSA)
 add_library(webrtc ${WEBRTC_SRCS})
 set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv jsoncpp ${CMAKE_THREAD_LIBS_INIT} vpx dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES})
+target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv jsoncpp ${CMAKE_THREAD_LIBS_INIT} vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES})
 
 
 
@@ -310,7 +310,7 @@ add_definitions(-DSRTP_RELATIVE_PATH)
 add_definitions(-DUSE_SYSTEM_LIBSRTP)
 add_definitions(-DLIBPEERCONNECTION_LIB)
 add_library(jingle ${JINGLE_SRCS})
-target_link_libraries(jingle webrtc usrsctp srtp gthread-2.0 gobject-2.0 rt ${GTK2_LIBRARIES})
+target_link_libraries(jingle webrtc usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
 
 
 

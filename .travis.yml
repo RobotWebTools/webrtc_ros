@@ -13,11 +13,12 @@ before_install:
   - sudo apt-get install -qq g++-4.8
   - export CXX="g++-4.8"
 
+
 install:
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
   - sudo apt-get update -qq
-  - sudo apt-get install python-catkin-pkg python-rosdep ros-hydro-catkin -qq
+  - sudo apt-get install python-catkin-pkg python-rosdep ros-hydro-catkin python-catkin-tools -qq
   - sudo rosdep init
   - rosdep update
   - mkdir -p /tmp/ws/src
@@ -25,6 +26,16 @@ install:
   - cd /tmp/ws/src/package/webrtc
   - ./install_deps.sh
   - ./checkout_source.sh
+
+  - sudo apt-get remove libvpx-dev -qq
+  - sudo apt-get install yasm -qq
+  - cd /tmp
+  - git clone http://git.chromium.org/webm/libvpx.git
+  - cd libvpx
+  - ./configure --prefix=/usr --enable-shared --disable-static
+  - make
+  - sudo make install
+
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
 

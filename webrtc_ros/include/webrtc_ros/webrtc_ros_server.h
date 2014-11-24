@@ -17,7 +17,7 @@ class WebrtcRosServer {
 									      cpp_web_server::WebsocketConnectionPtr websocket);
   void spin();
  private:
-  std::vector<boost::shared_ptr<WebrtcClient> > clients_;
+  std::vector<boost::weak_ptr<WebrtcClient> > clients_;
 
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;

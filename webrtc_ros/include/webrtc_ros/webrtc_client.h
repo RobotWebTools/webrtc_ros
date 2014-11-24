@@ -41,10 +41,17 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
  {
  public:
   WebrtcClient(ros::NodeHandle& nh, cpp_web_server::WebsocketConnectionPtr signaling_channel);
+  ~WebrtcClient();
   cpp_web_server::WebsocketConnection::MessageHandler createMessageHandler();
+
+  void init();
+  void invalidate();
+  bool valid();
 
 
  private:
+  boost::shared_ptr<WebrtcClient> keep_alive_this_;
+
   bool initPeerConnection();
 
   void ping_timer_callback(const ros::TimerEvent&);
@@ -57,8 +64,6 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   void OnSessionDescriptionFailure(const std::string&);
   void OnAddRemoteStream(webrtc::MediaStreamInterface*);
   void OnIceCandidate(const webrtc::IceCandidateInterface*);
-
-  bool is_broken_;
 
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;

@@ -42,12 +42,12 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
 
 
 WebrtcClient::WebrtcClient(ros::NodeHandle& nh, cpp_web_server::WebsocketConnectionPtr signaling_channel)
-  : is_broken_(false), nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
+  : nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
     ros_media_device_manager_(it_){
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
   if (!peer_connection_factory_.get()) {
     ROS_WARN("Could not create peer connection factory");
-    is_broken_ = true;
+    invalidate();
     return;
   }
   peer_connection_constraints_.SetAllowDtlsSctpDataChannels();
@@ -55,6 +55,20 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, cpp_web_server::WebsocketConnect
   media_constraints_.SetMandatoryReceiveAudio(true);
   ping_timer_ = nh_.createTimer(ros::Duration(5.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
 }
+WebrtcClient::~WebrtcClient(){
+  ROS_INFO("Webrtc Client Destroyed");
+}
+
+void WebrtcClient::init() {
+  keep_alive_this_ = shared_from_this();
+}
+void WebrtcClient::invalidate() {
+  keep_alive_this_.reset();
+}
+bool WebrtcClient::valid() {
+  return keep_alive_this_;
+}
+
 
 bool WebrtcClient::initPeerConnection() {
   if(!peer_connection_) {
@@ -67,7 +81,7 @@ bool WebrtcClient::initPeerConnection() {
 								      webrtc_observer_proxy_.get());
     if (!peer_connection_.get()) {
       ROS_WARN("Could not create peer connection");
-      is_broken_ = true;
+      invalidate();
       return false;
     }
     return true;
@@ -87,9 +101,9 @@ void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event) {
     signaling_channel_->sendPingMessage();
   } catch(...) {
     //signaling channel probably broken
-    if(!is_broken_) {
+    if(valid()) {
       ROS_WARN("Connection broken");
-      is_broken_ = true;
+      invalidate();
     }
   }
 }
@@ -128,7 +142,7 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
     Json::Value message_json;
     if (!reader.parse(message.content, message_json)) {
       ROS_WARN_STREAM("Could not parse message: " << message.content);
-      is_broken_ = true;
+      invalidate();
       return;
     }
 
@@ -136,7 +150,7 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
       ConfigureMessage message;
       if(!message.fromJson(message_json)) {
 	ROS_WARN("Can't parse received configure message.");
-	is_broken_ = true;
+	invalidate();
 	return;
       }
 
@@ -165,7 +179,7 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
 
       if (!peer_connection_->AddStream(stream)) {
         ROS_WARN("Adding stream to PeerConnection failed");
-	is_broken_ = true;
+	invalidate();
       }
 
       peer_connection_->CreateOffer(webrtc_observer_proxy_.get(), &media_constraints_);
@@ -175,14 +189,14 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
 
       if(!message.fromJson(message_json)) {
 	ROS_WARN("Can't parse received session description message.");
-	is_broken_ = true;
+	invalidate();
 	return;
       }
 
       webrtc::SessionDescriptionInterface* session_description(message.createSessionDescription());
       if (!session_description) {
 	ROS_WARN("Can't create session description");
-	is_broken_ = true;
+	invalidate();
 	return;
       }
 
@@ -192,19 +206,19 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
       IceCandidateMessage message;
       if(!message.fromJson(message_json)) {
 	ROS_WARN("Can't parse received ice candidate message.");
-	is_broken_ = true;
+	invalidate();
 	return;
       }
 
       rtc::scoped_ptr<webrtc::IceCandidateInterface> candidate(message.createIceCandidate());
       if (!candidate.get()) {
 	ROS_WARN("Can't parse received candidate message.");
-	is_broken_ = true;
+	invalidate();
 	return;
       }
       if (!peer_connection_->AddIceCandidate(candidate.get())) {
 	ROS_WARN("Failed to apply the received candidate");
-	is_broken_ = true;
+	invalidate();
 	return;
       }
       ROS_DEBUG_STREAM("Received remote candidate :" << message.toJson());
@@ -238,7 +252,7 @@ void WebrtcClient::OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterfa
 }
 void WebrtcClient::OnSessionDescriptionFailure(const std::string& error) {
   ROS_WARN_STREAM("Could not create local description: " << error);
-  is_broken_ = true;
+  invalidate();
 }
 void WebrtcClient::OnIceCandidate(const webrtc::IceCandidateInterface* candidate){
   IceCandidateMessage message;

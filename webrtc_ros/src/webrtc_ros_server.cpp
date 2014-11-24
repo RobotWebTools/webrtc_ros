@@ -26,6 +26,8 @@ cpp_web_server::WebsocketConnection::MessageHandler WebrtcRosServer::handle_webr
 											     cpp_web_server::WebsocketConnectionPtr websocket) {
   ROS_INFO_STREAM("Handling new WebRTC websocket");
   boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, websocket));
+  // hold a shared ptr until the object is initialized
+  client->init();
   clients_.push_back(client);
   return client->createMessageHandler();
 }

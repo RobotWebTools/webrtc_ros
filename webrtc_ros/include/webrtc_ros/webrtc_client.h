@@ -6,7 +6,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include "webrtc_ros/ros_media_device_manager.h"
 #include <cpp_web_server/websocket_request_handler.hpp>
+#include "talk/app/webrtc/mediastreaminterface.h"
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/test/fakeconstraints.h"
 
@@ -53,6 +55,7 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
 
   void OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterface*);
   void OnSessionDescriptionFailure(const std::string&);
+  void OnAddRemoteStream(webrtc::MediaStreamInterface*);
   void OnIceCandidate(const webrtc::IceCandidateInterface*);
 
   bool is_broken_;
@@ -61,8 +64,12 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   image_transport::ImageTransport it_;
   cpp_web_server::WebsocketConnectionPtr signaling_channel_;
 
+  RosMediaDeviceManager ros_media_device_manager_;
+
+  boost::shared_ptr<RosVideoRenderer> video_renderer_;
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;
-  webrtc::FakeConstraints constraints_;
+  webrtc::FakeConstraints peer_connection_constraints_;
+  webrtc::FakeConstraints media_constraints_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::MediaStreamInterface> stream_;

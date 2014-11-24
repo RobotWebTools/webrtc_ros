@@ -2,6 +2,8 @@
 #define WEBRTC_ROS_ROS_MEDIA_DEVICE_MANAGER_H_
 
 #include "talk/media/devices/devicemanager.h"
+#include "talk/app/webrtc/mediastreaminterface.h"
+#include "webrtc_ros/ros_video_renderer.h"
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 
@@ -38,6 +40,7 @@ class RosMediaDeviceManager : public cricket::DeviceManagerInterface
   virtual void ClearVideoCaptureDeviceMaxFormat(const std::string& usb_id);
 
   virtual cricket::VideoCapturer* CreateVideoCapturer(const cricket::Device& device) const;
+  virtual RosVideoRenderer* CreateVideoRenderer(const cricket::Device& device) const;
 
   virtual bool GetWindows(std::vector<rtc::WindowDescription>* descriptions);
   virtual bool GetDesktops(std::vector<rtc::DesktopDescription>* descriptions);
@@ -52,7 +55,7 @@ class RosMediaDeviceManager : public cricket::DeviceManagerInterface
 
 
 
-} // namespace scy
+}
 
 
 #endif

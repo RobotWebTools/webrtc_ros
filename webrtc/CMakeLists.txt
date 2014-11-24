@@ -16,6 +16,7 @@ catkin_package(
   INCLUDE_DIRS
     src
     "src/third_party/jsoncpp/source/include"
+    "src/third_party/libyuv/include"
   LIBRARIES jingle webrtc usrsctp srtp opus yuv jsoncpp
   DEPENDS
 )

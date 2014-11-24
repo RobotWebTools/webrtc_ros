@@ -1,6 +1,7 @@
 #include "talk/media/base/mediacommon.h"
 #include "webrtc_ros/ros_media_device_manager.h"
 #include "webrtc_ros/ros_video_capturer.h"
+#include "webrtc_ros/ros_video_renderer.h"
 
 namespace webrtc_ros {
 
@@ -60,6 +61,9 @@ cricket::VideoCapturer* RosMediaDeviceManager::CreateVideoCapturer(const cricket
   return new RosVideoCapturer(it_, device.id);
 }
 
+RosVideoRenderer* RosMediaDeviceManager::CreateVideoRenderer(const cricket::Device& device) const {
+  return new RosVideoRenderer(it_, device.id);
+}
 
 
 

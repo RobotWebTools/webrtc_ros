@@ -5,7 +5,7 @@
   RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
   RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
   RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
-  getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+  navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
   URL = window.webkitURL || window.URL;
 
   var mediaConstraints = {'mandatory': {
@@ -58,7 +58,7 @@
     function onRemoteStreamAdded(event) {
       console.log(event);
       console.log("Remote stream added:", URL.createObjectURL(event.stream));
-      var remoteVideoElement = document.getElementById('video');
+      var remoteVideoElement = document.getElementById('remote-video');
       remoteVideoElement.src = URL.createObjectURL(event.stream);
       remoteVideoElement.play();
     }
@@ -88,14 +88,23 @@
 
       pc.setRemoteDescription(new RTCSessionDescription(dataJson), onRemoteSdpSucces, onRemoteSdpError);
 
-      pc.createAnswer(function(sessionDescription) {
-          console.log("Create answer:", sessionDescription);
-          pc.setLocalDescription(sessionDescription);
-          var data = JSON.stringify(sessionDescription);
-          connection.send(data);
-      }, function(error) { // error
-          console.log("Create answer error:", error);
-      }, mediaConstraints);
+      navigator.getUserMedia({"video": true}, function (stream) {
+        var remoteVideoElement = document.getElementById('local-video');
+        remoteVideoElement.src = URL.createObjectURL(stream);
+        remoteVideoElement.play();
+
+        pc.addStream(stream);
+        pc.createAnswer(function(sessionDescription) {
+            console.log("Create answer:", sessionDescription);
+            pc.setLocalDescription(sessionDescription);
+            var data = JSON.stringify(sessionDescription);
+            connection.send(data);
+        }, function(error) { // error
+            console.log("Create answer error:", error);
+        }, mediaConstraints);
+      }, function(error) {
+        console.error(error);
+      });
     }
     else if(dataJson['type'] == 'ice_candidate'){
       console.log("Adding ICE candiate ", dataJson);
@@ -115,7 +124,8 @@
 </head>
 <body>
     <div id="container">
-        <video id="video"></video>
+        <video id="remote-video"></video>
+        <video id="local-video"></video>
 	<br>
 	<form  onsubmit="configure();return false;">
 	  Subscribed Video Topic: <input type="text" id="subscribed_video_topic_name" value="/image_raw">

@@ -1,6 +1,5 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_client.h>
-#include "webrtc_ros/ros_media_device_manager.h"
 #include "webrtc_ros/webrtc_ros_message.h"
 #include "webrtc_ros/configure_message.h"
 #include "webrtc_ros/sdp_message.h"
@@ -24,7 +23,10 @@ void WebrtcClientObserverProxy::OnFailure(const std::string& error) {
   if(client)
     client->OnSessionDescriptionFailure(error);
 }
-void WebrtcClientObserverProxy::OnAddStream(webrtc::MediaStreamInterface*){
+void WebrtcClientObserverProxy::OnAddStream(webrtc::MediaStreamInterface* media_stream){
+  boost::shared_ptr<WebrtcClient> client = client_weak_.lock();
+  if(client)
+    client->OnAddRemoteStream(media_stream);
 }
 void WebrtcClientObserverProxy::OnRemoveStream(webrtc::MediaStreamInterface*){
 }
@@ -40,23 +42,26 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
 
 
 WebrtcClient::WebrtcClient(ros::NodeHandle& nh, cpp_web_server::WebsocketConnectionPtr signaling_channel)
-  : is_broken_(false), nh_(nh), it_(nh_), signaling_channel_(signaling_channel) {
+  : is_broken_(false), nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
+    ros_media_device_manager_(it_){
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
   if (!peer_connection_factory_.get()) {
     ROS_WARN("Could not create peer connection factory");
     is_broken_ = true;
     return;
   }
+  peer_connection_constraints_.SetAllowDtlsSctpDataChannels();
+  media_constraints_.SetMandatoryReceiveVideo(true);
+  media_constraints_.SetMandatoryReceiveAudio(true);
   ping_timer_ = nh_.createTimer(ros::Duration(5.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
 }
 
 bool WebrtcClient::initPeerConnection() {
   if(!peer_connection_) {
-    constraints_.SetAllowDtlsSctpDataChannels();
     webrtc::PeerConnectionInterface::IceServers servers;
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(boost::weak_ptr<WebrtcClient>(shared_from_this()));
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(servers,
-								      &constraints_,
+								      &peer_connection_constraints_,
 								      NULL,
 								      NULL,
 								      webrtc_observer_proxy_.get());
@@ -142,15 +147,13 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
 
       ROS_DEBUG("Configuring webrtc connection");
 
-      RosMediaDeviceManager dev_manager(it_);
-
       rtc::scoped_refptr<webrtc::MediaStreamInterface> stream =
 	peer_connection_factory_->CreateLocalMediaStream("ros_media_stream");
 
       if(!message.subscribed_video_topic.empty()) {
 	ROS_DEBUG_STREAM("Subscribing to ROS topic: " << message.subscribed_video_topic);
 	cricket::Device device(message.subscribed_video_topic, message.subscribed_video_topic);
-	cricket::VideoCapturer* capturer = dev_manager.CreateVideoCapturer(device);
+	cricket::VideoCapturer* capturer = ros_media_device_manager_.CreateVideoCapturer(device);
 
 	rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
             peer_connection_factory_->CreateVideoTrack(
@@ -165,7 +168,7 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
 	is_broken_ = true;
       }
 
-      peer_connection_->CreateOffer(webrtc_observer_proxy_.get(), NULL);
+      peer_connection_->CreateOffer(webrtc_observer_proxy_.get(), &media_constraints_);
     }
     else if(SdpMessage::isSdpAnswer(message_json)){
       SdpMessage message;
@@ -247,6 +250,19 @@ void WebrtcClient::OnIceCandidate(const webrtc::IceCandidateInterface* candidate
     ROS_WARN("Failed to serialize local candidate");
   }
 }
+
+void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream) {
+  webrtc::VideoTrackVector video_tracks = media_stream->GetVideoTracks();
+  webrtc::AudioTrackVector audio_tracks = media_stream->GetAudioTracks();
+  ROS_DEBUG("Got remote stream video: %ld, audio: %ld", video_tracks.size(), audio_tracks.size());
+  if(video_tracks.size() > 0) {
+    ROS_DEBUG_STREAM("Got remote video track, kind=" << video_tracks[0]->kind() << ", id=" << video_tracks[0]->id());
+    cricket::Device device("/webrtc_video", "/webrtc_video");
+    video_renderer_ = boost::shared_ptr<RosVideoRenderer>(ros_media_device_manager_.CreateVideoRenderer(device));
+    video_tracks[0]->AddRenderer(video_renderer_.get());
+  }
+}
+
 
 
 

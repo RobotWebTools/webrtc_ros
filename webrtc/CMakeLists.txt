@@ -15,7 +15,7 @@ pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
 catkin_package(
   INCLUDE_DIRS
     src
-    "src/third_party/jsoncpp/source/include"
+    "/usr/include/jsoncpp"
     "src/third_party/libyuv/include"
   LIBRARIES jingle webrtc usrsctp srtp opus yuv jsoncpp
   DEPENDS
@@ -33,7 +33,6 @@ include_directories(
   "src/third_party/opus/src/include"
   "src/third_party/opus/src/src"
   "src/third_party/libyuv/include"
-  "src/third_party/jsoncpp/source/include"
   "src/webrtc/modules/audio_device/linux/"
   "src/webrtc/system_wrappers/interface/"
   "src/webrtc/common_audio/signal_processing/include"
@@ -45,7 +44,9 @@ include_directories(
   "src/webrtc/modules/audio_coding/codecs/g722/include"
   "src/third_party/usrsctp/usrsctplib"
   "src/third_party/usrsctp/"
+
   "/usr/include/srtp"
+  "/usr/include/jsoncpp"
 )
 include_directories(${EXPAT_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIRS})
@@ -101,15 +102,6 @@ endforeach(src)
 
 add_library(yuv ${YUV_SRCS})
 
-
-
-
-
-file(GLOB_RECURSE JSONCPP_SRCS "src/third_party/jsoncpp/source/src/**.cpp")
-foreach(src ${JSONCPP_SRCS})
-endforeach(src)
-
-add_library(jsoncpp ${JSONCPP_SRCS})
 
 
 
@@ -357,7 +349,7 @@ target_link_libraries(relayserver jingle)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS opus yuv jsoncpp usrsctp webrtc jingle peerconnection_server peerconnection_client stunserver turnserver relayserver
+install(TARGETS yuv usrsctp opus  webrtc jingle  peerconnection_server peerconnection_client stunserver turnserver relayserver
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

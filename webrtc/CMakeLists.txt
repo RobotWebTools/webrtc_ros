@@ -365,12 +365,15 @@ install(TARGETS yuv usrsctp opus  webrtc jingle  peerconnection_server peerconne
 install(DIRECTORY webrtc_src/talk
   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 install(DIRECTORY webrtc_src/webrtc
   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 install(DIRECTORY webrtc_src/third_party
   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )

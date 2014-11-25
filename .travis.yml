@@ -43,8 +43,8 @@ script:
   - source /opt/ros/hydro/setup.bash
   - catkin init
   - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
-  - catkin build -p1 -j1
+  - catkin build -p1 -j2 --no-status
   - catkin config --install
   - catkin clean -b
-  - catkin build -p1 -j1
+  - catkin build -p1 -j2 --no-status
   - source install/setup.bash

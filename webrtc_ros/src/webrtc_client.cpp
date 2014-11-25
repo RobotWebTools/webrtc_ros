@@ -40,7 +40,7 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
 }
 
 
-WebrtcClient::WebrtcClient(ros::NodeHandle& nh, cpp_web_server::WebsocketConnectionPtr signaling_channel)
+WebrtcClient::WebrtcClient(ros::NodeHandle& nh, async_web_server_cpp::WebsocketConnectionPtr signaling_channel)
   : nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
     ros_media_device_manager_(it_){
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
@@ -91,7 +91,7 @@ bool WebrtcClient::initPeerConnection() {
 }
 
 
-cpp_web_server::WebsocketConnection::MessageHandler WebrtcClient::createMessageHandler() {
+async_web_server_cpp::WebsocketConnection::MessageHandler WebrtcClient::createMessageHandler() {
   return boost::bind(&WebrtcClient::static_handle_message, WebrtcClientWeakPtr(shared_from_this()), _1);
 }
 
@@ -128,15 +128,15 @@ class DummySetSessionDescriptionObserver
 };
 
 void WebrtcClient::static_handle_message(WebrtcClientWeakPtr weak_this,
-					 const cpp_web_server::WebsocketMessage& message) {
+					 const async_web_server_cpp::WebsocketMessage& message) {
   WebrtcClientPtr _this = weak_this.lock();
   if(_this)
     _this->handle_message(message);
 }
 
 
-void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& message) {
-  if(message.type == cpp_web_server::WebsocketMessage::type_text) {
+void WebrtcClient::handle_message(const async_web_server_cpp::WebsocketMessage& message) {
+  if(message.type == async_web_server_cpp::WebsocketMessage::type_text) {
     Json::Reader reader;
     Json::Value message_json;
     if (!reader.parse(message.content, message_json)) {
@@ -231,7 +231,7 @@ void WebrtcClient::handle_message(const cpp_web_server::WebsocketMessage& messag
       ROS_WARN_STREAM("Unexpected message type: " << type << ": " << message.content);
     }
   }
-  else if(message.type == cpp_web_server::WebsocketMessage::type_pong) {
+  else if(message.type == async_web_server_cpp::WebsocketMessage::type_pong) {
     // got a pong from the last ping
   }
   else{

@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   webrtc
   image_transport
   nodelet
-  cpp_web_server
+  async_web_server_cpp
 )
 
 
@@ -48,7 +48,7 @@ add_definitions(-DLINUX_ALSA)
 
 catkin_package(
   INCLUDE_DIRS include
-  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet cpp_web_server
+  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet async_web_server_cpp
 )
 
 ###########

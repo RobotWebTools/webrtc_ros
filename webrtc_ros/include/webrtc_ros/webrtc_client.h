@@ -7,7 +7,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "webrtc_ros/ros_media_device_manager.h"
-#include <cpp_web_server/websocket_request_handler.hpp>
+#include <async_web_server_cpp/websocket_request_handler.hpp>
 #include "talk/app/webrtc/mediastreaminterface.h"
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/test/fakeconstraints.h"
@@ -43,9 +43,9 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   private boost::noncopyable
  {
  public:
-  WebrtcClient(ros::NodeHandle& nh, cpp_web_server::WebsocketConnectionPtr signaling_channel);
+  WebrtcClient(ros::NodeHandle& nh, async_web_server_cpp::WebsocketConnectionPtr signaling_channel);
   ~WebrtcClient();
-  cpp_web_server::WebsocketConnection::MessageHandler createMessageHandler();
+  async_web_server_cpp::WebsocketConnection::MessageHandler createMessageHandler();
 
   void init();
   void invalidate();
@@ -60,8 +60,8 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   void ping_timer_callback(const ros::TimerEvent&);
 
   static void static_handle_message(WebrtcClientWeakPtr weak_this,
-				    const cpp_web_server::WebsocketMessage& message);
-  void handle_message(const cpp_web_server::WebsocketMessage& message);
+				    const async_web_server_cpp::WebsocketMessage& message);
+  void handle_message(const async_web_server_cpp::WebsocketMessage& message);
 
   void OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterface*);
   void OnSessionDescriptionFailure(const std::string&);
@@ -70,7 +70,7 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
 
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
-  cpp_web_server::WebsocketConnectionPtr signaling_channel_;
+  async_web_server_cpp::WebsocketConnectionPtr signaling_channel_;
 
   RosMediaDeviceManager ros_media_device_manager_;
   ConfigureMessage last_configuration_;

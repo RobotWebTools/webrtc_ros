@@ -7,137 +7,25 @@
   RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
   navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
   URL = window.webkitURL || window.URL;
-
-  var mediaConstraints = {'mandatory': {
-      'OfferToReceiveAudio': true,
-      'OfferToReceiveVideo': true
-  }};
-
-  var pc;
-  var pcOptions = {
-      optional: [
-          {DtlsSrtpKeyAgreement: true}
-      ]
-  }
-
-  var connection = new WebSocket('ws://'+window.location.host+'/webrtc');
-  var configuration = {"type": "configure"};
-
+</script>
+<script type="text/javascript" src="/webrtc_ros.js"></script>
+<script>
+  var connection = WebrtcRos.createConnection();
   function configure() {
-      subscribed_video_topic_name = document.getElementById("subscribed_video_topic_name").value;
-      published_video_topic_name = document.getElementById("published_video_topic_name").value;
-      publish_video = document.getElementById("publish_video").checked;
-      configuration["subscribed_video_topic"] = subscribed_video_topic_name;
-      if(publish_video)
-        configuration["published_video_topic"] = published_video_topic_name;
-      else
-        configuration["published_video_topic"] = "";
-      var data = JSON.stringify(configuration);
-      connection.send(data);
-      console.log("Sent configure: ", configuration);
-  }
-
-  connection.onopen = function () {
-        try {
-            pc = new RTCPeerConnection(null, pcOptions);
-            pc.onicecandidate = function(event) {
-                if (event.candidate) {
-                    var candidate = {
-                        sdp_mline_index: event.candidate.sdpMLineIndex,
-                        sdp_mid: event.candidate.sdpMid,
-                        candidate: event.candidate.candidate,
-                        type: 'ice_candidate'
-                    };
-                    connection.send(JSON.stringify(candidate));
-                } else {
-                  console.log("End of candidates.");
-                }
-            };
-            pc.onconnecting = onSessionConnecting;
-            pc.onopen = onSessionOpened;
-            pc.onaddstream = onRemoteStreamAdded;
-            pc.onremovestream = onRemoteStreamRemoved;
-        }
-        catch (e) {
-            console.log("Failed to create, exception: " + e.message);
-        }
-
+    subscribed_video_topic_name = document.getElementById("subscribed_video_topic_name").value;
+    published_video_topic_name = document.getElementById("publish_video").checked ? document.getElementById("published_video_topic_name").value : "";
+    config = {
+      "subscribed_video_topic": subscribed_video_topic_name,
+      "published_video_topic": published_video_topic_name
+    };
+    connection.configure(config);
   };
-
-    function onRemoteStreamAdded(event) {
-      console.log(event);
-      console.log("Remote stream added:", URL.createObjectURL(event.stream));
-      var remoteVideoElement = document.getElementById('remote-video');
-      remoteVideoElement.src = URL.createObjectURL(event.stream);
-      remoteVideoElement.play();
-    }
-    function onSessionConnecting(message) {
-        console.log("Session connecting.");
-    }
-
-    function onSessionOpened(message) {
-        console.log("Session opened.");
-    }
-
-    function onRemoteStreamRemoved(event) {
-        console.log("Remote stream removed.");
-    }
-
-  // Log errors
-  connection.onerror = function (error) {
-  console.log('WebSocket Error ' + error);
+  connection.onSignalingOpen = function(){
+    console.log("Signaling open");
   };
-
-  function sendAnswer() {
-    pc.createAnswer(function(sessionDescription) {
-        console.log("Create answer:", sessionDescription);
-        pc.setLocalDescription(sessionDescription);
-        var data = JSON.stringify(sessionDescription);
-        connection.send(data);
-    }, function(error) { // error
-        console.log("Create answer error:", error);
-    }, mediaConstraints);
-  }
-
-  // Log messages from the server
-  connection.onmessage = function (e) {
-    var dataJson = JSON.parse(e.data);
-
-    if (dataJson['type'] == 'offer') {
-      console.log("Got offer:", dataJson);
-
-      pc.setRemoteDescription(new RTCSessionDescription(dataJson), onRemoteSdpSucces, onRemoteSdpError);
-
-      console.log(configuration["published_video_topic"], " - hello");
-      if(configuration["published_video_topic"] && configuration["published_video_topic"].length > 0) {
-        navigator.getUserMedia({"video": true}, function (stream) {
-          var remoteVideoElement = document.getElementById('local-video');
-          remoteVideoElement.src = URL.createObjectURL(stream);
-          remoteVideoElement.play();
-
-          pc.addStream(stream);
-          sendAnswer();
-        }, function(error) {
-          console.error(error);
-        });
-      }
-      else
-        sendAnswer();
-    }
-    else if(dataJson['type'] == 'ice_candidate'){
-      console.log("Adding ICE candiate ", dataJson);
-      var candidate = new RTCIceCandidate({sdpMLineIndex: dataJson.sdpMLineIndex, candidate: dataJson.candidate});
-      pc.addIceCandidate(candidate);
-    }
+  connection.onSignalingError = function(error){
+    console.error(error);
   };
-  function onRemoteSdpError(event) {
-    console.error('onRemoteSdpError', event);
-    console.error('onRemoteSdpError', event.name, event.message);
-  }
-
-  function onRemoteSdpSucces() {
-    console.log('onRemoteSdpSucces');
-  }
 </script>
 </head>
 <body>

@@ -43,6 +43,8 @@ WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
 
   handler_group_.addHandlerForPath("/", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/html",
 									     ros::package::getPath("webrtc_ros")+"/web/test.html"));
+  handler_group_.addHandlerForPath("/webrtc_ros.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
+												ros::package::getPath("webrtc_ros")+"/web/webrtc_ros.js"));
   handler_group_.addHandlerForPath("/webrtc", async_web_server_cpp::WebsocketHttpRequestHandler(boost::bind(&WebrtcRosServer::handle_webrtc_websocket, this, _1, _2)));
   server_.reset(new async_web_server_cpp::HttpServer("0.0.0.0", boost::lexical_cast<std::string>(port),
 					       boost::bind(ros_connection_logger, handler_group_, _1, _2, _3, _4), 1));

@@ -9,26 +9,27 @@
 #include <opencv2/core/core.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 
-  class RosVideoRenderer :
-    public webrtc::VideoRendererInterface
-    {
-    public:
-      RosVideoRenderer(image_transport::ImageTransport it, const std::string& topic);
-      virtual ~RosVideoRenderer();
+class RosVideoRenderer :
+  public webrtc::VideoRendererInterface
+{
+public:
+  RosVideoRenderer(image_transport::ImageTransport it, const std::string& topic);
+  virtual ~RosVideoRenderer();
 
-      virtual void SetSize(int width, int height);
-      virtual void RenderFrame(const cricket::VideoFrame* frame);
+  virtual void SetSize(int width, int height);
+  virtual void RenderFrame(const cricket::VideoFrame* frame);
 
-    private:
-      DISALLOW_COPY_AND_ASSIGN(RosVideoRenderer);
+private:
+  DISALLOW_COPY_AND_ASSIGN(RosVideoRenderer);
 
-      image_transport::ImageTransport it_;
-      const std::string topic_;
-      image_transport::Publisher pub_;
-    };
+  image_transport::ImageTransport it_;
+  const std::string topic_;
+  image_transport::Publisher pub_;
+};
 
 
 

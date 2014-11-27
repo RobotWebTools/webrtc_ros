@@ -10,33 +10,34 @@
 #include <opencv2/core/core.hpp>
 #include <cv_bridge/cv_bridge.h>
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 
-  class RosVideoCapturer :
-    public cricket::VideoCapturer
-    {
-    public:
-      RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic);
-      virtual ~RosVideoCapturer();
+class RosVideoCapturer :
+  public cricket::VideoCapturer
+{
+public:
+  RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic);
+  virtual ~RosVideoCapturer();
 
-      void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+  void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
-      virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) OVERRIDE;
-      virtual void Stop() OVERRIDE;
-      virtual bool IsRunning() OVERRIDE;
-      virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs) OVERRIDE;
-      virtual bool GetBestCaptureFormat(const cricket::VideoFormat& desired,
-					cricket::VideoFormat* best_format) OVERRIDE;
-      virtual bool IsScreencast() const OVERRIDE;
+  virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) OVERRIDE;
+  virtual void Stop() OVERRIDE;
+  virtual bool IsRunning() OVERRIDE;
+  virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs) OVERRIDE;
+  virtual bool GetBestCaptureFormat(const cricket::VideoFormat& desired,
+                                    cricket::VideoFormat* best_format) OVERRIDE;
+  virtual bool IsScreencast() const OVERRIDE;
 
-    private:
-      DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);
+private:
+  DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);
 
-      image_transport::ImageTransport it_;
-      const std::string topic_;
-      image_transport::Subscriber sub_;
-    };
+  image_transport::ImageTransport it_;
+  const std::string topic_;
+  image_transport::Subscriber sub_;
+};
 
 
 

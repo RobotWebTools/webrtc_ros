@@ -1,19 +1,24 @@
 #include "webrtc_ros/sdp_message.h"
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
-bool SdpMessage::isSdpOffer(const Json::Value& message_json) {
+bool SdpMessage::isSdpOffer(const Json::Value& message_json)
+{
   return WebrtcRosMessage::isType(message_json, kSdpOfferType);
 }
-bool SdpMessage::isSdpAnswer(const Json::Value& message_json) {
+bool SdpMessage::isSdpAnswer(const Json::Value& message_json)
+{
   return WebrtcRosMessage::isType(message_json, kSdpAnswerType);
 }
 
-bool SdpMessage::fromJson(const Json::Value& message_json) {
-  if(isSdpOffer(message_json) || isSdpAnswer(message_json)){
-    if(!GetStringFromJsonObject(message_json, WebrtcRosMessage::kMessageTypeFieldName, &type))
+bool SdpMessage::fromJson(const Json::Value& message_json)
+{
+  if (isSdpOffer(message_json) || isSdpAnswer(message_json))
+  {
+    if (!GetStringFromJsonObject(message_json, WebrtcRosMessage::kMessageTypeFieldName, &type))
       return false;
-    if(!GetStringFromJsonObject(message_json, kSdpFieldName, &sdp))
+    if (!GetStringFromJsonObject(message_json, kSdpFieldName, &sdp))
       return false;
     return true;
   }
@@ -21,18 +26,21 @@ bool SdpMessage::fromJson(const Json::Value& message_json) {
     return false;
 }
 
-bool SdpMessage::fromSessionDescription(const webrtc::SessionDescriptionInterface& description) {
+bool SdpMessage::fromSessionDescription(const webrtc::SessionDescriptionInterface& description)
+{
   type = description.type();
   description.ToString(&sdp);
   return true;
 }
 
 
-webrtc::SessionDescriptionInterface* SdpMessage::createSessionDescription() {
+webrtc::SessionDescriptionInterface* SdpMessage::createSessionDescription()
+{
   return webrtc::CreateSessionDescription(type, sdp);
 }
 
-std::string SdpMessage::toJson() {
+std::string SdpMessage::toJson()
+{
   Json::FastWriter writer;
   Json::Value message_json;
   message_json[WebrtcRosMessage::kMessageTypeFieldName] = type;

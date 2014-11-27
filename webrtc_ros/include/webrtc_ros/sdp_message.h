@@ -5,11 +5,12 @@
 #include "webrtc/base/json.h"
 #include "talk/app/webrtc/jsep.h"
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 class SdpMessage
 {
- public:
+public:
   static std::string kSdpFieldName;
   static std::string kSdpOfferType;
   static std::string kSdpAnswerType;

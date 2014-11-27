@@ -5,11 +5,12 @@
 #include "webrtc/base/json.h"
 #include "talk/app/webrtc/jsep.h"
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 class IceCandidateMessage
 {
- public:
+public:
   static std::string kIceCandidateType;
   static std::string kSdpMidFieldName;
   static std::string kSdpMlineIndexFieldName;

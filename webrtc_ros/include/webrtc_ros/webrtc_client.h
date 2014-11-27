@@ -13,7 +13,8 @@
 #include "talk/app/webrtc/test/fakeconstraints.h"
 #include "webrtc_ros/configure_message.h"
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 class WebrtcClient;
 typedef boost::shared_ptr<WebrtcClient> WebrtcClientPtr;
@@ -22,7 +23,7 @@ typedef boost::weak_ptr<WebrtcClient> WebrtcClientWeakPtr;
 class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
   public webrtc::CreateSessionDescriptionObserver
 {
- public:
+public:
   WebrtcClientObserverProxy(WebrtcClientWeakPtr client_weak);
 
   void OnSuccess(webrtc::SessionDescriptionInterface*);
@@ -33,7 +34,7 @@ class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
   void OnRenegotiationNeeded();
   void OnIceCandidate(const webrtc::IceCandidateInterface*);
 
- private:
+private:
   WebrtcClientWeakPtr client_weak_;
 
 };
@@ -41,8 +42,8 @@ class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
 
 class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   private boost::noncopyable
- {
- public:
+{
+public:
   WebrtcClient(ros::NodeHandle& nh, async_web_server_cpp::WebsocketConnectionPtr signaling_channel);
   ~WebrtcClient();
   async_web_server_cpp::WebsocketConnection::MessageHandler createMessageHandler();
@@ -52,7 +53,7 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   bool valid();
 
 
- private:
+private:
   WebrtcClientPtr keep_alive_this_;
 
   bool initPeerConnection();
@@ -60,7 +61,7 @@ class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   void ping_timer_callback(const ros::TimerEvent&);
 
   static void static_handle_message(WebrtcClientWeakPtr weak_this,
-				    const async_web_server_cpp::WebsocketMessage& message);
+                                    const async_web_server_cpp::WebsocketMessage& message);
   void handle_message(const async_web_server_cpp::WebsocketMessage& message);
 
   void OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterface*);

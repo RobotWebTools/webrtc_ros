@@ -7,11 +7,12 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 class RosMediaDeviceManager : public cricket::DeviceManagerInterface
 {
- public:
+public:
   RosMediaDeviceManager(image_transport::ImageTransport it);
   virtual ~RosMediaDeviceManager();
 
@@ -36,7 +37,7 @@ class RosMediaDeviceManager : public cricket::DeviceManagerInterface
   virtual void SetScreenCapturerFactory(cricket::ScreenCapturerFactory* screen_capturer_factory);
 
   virtual void SetVideoCaptureDeviceMaxFormat(const std::string& usb_id,
-					      const cricket::VideoFormat& max_format);
+      const cricket::VideoFormat& max_format);
   virtual void ClearVideoCaptureDeviceMaxFormat(const std::string& usb_id);
 
   virtual cricket::VideoCapturer* CreateVideoCapturer(const cricket::Device& device) const;
@@ -47,7 +48,7 @@ class RosMediaDeviceManager : public cricket::DeviceManagerInterface
   virtual cricket::VideoCapturer* CreateScreenCapturer(const cricket::ScreencastId& screenid) const;
 
 
- private:
+private:
   DISALLOW_COPY_AND_ASSIGN(RosMediaDeviceManager);
 
   image_transport::ImageTransport it_;

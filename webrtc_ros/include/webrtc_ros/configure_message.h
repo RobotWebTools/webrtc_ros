@@ -5,11 +5,12 @@
 #include "webrtc/base/json.h"
 #include "talk/app/webrtc/jsep.h"
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
 class ConfigureMessage
 {
- public:
+public:
   static std::string kSubscribedVideoTopicFieldName;
   static std::string kSubscribedAudioTopicFieldName;
   static std::string kPublishedVideoTopicFieldName;

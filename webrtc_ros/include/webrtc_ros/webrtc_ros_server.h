@@ -7,16 +7,18 @@
 #include <async_web_server_cpp/websocket_connection.hpp>
 #include <webrtc_ros/webrtc_client.h>
 
-namespace webrtc_ros {
+namespace webrtc_ros
+{
 
-class WebrtcRosServer {
- public:
+class WebrtcRosServer
+{
+public:
   WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh);
   ~WebrtcRosServer();
   async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocket(const async_web_server_cpp::HttpRequest& request,
-									      async_web_server_cpp::WebsocketConnectionPtr websocket);
+      async_web_server_cpp::WebsocketConnectionPtr websocket);
   void spin();
- private:
+private:
   std::vector<WebrtcClientWeakPtr> clients_;
 
   ros::NodeHandle nh_;

@@ -25,7 +25,6 @@ install:
   - mkdir -p /tmp/ws/src
   - ln -s `pwd` /tmp/ws/src/package
   - cd /tmp/ws/src/package/webrtc
-  - ./install_deps.sh
   - ./checkout_source.sh
 
   - cd /tmp/ws/src

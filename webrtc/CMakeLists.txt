@@ -12,6 +12,13 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(OPENSSL REQUIRED openssl)
 pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
 
+
+execute_process(
+  COMMAND ./checkout_source.sh
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)
+
+
 catkin_package(
   INCLUDE_DIRS
     "webrtc_src"

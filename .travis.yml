@@ -43,6 +43,8 @@ install:
   - make
   - sudo make install
 
+  - cd /tmp/ws
+
 script:
   - source /opt/ros/hydro/setup.bash
   - catkin init

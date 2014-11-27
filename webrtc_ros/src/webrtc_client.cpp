@@ -116,10 +116,10 @@ class DummySetSessionDescriptionObserver
         new rtc::RefCountedObject<DummySetSessionDescriptionObserver>();
   }
   virtual void OnSuccess() {
-    ROS_DEBUG(__FUNCTION__);
+    //ROS_DEBUG(__FUNCTION__);
   }
   virtual void OnFailure(const std::string& error) {
-    ROS_WARN_STREAM(__FUNCTION__ << " " << error);
+    //ROS_WARN_STREAM(__FUNCTION__ << " " << error);
   }
 
  protected:

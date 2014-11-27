@@ -21,25 +21,33 @@ window.WebrtcRos = (function() {
                     candidate: event.candidate.candidate,
                     type: 'ice_candidate'
                 };
-		console.log(self);
                 self.signalingChannel.send(JSON.stringify(candidate));
-            } else {
-                //console.log("End of candidates.");
             }
         };
 	this.peerConnection.onconnecting = this.onSessionConnecting;
         this.peerConnection.onopen = this.onSessionOpened;
-        this.peerConnection.onaddstream = this.onRemoteStreamAdded;
-        this.peerConnection.onremovestream = this.onRemoteStreamRemoved;
     };
 
     Object.defineProperty(WebrtcRosConnection.prototype, 'onSignalingOpen', {
+	enumerable: true,
 	get: function() { return this.signalingChannel.onopen; },
 	set: function(callback) { this.signalingChannel.onopen = callback; }
     });
     Object.defineProperty(WebrtcRosConnection.prototype, 'onSignalingError', {
+	enumerable: true,
 	get: function() { return this.signalingChannel.onerror; },
 	set: function(callback) { this.signalingChannel.onerror = callback; }
+    });
+
+    Object.defineProperty(WebrtcRosConnection.prototype, 'onRemoteStreamAdded', {
+	enumerable: true,
+	get: function() { return this.peerConnection.onaddstream; },
+	set: function(callback) { this.peerConnection.onaddstream = callback; }
+    });
+    Object.defineProperty(WebrtcRosConnection.prototype, 'onRemoteStreamRemoved', {
+	enumerable: true,
+	get: function() { return this.peerConnection.onremovestream; },
+	set: function(callback) { this.peerConnection.onremovestream = callback; }
     });
     WebrtcRosConnection.prototype.configure = function(config){
 	this.config = config;
@@ -93,13 +101,6 @@ window.WebrtcRos = (function() {
 	}, mediaConstraints);
     }
 
-    WebrtcRosConnection.prototype.onRemoteStreamAdded = function(event) {
-	console.log(event);
-	console.log("Remote stream added:", URL.createObjectURL(event.stream));
-	var remoteVideoElement = document.getElementById('remote-video');
-	remoteVideoElement.src = URL.createObjectURL(event.stream);
-	remoteVideoElement.play();
-    }
     WebrtcRosConnection.prototype.onSessionConnecting = function(message) {
         console.log("Session connecting.");
     }
@@ -108,12 +109,8 @@ window.WebrtcRos = (function() {
         console.log("Session opened.");
     }
 
-    WebrtcRosConnection.prototype.onRemoteStreamRemoved = function(event) {
-        console.log("Remote stream removed.");
-    }
     WebrtcRosConnection.prototype.onRemoteSdpError = function(event) {
 	console.error('onRemoteSdpError', event);
-	console.error('onRemoteSdpError', event.name, event.message);
     }
 
     WebrtcRosConnection.prototype.onRemoteSdpSucces = function() {

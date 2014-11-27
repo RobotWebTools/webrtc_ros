@@ -26,12 +26,21 @@
   connection.onSignalingError = function(error){
     console.error(error);
   };
+  connection.onRemoteStreamAdded = function(event) {
+    console.log("Remote stream added:", URL.createObjectURL(event.stream));
+    var remoteVideoElement = document.getElementById('remote-video');
+    remoteVideoElement.src = URL.createObjectURL(event.stream);
+    remoteVideoElement.play();
+  }
+  connection.onRemoteStreamRemoved = function(event) {
+    console.log("Remote stream removed");
+  }
+  console.log(connection);
 </script>
 </head>
 <body>
     <div id="container">
         <video id="remote-video"></video>
-        <video id="local-video"></video>
 	<br>
 	<form  onsubmit="configure();return false;">
 	  Subscribed Video Topic: <input type="text" id="subscribed_video_topic_name" value="/camera/image_raw">

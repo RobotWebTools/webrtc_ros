@@ -72,7 +72,8 @@ bool WebrtcClient::valid() {
 bool WebrtcClient::initPeerConnection() {
   if(!peer_connection_) {
     webrtc::PeerConnectionInterface::IceServers servers;
-    webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(WebrtcClientWeakPtr(shared_from_this()));
+    WebrtcClientWeakPtr weak_this(shared_from_this());
+    webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(servers,
 								      &peer_connection_constraints_,
 								      NULL,
@@ -92,7 +93,8 @@ bool WebrtcClient::initPeerConnection() {
 
 
 async_web_server_cpp::WebsocketConnection::MessageHandler WebrtcClient::createMessageHandler() {
-  return boost::bind(&WebrtcClient::static_handle_message, WebrtcClientWeakPtr(shared_from_this()), _1);
+  WebrtcClientWeakPtr weak_this(shared_from_this());
+  return boost::bind(&WebrtcClient::static_handle_message, weak_this, _1);
 }
 
 void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event) {

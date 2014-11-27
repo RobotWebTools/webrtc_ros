@@ -24,7 +24,7 @@
     console.log("Signaling open");
   };
   connection.onSignalingError = function(error){
-    console.error(error);
+    console.error("Error opening signaling channel", error);
   };
   connection.onRemoteStreamAdded = function(event) {
     console.log("Remote stream added:", URL.createObjectURL(event.stream));
@@ -35,7 +35,6 @@
   connection.onRemoteStreamRemoved = function(event) {
     console.log("Remote stream removed");
   }
-  console.log(connection);
 </script>
 </head>
 <body>

@@ -67,14 +67,35 @@ void RosVideoCapturer::Stop()
 
 void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
-  cv::Mat orig = cv_bridge::toCvShare(msg, "bgr8")->image;
+  cv::Mat bgr;
+  if (msg->encoding.find("F") != std::string::npos)
+    {
+      // scale floating point images
+      cv::Mat float_image_bridge = cv_bridge::toCvCopy(msg, msg->encoding)->image;
+      cv::Mat_<float> float_image = float_image_bridge;
+      double max_val;
+      cv::minMaxIdx(float_image, 0, &max_val);
 
-  cv::Mat yuv(orig.rows, orig.cols, CV_8UC4);
-  cv::cvtColor(orig, yuv, CV_BGR2YUV_I420);
+      if (max_val > 0)
+	{
+	  float_image *= (255 / max_val);
+	}
+      cv::Mat orig;
+      float_image.convertTo(orig, CV_8U);
+      bgr = cv::Mat(bgr.rows, bgr.cols, CV_8UC3);
+      cv::cvtColor(orig, bgr, CV_GRAY2BGR);
+    }
+  else
+    {
+      bgr = cv_bridge::toCvCopy(msg, "bgr8")->image;
+    }
+
+  cv::Mat yuv(bgr.rows, bgr.cols, CV_8UC4);
+  cv::cvtColor(bgr, yuv, CV_BGR2YUV_I420);
 
   cricket::CapturedFrame frame;
-  frame.width = orig.cols;
-  frame.height = orig.rows;
+  frame.width = bgr.cols;
+  frame.height = bgr.rows;
   frame.fourcc = cricket::FOURCC_I420;
   frame.data_size = yuv.rows * yuv.step;
   frame.data = yuv.data;

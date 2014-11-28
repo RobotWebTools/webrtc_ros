@@ -1,3 +1,9 @@
+RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
+RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
+navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+URL = window.webkitURL || window.URL;
+
 window.WebrtcRos = (function() {
     var WebrtcRosConnection = function(signalingServerPath) {
 	var self = this;

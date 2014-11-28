@@ -1,13 +1,6 @@
 <html>
 <head>
 <title>WebRTC ROS</title>
-<script>
-  RTCPeerConnection = window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-  RTCSessionDescription = window.mozRTCSessionDescription || window.RTCSessionDescription;
-  RTCIceCandidate = window.mozRTCIceCandidate || window.RTCIceCandidate;
-  navigator.getUserMedia = navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
-  URL = window.webkitURL || window.URL;
-</script>
 <script type="text/javascript" src="/webrtc_ros.js"></script>
 <script>
   var connection = WebrtcRos.createConnection();

@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(webrtc)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(Threads REQUIRED)
@@ -11,6 +8,7 @@ find_package(PkgConfig REQUIRED)
 
 pkg_search_module(OPENSSL REQUIRED openssl)
 pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
+pkg_search_module(JSONCPP REQUIRED jsoncpp)
 
 
 execute_process(
@@ -23,46 +21,24 @@ catkin_package(
   INCLUDE_DIRS
     "webrtc_src"
     "yuv_src/include"
-    "/usr/include/jsoncpp"
-  LIBRARIES jingle webrtc usrsctp srtp opus yuv jsoncpp
-  DEPENDS
+  LIBRARIES jingle webrtc usrsctp srtp opus yuv
+  DEPENDS JSONCPP
 )
 
 #add_definitions(-DDEBUG)
 #add_definitions(-D_DEBUG)
 
-
 include_directories(
   "chromium_src"
-
   "webrtc_src"
-  "webrtc_src/webrtc/modules/audio_device/linux/"
-  "webrtc_src/webrtc/system_wrappers/interface/"
-  "webrtc_src/webrtc/common_audio/signal_processing/include"
-  "webrtc_src/webrtc/modules/audio_coding/codecs/ilbc/interface/"
-  "webrtc_src/webrtc/modules/audio_coding/codecs/pcm16b/include/"
-  "webrtc_src/webrtc/modules/audio_coding/codecs/isac/main/interface/"
-  "webrtc_src/webrtc/modules/audio_coding/codecs/g711/include"
-  "webrtc_src/webrtc/modules/audio_coding/codecs/cng/include"
-  "webrtc_src/webrtc/modules/audio_coding/codecs/g722/include"
-
-  "opus_src"
-  "opus_src/celt"
-  "opus_src/silk"
-  "opus_src/silk/float"
   "opus_src/include"
-  "opus_src/src"
-
   "yuv_src/include"
-
-  "usrsctp_src/usrsctplib"
   "usrsctp_src/"
-
   "/usr/include/srtp"
-  "/usr/include/jsoncpp"
 )
 include_directories(${EXPAT_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIRS})
+include_directories(${JSONCPP_INCLUDE_DIRS})
 include_directories(${GTK2_INCLUDE_DIRS})
 link_directories(${GTK2_LIBRARY_DIRS})
 add_definitions(${GTK2_CFLAGS_OTHER})
@@ -100,7 +76,7 @@ add_definitions(-DOPUS_EXPORT=)
 add_definitions(-DOPUS_BUILD)
 add_definitions(-D__OPTIMIZE__)
 add_library(opus ${OPUS_SRCS})
-
+target_include_directories(opus PRIVATE "opus_src/celt" "opus_src/silk" "opus_src/silk/float")
 
 
 
@@ -130,6 +106,7 @@ add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
 add_definitions(-D__Userspace__)
 add_definitions(-D__Userspace_os_Linux)
 add_library(usrsctp ${USRSCTP_SRCS})
+target_include_directories(usrsctp PRIVATE "usrsctp_src/usrsctplib")
 
 
 
@@ -279,7 +256,21 @@ add_definitions(-DLINUX_PULSE)
 add_definitions(-DLINUX_ALSA)
 add_library(webrtc ${WEBRTC_SRCS})
 set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv jsoncpp ${CMAKE_THREAD_LIBS_INIT} vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES})
+target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv ${CMAKE_THREAD_LIBS_INIT} vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES})
+target_include_directories(webrtc PRIVATE
+  "webrtc_src/webrtc/modules/audio_device/linux/"
+  "webrtc_src/webrtc/system_wrappers/interface/"
+  "webrtc_src/webrtc/common_audio/signal_processing/include"
+  "webrtc_src/webrtc/modules/audio_coding/codecs/ilbc/interface/"
+  "webrtc_src/webrtc/modules/audio_coding/codecs/pcm16b/include/"
+  "webrtc_src/webrtc/modules/audio_coding/codecs/isac/main/interface/"
+  "webrtc_src/webrtc/modules/audio_coding/codecs/g711/include"
+  "webrtc_src/webrtc/modules/audio_coding/codecs/cng/include"
+  "webrtc_src/webrtc/modules/audio_coding/codecs/g722/include"
+
+  "opus_src/celt"
+  "opus_src/src"
+)
 
 
 
@@ -362,7 +353,7 @@ target_link_libraries(relayserver jingle)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS yuv usrsctp opus  webrtc jingle  peerconnection_server peerconnection_client stunserver turnserver relayserver
+install(TARGETS yuv usrsctp opus webrtc jingle peerconnection_server peerconnection_client stunserver turnserver relayserver
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

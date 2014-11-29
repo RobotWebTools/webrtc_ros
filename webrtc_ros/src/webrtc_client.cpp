@@ -62,7 +62,7 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, async_web_server_cpp::WebsocketC
   peer_connection_constraints_.SetAllowDtlsSctpDataChannels();
   media_constraints_.SetMandatoryReceiveVideo(true);
   media_constraints_.SetMandatoryReceiveAudio(true);
-  ping_timer_ = nh_.createTimer(ros::Duration(5.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
+  ping_timer_ = nh_.createTimer(ros::Duration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
 }
 WebrtcClient::~WebrtcClient()
 {
@@ -282,6 +282,10 @@ void WebrtcClient::handle_message(const async_web_server_cpp::WebsocketMessage& 
   else if (message.type == async_web_server_cpp::WebsocketMessage::type_pong)
   {
     // got a pong from the last ping
+  }
+  else if (message.type == async_web_server_cpp::WebsocketMessage::type_close)
+  {
+    invalidate();
   }
   else
   {

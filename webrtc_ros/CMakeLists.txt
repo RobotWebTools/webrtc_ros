@@ -20,7 +20,6 @@ link_directories(${GTK2_LIBRARY_DIRS})
 add_definitions(${GTK2_CFLAGS_OTHER})
 
 
-#set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
 #add_definitions(-DDEBUG)
 #add_definitions(-D_DEBUG)
 add_definitions(-DPOSIX)

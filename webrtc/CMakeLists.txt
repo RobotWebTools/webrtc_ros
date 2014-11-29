@@ -75,8 +75,8 @@ add_definitions(-DHAVE_LRINTF)
 add_definitions(-DOPUS_EXPORT=)
 add_definitions(-DOPUS_BUILD)
 add_definitions(-D__OPTIMIZE__)
+include_directories("opus_src/celt" "opus_src/silk" "opus_src/silk/float")
 add_library(opus ${OPUS_SRCS})
-target_include_directories(opus PRIVATE "opus_src/celt" "opus_src/silk" "opus_src/silk/float")
 
 
 
@@ -106,7 +106,7 @@ add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
 add_definitions(-D__Userspace__)
 add_definitions(-D__Userspace_os_Linux)
 add_library(usrsctp ${USRSCTP_SRCS})
-target_include_directories(usrsctp PRIVATE "usrsctp_src/usrsctplib")
+include_directories(usrsctp PRIVATE "usrsctp_src/usrsctplib")
 
 
 
@@ -254,10 +254,7 @@ add_definitions(-DFEATURE_ENABLE_SSL)
 add_definitions(-DHAVE_OPENSSL_SSL_H)
 add_definitions(-DLINUX_PULSE)
 add_definitions(-DLINUX_ALSA)
-add_library(webrtc ${WEBRTC_SRCS})
-set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv ${CMAKE_THREAD_LIBS_INIT} vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES})
-target_include_directories(webrtc PRIVATE
+include_directories(
   "webrtc_src/webrtc/modules/audio_device/linux/"
   "webrtc_src/webrtc/system_wrappers/interface/"
   "webrtc_src/webrtc/common_audio/signal_processing/include"
@@ -271,6 +268,9 @@ target_include_directories(webrtc PRIVATE
   "opus_src/celt"
   "opus_src/src"
 )
+add_library(webrtc ${WEBRTC_SRCS})
+set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv ${CMAKE_THREAD_LIBS_INIT} vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES})
 
 
 

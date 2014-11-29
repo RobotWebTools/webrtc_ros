@@ -69,26 +69,26 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
   cv::Mat bgr;
   if (msg->encoding.find("F") != std::string::npos)
-    {
-      // scale floating point images
-      cv::Mat float_image_bridge = cv_bridge::toCvCopy(msg, msg->encoding)->image;
-      cv::Mat_<float> float_image = float_image_bridge;
-      double max_val;
-      cv::minMaxIdx(float_image, 0, &max_val);
+  {
+    // scale floating point images
+    cv::Mat float_image_bridge = cv_bridge::toCvCopy(msg, msg->encoding)->image;
+    cv::Mat_<float> float_image = float_image_bridge;
+    double max_val;
+    cv::minMaxIdx(float_image, 0, &max_val);
 
-      if (max_val > 0)
-	{
-	  float_image *= (255 / max_val);
-	}
-      cv::Mat orig;
-      float_image.convertTo(orig, CV_8U);
-      bgr = cv::Mat(bgr.rows, bgr.cols, CV_8UC3);
-      cv::cvtColor(orig, bgr, CV_GRAY2BGR);
-    }
-  else
+    if (max_val > 0)
     {
-      bgr = cv_bridge::toCvCopy(msg, "bgr8")->image;
+      float_image *= (255 / max_val);
     }
+    cv::Mat orig;
+    float_image.convertTo(orig, CV_8U);
+    bgr = cv::Mat(bgr.rows, bgr.cols, CV_8UC3);
+    cv::cvtColor(orig, bgr, CV_GRAY2BGR);
+  }
+  else
+  {
+    bgr = cv_bridge::toCvCopy(msg, "bgr8")->image;
+  }
 
   cv::Mat yuv(bgr.rows, bgr.cols, CV_8UC4);
   cv::cvtColor(bgr, yuv, CV_BGR2YUV_I420);

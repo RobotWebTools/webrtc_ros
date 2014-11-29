@@ -57,7 +57,7 @@ WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
 }
 
 void WebrtcRosServer::handle_list_streams(const async_web_server_cpp::HttpRequest &request,
-					  async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end)
+    async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end)
 {
   std::string image_message_type = ros::message_traits::datatype<sensor_msgs::Image>();
   std::string camera_info_message_type = ros::message_traits::datatype<sensor_msgs::CameraInfo>();
@@ -81,53 +81,54 @@ void WebrtcRosServer::handle_list_streams(const async_web_server_cpp::HttpReques
   }
 
   async_web_server_cpp::HttpReply::builder(async_web_server_cpp::HttpReply::ok)
-      .header("Connection", "close")
-      .header("Server", "web_video_server")
-      .header("Cache-Control", "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0")
-      .header("Pragma", "no-cache")
-      .header("Content-type", "text/html;")
-      .write(connection);
+  .header("Connection", "close")
+  .header("Server", "web_video_server")
+  .header("Cache-Control", "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0")
+  .header("Pragma", "no-cache")
+  .header("Content-type", "text/html;")
+  .write(connection);
 
   connection->write("<html>"
-      "<head><title>ROS Image Topic List</title></head>"
-      "<body><h1>Available ROS Image Topics:</h1>");
+                    "<head><title>ROS Image Topic List</title></head>"
+                    "<body><h1>Available ROS Image Topics:</h1>");
   connection->write("<ul>");
-  BOOST_FOREACH(std::string &camera_info_topic, camera_info_topics)
+  BOOST_FOREACH(std::string & camera_info_topic, camera_info_topics)
+  {
+    if (boost::algorithm::ends_with(camera_info_topic, "/camera_info"))
+    {
+      std::string base_topic = camera_info_topic.substr(0, camera_info_topic.size() - strlen("camera_info"));
+      connection->write("<li>");
+      connection->write(base_topic);
+      connection->write("<ul>");
+      std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
+      for (; image_topic_itr != image_topics.end();)
+      {
+        if (boost::starts_with(*image_topic_itr, base_topic))
         {
-          if (boost::algorithm::ends_with(camera_info_topic, "/camera_info"))
-          {
-            std::string base_topic = camera_info_topic.substr(0, camera_info_topic.size() - strlen("camera_info"));
-            connection->write("<li>");
-            connection->write(base_topic);
-            connection->write("<ul>");
-            std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
-            for (; image_topic_itr != image_topics.end();)
-            {
-              if (boost::starts_with(*image_topic_itr, base_topic))
-              {
-                connection->write("<li><a href=\"/viewer?subscribed_video_topic=");
-                connection->write(*image_topic_itr);
-                connection->write("\">");
-                connection->write(image_topic_itr->substr(base_topic.size()));
-                connection->write("</a>");
-                connection->write("</li>");
-
-                image_topic_itr = image_topics.erase(image_topic_itr);
-              } else
-              {
-                ++image_topic_itr;
-              }
-            }
-            connection->write("</ul>");
-          }
+          connection->write("<li><a href=\"/viewer?subscribed_video_topic=");
+          connection->write(*image_topic_itr);
+          connection->write("\">");
+          connection->write(image_topic_itr->substr(base_topic.size()));
+          connection->write("</a>");
           connection->write("</li>");
+
+          image_topic_itr = image_topics.erase(image_topic_itr);
         }
+        else
+        {
+          ++image_topic_itr;
+        }
+      }
+      connection->write("</ul>");
+    }
+    connection->write("</li>");
+  }
   connection->write("</ul>");
   connection->write("<form action=\"/viewer\">"
-		    "Subscribe Video: <input name=\"subscribed_video_topic\" type=\"text\"><br>"
-		    "Publish Video: <input name=\"published_video_topic\" type=\"text\"><br>"
-		    "<input type=\"submit\" value=\"Go\">"
-		    "</form>");
+                    "Subscribe Video: <input name=\"subscribed_video_topic\" type=\"text\"><br>"
+                    "Publish Video: <input name=\"published_video_topic\" type=\"text\"><br>"
+                    "<input type=\"submit\" value=\"Go\">"
+                    "</form>");
 
   connection->write("</body></html>");
 }

@@ -1,0 +1,52 @@
+language:
+  - cpp
+compiler:
+  - gcc
+
+branches:
+  only:
+    - master
+    - develop
+
+before_install:
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq g++-4.8
+  - export CXX="g++-4.8"
+
+
+install:
+  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
+  - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
+  - sudo apt-get update -qq
+  - sudo apt-get install python-catkin-pkg python-rosdep ros-hydro-catkin python-catkin-tools -qq
+  - sudo rosdep init
+  - rosdep update
+  - mkdir -p /tmp/ws/src
+  - ln -s `pwd` /tmp/ws/src/package
+  - cd /tmp/ws/src/package/webrtc
+
+  - cd /tmp/ws/src
+  - git clone https://github.com/mitchellwills/async_web_server_cpp.git
+
+  - cd /tmp/ws
+  - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
+
+  - sudo apt-get remove libvpx-dev -qq
+  - sudo apt-get install yasm -qq
+  - cd /tmp
+  - git clone http://git.chromium.org/webm/libvpx.git
+  - cd libvpx
+  - ./configure --prefix=/usr --enable-shared --disable-static
+  - make
+  - sudo make install
+
+  - cd /tmp/ws
+
+script:
+  - source /opt/ros/hydro/setup.bash
+  - catkin init
+  - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
+  - catkin config --install
+  - catkin build -p2 -j4 --no-status
+  - source install/setup.bash

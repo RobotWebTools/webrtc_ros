@@ -37,5 +37,8 @@ script:
   - sudo make install
   - cd ../
   - rm -rf libvpx
-  - catkin_make -p2 -j4 -DCMAKE_CXX_COMPILER=g++-4.8
-  - catkin_make install
+  - catkin init
+  - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
+  - catkin config --install
+  - catkin build -p2 -j4 --no-status
+  - source install/setup.bash

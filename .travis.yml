@@ -23,9 +23,7 @@ install:
   - rosdep update
   - mkdir -p /tmp/ws/src
   - ln -s `pwd` /tmp/ws/src/package
-  - cd /tmp/ws/src
-  - git clone https://github.com/WPI-RAIL/async_web_server_cpp.git
-  - cd ../
+  - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
 
 script:
@@ -39,5 +37,8 @@ script:
   - sudo make install
   - cd ../
   - rm -rf libvpx
-  - catkin_make -p2 -j4 -DCMAKE_CXX_COMPILER=g++-4.8
-  - catkin_make install
+  - catkin init
+  - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
+  - catkin config --install
+  - catkin build -p2 -j4 --no-status
+  - source install/setup.bash

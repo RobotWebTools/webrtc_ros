@@ -147,11 +147,14 @@ WebrtcRosServer::~WebrtcRosServer()
   rtc::CleanupSSL();
 }
 
-void WebrtcRosServer::spin()
+void WebrtcRosServer::run()
 {
   server_->run();
   ROS_INFO("Waiting For connections");
-  ros::spin();
+}
+
+void WebrtcRosServer::stop()
+{
   server_->stop();
 }
 

@@ -25,5 +25,6 @@
   <run_depend>async_web_server_cpp</run_depend>
 
   <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
   </export>
 </package>

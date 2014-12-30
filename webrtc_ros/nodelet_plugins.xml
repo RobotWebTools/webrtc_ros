@@ -1,0 +1,7 @@
+<library path="lib/libwebrtc_ros_server_nodelet">
+  <class name="webrtc_ros/WebrtcRosServerNodelet" type="webrtc_ros::WebrtcRosServerNodelet" base_class_type="nodelet::Nodelet">
+    <description>
+      A nodelet version of the webrtc_ros/webrtc_ros_server_node node.
+    </description>
+  </class>
+</library>

@@ -17,7 +17,8 @@ public:
   ~WebrtcRosServer();
   async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocket(const async_web_server_cpp::HttpRequest& request,
       async_web_server_cpp::WebsocketConnectionPtr websocket);
-  void spin();
+  void run();
+  void stop();
 private:
   void handle_list_streams(const async_web_server_cpp::HttpRequest &request,
                            async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end);

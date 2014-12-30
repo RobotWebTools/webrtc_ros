@@ -82,7 +82,7 @@ private:
   webrtc::FakeConstraints peer_connection_constraints_;
   webrtc::FakeConstraints media_constraints_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> stream_;
+  rtc::scoped_refptr<webrtc::MediaStreamInterface> last_stream_;
 
   ros::Timer ping_timer_;
 

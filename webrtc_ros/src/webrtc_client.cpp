@@ -199,8 +199,17 @@ void WebrtcClient::handle_message(const async_web_server_cpp::WebsocketMessage& 
 
       ROS_DEBUG("Configuring webrtc connection");
 
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> stream =
-        peer_connection_factory_->CreateLocalMediaStream("ros_media_stream");
+      if(last_stream_)
+      {
+	peer_connection_->RemoveStream(last_stream_);
+	last_stream_ = NULL;
+      }
+
+      // Need to generate unique stream id for the stream to change
+      static int i = 0;
+      std::stringstream ss;
+      ss << "ros_media_stream" << i++;
+      last_stream_ = peer_connection_factory_->CreateLocalMediaStream(ss.str());
 
       if (!message.subscribed_video_topic.empty())
       {
@@ -213,10 +222,10 @@ void WebrtcClient::handle_message(const async_web_server_cpp::WebsocketMessage& 
             message.subscribed_video_topic,
             peer_connection_factory_->CreateVideoSource(capturer,
                 NULL)));
-        stream->AddTrack(video_track);
+        last_stream_->AddTrack(video_track);
       }
 
-      if (!peer_connection_->AddStream(stream))
+      if (!peer_connection_->AddStream(last_stream_))
       {
         ROS_WARN("Adding stream to PeerConnection failed");
         invalidate();

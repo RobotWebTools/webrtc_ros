@@ -106,7 +106,7 @@ add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
 add_definitions(-D__Userspace__)
 add_definitions(-D__Userspace_os_Linux)
 add_library(usrsctp ${USRSCTP_SRCS})
-include_directories(usrsctp PRIVATE "usrsctp_src/usrsctplib")
+include_directories("usrsctp_src/usrsctplib")
 
 
 

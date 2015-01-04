@@ -105,6 +105,7 @@ target_link_libraries(webrtc_ros_server_nodelet
 ## Install ##
 #############
 
+# Mark nodes and libraries for installation
 install(TARGETS
   ros_webrtc_devices
   webrtc_ros_messages
@@ -115,6 +116,19 @@ install(TARGETS
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+# Mark nodelet plugin configuration for installation
+install(FILES
+  nodelet_plugins.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY web

@@ -18,16 +18,23 @@ include_directories(${GTK2_INCLUDE_DIRS})
 link_directories(${GTK2_LIBRARY_DIRS})
 add_definitions(${GTK2_CFLAGS_OTHER})
 
+add_definitions(-DDEBUG)
+add_definitions(-D_DEBUG)
 
 add_definitions(-DPOSIX)
-add_definitions(-DLINUX)
-add_definitions(-DUSE_WEBRTC_DEV_BRANCH)
-add_definitions(-DHAVE_WEBRTC_VIDEO)
-add_definitions(-DHAVE_WEBRTC_VOICE)
-add_definitions(-DHAVE_SRTP)
-add_definitions(-DSRTP_RELATIVE_PATH)
-add_definitions(-DUSE_SYSTEM_LIBSRTP)
-add_definitions(-DLIBPEERCONNECTION_LIB)
+
+add_definitions(-DVAR_ARRAYS)
+add_definitions(-DHAVE_LRINT)
+add_definitions(-DHAVE_LRINTF)
+add_definitions(-DOPUS_EXPORT=)
+add_definitions(-DOPUS_BUILD)
+add_definitions(-D__OPTIMIZE__)
+
+add_definitions(-DSCTP_PROCESS_LEVEL_LOCKS)
+add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
+add_definitions(-D__Userspace__)
+add_definitions(-D__Userspace_os_Linux)
+
 add_definitions(-DWEBRTC_POSIX)
 add_definitions(-DWEBRTC_LINUX)
 add_definitions(-DWEBRTC_MODULE_UTILITY_VIDEO)
@@ -41,6 +48,16 @@ add_definitions(-DFEATURE_ENABLE_SSL)
 add_definitions(-DHAVE_OPENSSL_SSL_H)
 add_definitions(-DLINUX_PULSE)
 add_definitions(-DLINUX_ALSA)
+
+add_definitions(-DLINUX)
+add_definitions(-DUSE_WEBRTC_DEV_BRANCH)
+add_definitions(-DHAVE_WEBRTC_VIDEO)
+add_definitions(-DHAVE_WEBRTC_VOICE)
+add_definitions(-DHAVE_SRTP)
+add_definitions(-DSRTP_RELATIVE_PATH)
+add_definitions(-DUSE_SYSTEM_LIBSRTP)
+add_definitions(-DLIBPEERCONNECTION_LIB)
+
 
 catkin_package(
   INCLUDE_DIRS include

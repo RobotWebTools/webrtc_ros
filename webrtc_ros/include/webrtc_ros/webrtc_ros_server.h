@@ -6,6 +6,7 @@
 #include <async_web_server_cpp/http_server.hpp>
 #include <async_web_server_cpp/websocket_connection.hpp>
 #include <webrtc_ros/webrtc_client.h>
+#include <webrtc_ros/ros_trace_context.h>
 
 namespace webrtc_ros
 {
@@ -30,6 +31,7 @@ private:
 
   boost::shared_ptr<async_web_server_cpp::HttpServer> server_;
   async_web_server_cpp::HttpRequestHandlerGroup handler_group_;
+  RosTraceContext trace_context_;
 };
 
 }

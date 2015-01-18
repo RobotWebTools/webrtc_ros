@@ -86,6 +86,9 @@ add_library(webrtc_ros_messages
   src/ice_candidate_message.cpp
 )
 
+add_library(ros_trace_context
+  src/ros_trace_context.cpp
+)
 
 add_library(webrtc_ros_server
   src/webrtc_ros_server.cpp
@@ -97,6 +100,7 @@ target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}
   ros_webrtc_devices
   webrtc_ros_messages
+  ros_trace_context
 )
 
 add_executable(webrtc_ros_server_node
@@ -124,6 +128,7 @@ target_link_libraries(webrtc_ros_server_nodelet
 # Mark nodes and libraries for installation
 install(TARGETS
   ros_webrtc_devices
+  ros_trace_context
   webrtc_ros_messages
   webrtc_ros_server
   webrtc_ros_server_node

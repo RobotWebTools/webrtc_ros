@@ -56,7 +56,6 @@ add_definitions(-DHAVE_WEBRTC_VOICE)
 add_definitions(-DHAVE_SRTP)
 add_definitions(-DSRTP_RELATIVE_PATH)
 add_definitions(-DUSE_SYSTEM_LIBSRTP)
-add_definitions(-DLIBPEERCONNECTION_LIB)
 
 
 catkin_package(

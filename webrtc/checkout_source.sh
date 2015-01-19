@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-svn co http://webrtc.googlecode.com/svn/branches/40 webrtc_src
+svn co http://webrtc.googlecode.com/svn/branches/40 webrtc_src && svn revert webrtc_src -R && patch -p0 -i ../fix_dtls_handshake.patch -d webrtc_src
 svn co https://libyuv.googlecode.com/svn/branches/m39 yuv_src
 if [ -d opus_src ]; then (cd opus_src && git fetch); else git clone https://chromium.googlesource.com/chromium/deps/opus.git opus_src;fi; (cd opus_src && git checkout cae6961)
 svn co -r 9066 http://sctp-refimpl.googlecode.com/svn/trunk/KERN/usrsctp usrsctp_src

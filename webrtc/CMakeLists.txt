@@ -147,6 +147,10 @@ foreach(src ${WEBRTC_SRCS})
     list(REMOVE_ITEM WEBRTC_SRCS "${src}")
   endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/examples.*$")
 
+  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/libjingle/examples.*$")
+    list(REMOVE_ITEM WEBRTC_SRCS "${src}")
+  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/libjingle/examples.*$")
+
   if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/.+/test/.+$")
     list(REMOVE_ITEM WEBRTC_SRCS "${src}")
   endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/.+/test/.+$")

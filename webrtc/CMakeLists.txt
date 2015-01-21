@@ -37,6 +37,7 @@ include_directories(
   "yuv_src/include"
   "usrsctp_src/"
   "/usr/include/srtp"
+  "libvpx"
 )
 include_directories(${EXPAT_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIRS})
@@ -111,6 +112,26 @@ add_library(usrsctp ${USRSCTP_SRCS})
 include_directories("usrsctp_src/usrsctplib")
 
 
+
+
+
+
+
+
+set(LIBVPX_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/libvpx_build/)
+set(LIBVPX_LIBRARY ${LIBVPX_BUILD_DIRECTORY}/libvpx.so)
+file(MAKE_DIRECTORY ${LIBVPX_BUILD_DIRECTORY})
+add_custom_target(build_libvpx ALL
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libvpx/configure --disable-examples --disable-docs --enable-shared --disable-unit-tests
+  COMMAND ${CMAKE_MAKE_PROGRAM}
+  WORKING_DIRECTORY ${LIBVPX_BUILD_DIRECTORY}
+  COMMENT "Build libvpx")
+
+add_library(vpx STATIC IMPORTED)
+set_property(TARGET vpx APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+set_target_properties(vpx PROPERTIES
+  IMPORTED_LOCATION_NOCONFIG "${LIBVPX_LIBRARY}")
+add_dependencies(vpx build_libvpx)
 
 
 

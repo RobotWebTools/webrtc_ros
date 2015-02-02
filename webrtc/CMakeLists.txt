@@ -23,7 +23,7 @@ catkin_package(
   INCLUDE_DIRS
     "webrtc_src"
     "yuv_src/include"
-  LIBRARIES webrtc usrsctp srtp opus yuv
+  LIBRARIES webrtc usrsctp srtp opus yuv webrtc_vpx
   DEPENDS JSONCPP
 )
 
@@ -121,18 +121,16 @@ include_directories("usrsctp_src/usrsctplib")
 set(LIBVPX_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/libvpx_build/)
 set(LIBVPX_LIBRARY ${LIBVPX_BUILD_DIRECTORY}/libvpx.so)
 file(MAKE_DIRECTORY ${LIBVPX_BUILD_DIRECTORY})
-add_custom_target(build_libvpx ALL
+add_custom_target(build_libvpx
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libvpx/configure --disable-examples --disable-docs --enable-shared --disable-unit-tests
   COMMAND ${CMAKE_MAKE_PROGRAM}
   WORKING_DIRECTORY ${LIBVPX_BUILD_DIRECTORY}
   COMMENT "Build libvpx")
 
-add_library(webrtc_vpx SHARED IMPORTED)
-set_property(TARGET webrtc_vpx APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
-set_target_properties(webrtc_vpx PROPERTIES
-  IMPORTED_LOCATION_NOCONFIG "${LIBVPX_LIBRARY}")
+add_library(webrtc_vpx SHARED)
+add_custom_command(TARGET webrtc_vpx POST_BUILD COMMAND cp "${LIBVPX_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_vpx.so)
+set_target_properties(webrtc_vpx PROPERTIES LINKER_LANGUAGE CXX)
 add_dependencies(webrtc_vpx build_libvpx)
-
 
 
 
@@ -383,7 +381,7 @@ target_link_libraries(relayserver webrtc)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS yuv usrsctp opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver
+install(TARGETS yuv usrsctp opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver webrtc_vpx
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

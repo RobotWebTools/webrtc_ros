@@ -123,7 +123,7 @@ set(LIBVPX_LIBRARY ${LIBVPX_BUILD_DIRECTORY}/libvpx.so)
 file(MAKE_DIRECTORY ${LIBVPX_BUILD_DIRECTORY})
 add_custom_target(build_libvpx
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libvpx/configure --disable-examples --disable-docs --enable-shared --disable-unit-tests
-  COMMAND ${CMAKE_MAKE_PROGRAM}
+  COMMAND ${CMAKE_MAKE_PROGRAM} SONAME=libwebrtc_vpx.so
   WORKING_DIRECTORY ${LIBVPX_BUILD_DIRECTORY}
   COMMENT "Build libvpx")
 
@@ -131,7 +131,6 @@ add_library(webrtc_vpx SHARED)
 add_custom_command(TARGET webrtc_vpx POST_BUILD COMMAND cp "${LIBVPX_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_vpx.so)
 set_target_properties(webrtc_vpx PROPERTIES LINKER_LANGUAGE CXX)
 add_dependencies(webrtc_vpx build_libvpx)
-
 
 
 

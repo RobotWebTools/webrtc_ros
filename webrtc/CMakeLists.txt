@@ -23,7 +23,7 @@ catkin_package(
   INCLUDE_DIRS
     "webrtc_src"
     "yuv_src/include"
-  LIBRARIES webrtc usrsctp srtp opus yuv webrtc_vpx
+  LIBRARIES webrtc usrsctp srtp webrtc_opus yuv webrtc_vpx
   DEPENDS JSONCPP
 )
 
@@ -33,7 +33,6 @@ add_definitions(-D_DEBUG)
 include_directories(
   "chromium_src"
   "webrtc_src"
-  "opus_src/include"
   "yuv_src/include"
   "usrsctp_src/"
   "/usr/include/srtp"
@@ -53,33 +52,28 @@ add_definitions(-DPOSIX)
 
 
 
-file(GLOB_RECURSE OPUS_SRCS "opus_src/**.c")
-foreach(src ${OPUS_SRCS})
-  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*tests/.*$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*tests/.*$")
-  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*doc/.*$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*doc/.*$")
-  if(src MATCHES "_demo.c$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "_demo.c$")
-  if(src MATCHES "_FIX.c$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "_FIX.c$")
-endforeach()
-list(REMOVE_ITEM OPUS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/opus_src/celt/dump_modes/dump_modes.c")
-list(REMOVE_ITEM OPUS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/opus_src/src/mlp_train.c")
-list(REMOVE_ITEM OPUS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/opus_src/src/opus_compare.c")
+include_directories("opus_src/include"
+  # WebRTC uses internal APIs
+  "opus_src/celt"
+  "opus_src/src"
+)
+set(LIBOPUS_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/opus_build/)
+set(LIBOPUS_LIBRARY ${LIBOPUS_BUILD_DIRECTORY}/.libs/libwebrtc_opus.so)
+file(MAKE_DIRECTORY ${LIBOPUS_BUILD_DIRECTORY})
+add_custom_target(build_opus
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/opus_src/configure --enable-custom-modes --disable-doc --disable-extra-programs
+  # Rename library, this is needed so that the SONAME of the binary is changed, not just the filename
+  COMMAND sed -i 's/libopus\\.la/libwebrtc_opus\\.la/g' Makefile
+  # Don't generate different versions of the library
+  COMMAND sed -i 's/-version-info [[:digit:]]\\+:[[:digit:]]\\+:[[:digit:]]\\+/-avoid-version -export-symbols-regex '.*'/g' Makefile
+  COMMAND ${CMAKE_MAKE_PROGRAM}
+  WORKING_DIRECTORY ${LIBOPUS_BUILD_DIRECTORY}
+  COMMENT "Build opus")
 
-add_definitions(-DVAR_ARRAYS)
-add_definitions(-DHAVE_LRINT)
-add_definitions(-DHAVE_LRINTF)
-add_definitions(-DOPUS_EXPORT=)
-add_definitions(-DOPUS_BUILD)
-add_definitions(-D__OPTIMIZE__)
-include_directories("opus_src/celt" "opus_src/silk" "opus_src/silk/float")
-add_library(opus ${OPUS_SRCS})
+add_library(webrtc_opus SHARED)
+add_custom_command(TARGET webrtc_opus POST_BUILD COMMAND cp "${LIBOPUS_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_opus.so)
+set_target_properties(webrtc_opus PROPERTIES LINKER_LANGUAGE CXX)
+add_dependencies(webrtc_opus build_opus)
 
 
 
@@ -293,9 +287,6 @@ include_directories(
   "webrtc_src/webrtc/modules/audio_coding/codecs/g711/include"
   "webrtc_src/webrtc/modules/audio_coding/codecs/cng/include"
   "webrtc_src/webrtc/modules/audio_coding/codecs/g722/include"
-
-  "opus_src/celt"
-  "opus_src/src"
 )
 
 
@@ -335,7 +326,7 @@ add_definitions(-DLIBPEERCONNECTION_LIB)
 
 add_library(webrtc ${WEBRTC_SRCS} ${JINGLE_SRCS})
 set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv ${CMAKE_THREAD_LIBS_INIT} webrtc_vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES} usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
+target_link_libraries(webrtc ${EXPAT_LIBRARIES} webrtc_opus yuv ${CMAKE_THREAD_LIBS_INIT} webrtc_vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES} usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
 
 
 
@@ -380,7 +371,7 @@ target_link_libraries(relayserver webrtc)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS yuv usrsctp opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver webrtc_vpx
+install(TARGETS yuv usrsctp webrtc_opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver webrtc_vpx
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

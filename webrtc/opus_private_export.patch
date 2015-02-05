@@ -1,0 +1,26 @@
+diff --git a/src/analysis.h b/src/analysis.h
+index be0388f..c64cd04 100644
+--- a/src/analysis.h
++++ b/src/analysis.h
+@@ -83,7 +83,7 @@ void tonality_analysis(TonalityAnalysisState *tonal, AnalysisInfo *info,
+ 
+ void tonality_get_info(TonalityAnalysisState *tonal, AnalysisInfo *info_out, int len);
+ 
+-void run_analysis(TonalityAnalysisState *analysis, const CELTMode *celt_mode, const void *analysis_pcm,
++OPUS_EXPORT void run_analysis(TonalityAnalysisState *analysis, const CELTMode *celt_mode, const void *analysis_pcm,
+                  int analysis_frame_size, int frame_size, int c1, int c2, int C, opus_int32 Fs,
+                  int lsb_depth, downmix_func downmix, AnalysisInfo *analysis_info);
+ 
+diff --git a/src/opus_private.h b/src/opus_private.h
+index 83225f2..b3a9b2c 100644
+--- a/src/opus_private.h
++++ b/src/opus_private.h
+@@ -84,7 +84,7 @@ int get_mono_channel(const ChannelLayout *layout, int stream_id, int prev);
+ 
+ typedef void (*downmix_func)(const void *, opus_val32 *, int, int, int, int, int);
+ void downmix_float(const void *_x, opus_val32 *sub, int subframe, int offset, int c1, int c2, int C);
+-void downmix_int(const void *_x, opus_val32 *sub, int subframe, int offset, int c1, int c2, int C);
++OPUS_EXPORT void downmix_int(const void *_x, opus_val32 *sub, int subframe, int offset, int c1, int c2, int C);
+ 
+ int optimize_framesize(const opus_val16 *x, int len, int C, opus_int32 Fs,
+                 int bitrate, opus_val16 tonality, float *mem, int buffering,

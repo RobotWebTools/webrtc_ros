@@ -13,7 +13,6 @@
   <build_depend>libjsoncpp-dev</build_depend>
   <build_depend>libsrtp0-dev</build_depend>
   <build_depend>libpulse-dev</build_depend>
-  <build_depend>libvpx-dev</build_depend>
   <build_depend>libudev-dev</build_depend>
 
 
@@ -21,6 +20,5 @@
   <run_depend>libjsoncpp-dev</run_depend>
   <run_depend>libsrtp0-dev</run_depend>
   <run_depend>libpulse-dev</run_depend>
-  <run_depend>libvpx-dev</run_depend>
   <run_depend>libudev-dev</run_depend>
 </package>

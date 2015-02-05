@@ -27,5 +27,5 @@ script:
   - catkin init
   - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
   - catkin config --install
-  - catkin build -p2 -j4 --no-status
+  - catkin build -p1 -j4 --no-status
   - source install/setup.bash

@@ -23,15 +23,7 @@ install:
 
 script:
   - source /opt/ros/hydro/setup.bash
-  - sudo apt-get remove libvpx-dev -qq
   - sudo apt-get install yasm -qq
-  - git clone http://git.chromium.org/webm/libvpx.git
-  - cd libvpx
-  - ./configure --prefix=/usr --enable-shared --disable-static
-  - make
-  - sudo make install
-  - cd ../
-  - rm -rf libvpx
   - catkin init
   - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
   - catkin config --install

@@ -21,7 +21,24 @@ install:
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
 
+  # Workaround for outdated autotools on travis
+  - cd /tmp
+  - wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+  - tar -zxvf autoconf-2.69.tar.gz
+  - cd autoconf-2.69/
+  - ./configure
+  - make
+  - sudo make install
+  - cd /tmp
+  - wget http://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz
+  - tar -zxvf automake-1.14.1.tar.gz
+  - cd automake-1.14.1/
+  - ./configure
+  - make
+  - sudo make install
+
 script:
+  - cd /tmp/ws
   - source /opt/ros/hydro/setup.bash
   - sudo apt-get install yasm -qq
   - catkin init

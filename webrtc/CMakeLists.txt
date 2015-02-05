@@ -62,10 +62,6 @@ set(LIBOPUS_LIBRARY ${LIBOPUS_BUILD_DIRECTORY}/.libs/libwebrtc_opus.so)
 file(MAKE_DIRECTORY ${LIBOPUS_BUILD_DIRECTORY})
 add_custom_target(build_opus
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/opus_src/configure --enable-custom-modes --disable-doc --disable-extra-programs
-  # Rename library, this is needed so that the SONAME of the binary is changed, not just the filename
-  COMMAND sed -i 's/libopus\\.la/libwebrtc_opus\\.la/g' Makefile
-  # Don't generate different versions of the library
-  COMMAND sed -i 's/-version-info [[:digit:]]\\+:[[:digit:]]\\+:[[:digit:]]\\+/-avoid-version -export-symbols-regex '.*'/g' Makefile
   COMMAND ${CMAKE_MAKE_PROGRAM}
   WORKING_DIRECTORY ${LIBOPUS_BUILD_DIRECTORY}
   COMMENT "Build opus")

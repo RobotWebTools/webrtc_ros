@@ -6,7 +6,12 @@ if [ -d opus_src ]; then (cd opus_src && git fetch); else (mkdir -p opus_src && 
     && sed -i 's/libopus\.la/libwebrtc_opus\.la/g' Makefile.am \
     && sed -i 's/libopus_la/libwebrtc_opus_la/g' Makefile.am \
     && sed -i 's/-version-info @OPUS_LT_CURRENT@:@OPUS_LT_REVISION@:@OPUS_LT_AGE@/-avoid-version/g' Makefile.am)
-svn co -r 9066 http://sctp-refimpl.googlecode.com/svn/trunk/KERN/usrsctp usrsctp_src
+svn co -r 9066 http://sctp-refimpl.googlecode.com/svn/trunk/KERN/usrsctp usrsctp_src && (cd usrsctp_src \
+    && sed -i 's/libusrsctp\.la/libwebrtc_usrsctp\.la/g' usrsctplib/Makefile.am \
+    && sed -i 's/libusrsctp_la/libwebrtc_usrsctp_la/g' usrsctplib/Makefile.am \
+    && sed -i 's/libusrsctp\.la/libwebrtc_usrsctp\.la/g' programs/Makefile.am \
+    && sed -i 's/-version-info 1:0:0/-avoid-version/g' usrsctplib/Makefile.am \
+    && ./bootstrap)
 if [ -d chromium_src/build ]; then (cd chromium_src/build && git fetch); else (mkdir -p chromium_src/build && git clone https://chromium.googlesource.com/chromium/src/build chromium_src/build);fi; (cd chromium_src/build && git checkout 877467e)
 if [ -d libvpx ]; then (cd libvpx && git pull); else git clone https://chromium.googlesource.com/webm/libvpx libvpx;fi
 

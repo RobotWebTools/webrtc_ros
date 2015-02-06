@@ -23,7 +23,7 @@ catkin_package(
   INCLUDE_DIRS
     "webrtc_src"
     "yuv_src/include"
-  LIBRARIES webrtc usrsctp srtp webrtc_opus yuv webrtc_vpx
+  LIBRARIES webrtc webrtc_usrsctp srtp webrtc_opus yuv webrtc_vpx
   DEPENDS JSONCPP
 )
 
@@ -34,9 +34,7 @@ include_directories(
   "chromium_src"
   "webrtc_src"
   "yuv_src/include"
-  "usrsctp_src/"
   "/usr/include/srtp"
-  "libvpx"
 )
 include_directories(${EXPAT_INCLUDE_DIRS})
 include_directories(${OPENSSL_INCLUDE_DIRS})
@@ -90,24 +88,30 @@ add_library(yuv ${YUV_SRCS})
 
 
 
-file(GLOB_RECURSE USRSCTP_SRCS "usrsctp_src/usrsctplib/**.c")
-foreach(src ${USRSCTP_SRCS})
-endforeach()
+include_directories("usrsctp_src/")
+set(LIBUSRSCTP_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/usrsctp_build/)
+set(LIBUSRSCTP_LIBRARY ${LIBUSRSCTP_BUILD_DIRECTORY}/usrsctplib/.libs/libwebrtc_usrsctp.so)
+file(MAKE_DIRECTORY ${LIBUSRSCTP_BUILD_DIRECTORY})
+add_custom_target(build_usrsctp
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/usrsctp_src/configure
+  COMMAND ${CMAKE_MAKE_PROGRAM}
+  WORKING_DIRECTORY ${LIBUSRSCTP_BUILD_DIRECTORY}
+  COMMENT "Build usrsctp")
 
-add_definitions(-DSCTP_PROCESS_LEVEL_LOCKS)
-add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
-add_definitions(-D__Userspace__)
-add_definitions(-D__Userspace_os_Linux)
-add_library(usrsctp ${USRSCTP_SRCS})
-include_directories("usrsctp_src/usrsctplib")
-
-
-
-
-
-
+add_library(webrtc_usrsctp SHARED)
+add_custom_command(TARGET webrtc_usrsctp POST_BUILD COMMAND cp "${LIBUSRSCTP_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_usrsctp.so)
+set_target_properties(webrtc_usrsctp PROPERTIES LINKER_LANGUAGE CXX)
+add_dependencies(webrtc_usrsctp build_usrsctp)
 
 
+
+
+
+
+
+
+
+include_directories("libvpx")
 set(LIBVPX_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/libvpx_build/)
 set(LIBVPX_LIBRARY ${LIBVPX_BUILD_DIRECTORY}/libvpx.so)
 file(MAKE_DIRECTORY ${LIBVPX_BUILD_DIRECTORY})
@@ -322,7 +326,7 @@ add_definitions(-DLIBPEERCONNECTION_LIB)
 
 add_library(webrtc ${WEBRTC_SRCS} ${JINGLE_SRCS})
 set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(webrtc ${EXPAT_LIBRARIES} webrtc_opus yuv ${CMAKE_THREAD_LIBS_INIT} webrtc_vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES} usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
+target_link_libraries(webrtc ${EXPAT_LIBRARIES} webrtc_opus yuv ${CMAKE_THREAD_LIBS_INIT} webrtc_vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES} webrtc_usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
 
 
 
@@ -367,7 +371,7 @@ target_link_libraries(relayserver webrtc)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS yuv usrsctp webrtc_opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver webrtc_vpx
+install(TARGETS yuv webrtc_usrsctp webrtc_opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver webrtc_vpx
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

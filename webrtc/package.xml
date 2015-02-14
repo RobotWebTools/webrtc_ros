@@ -11,6 +11,9 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>automake</buildtool_depend>
   <buildtool_depend>autoconf</buildtool_depend>
+  <buildtool_depend>git</buildtool_depend>
+  <buildtool_depend>subversion</buildtool_depend>
+  <buildtool_depend>yasm</buildtool_depend>
 
   <build_depend>libasound2-dev</build_depend>
   <build_depend>libjsoncpp-dev</build_depend>

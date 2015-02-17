@@ -9,5 +9,7 @@ int main(int argc, char **argv)
   ros::NodeHandle pnh("~");
 
   webrtc_ros::WebrtcRosServer server(nh, pnh);
-  server.spin();
+  server.run();
+  ros::spin();
+  server.stop();
 }

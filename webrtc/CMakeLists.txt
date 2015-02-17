@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(webrtc)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 find_package(catkin REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(Threads REQUIRED)
@@ -25,8 +27,8 @@ catkin_package(
   DEPENDS JSONCPP
 )
 
-#add_definitions(-DDEBUG)
-#add_definitions(-D_DEBUG)
+add_definitions(-DDEBUG)
+add_definitions(-D_DEBUG)
 
 include_directories(
   "chromium_src"
@@ -106,7 +108,7 @@ add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
 add_definitions(-D__Userspace__)
 add_definitions(-D__Userspace_os_Linux)
 add_library(usrsctp ${USRSCTP_SRCS})
-include_directories(usrsctp PRIVATE "usrsctp_src/usrsctplib")
+include_directories("usrsctp_src/usrsctplib")
 
 
 

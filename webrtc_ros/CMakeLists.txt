@@ -67,6 +67,8 @@ catkin_package(
 ## Build ##
 ###########
 
+# Enable C++11
+set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
 
 include_directories(
   include

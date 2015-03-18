@@ -41,7 +41,7 @@ add_library(webrtc_ros_server
   src/sdp_message.cpp
   src/ice_candidate_message.cpp
 
-  src/ros_trace_context.cpp
+  src/ros_log_context.cpp
 
   src/webrtc_ros_server.cpp
   src/webrtc_client.cpp

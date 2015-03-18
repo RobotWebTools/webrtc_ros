@@ -1,9 +1,9 @@
-#include "webrtc_ros/ros_trace_context.h"
+#include "webrtc_ros/ros_log_context.h"
 #include <ros/ros.h>
 
 namespace webrtc_ros {
 
-static ::ros::console::levels::Level RosLogLevelFromWebRtcLogLevel(webrtc::TraceLevel webrtc_level) {
+static ::ros::console::levels::Level RosLogLevelFromWebRtcTraceLevel(webrtc::TraceLevel webrtc_level) {
   switch (webrtc_level) {
     case webrtc::kTraceStateInfo: return ::ros::console::levels::Debug;
     case webrtc::kTraceWarning: return ::ros::console::levels::Warn;
@@ -23,20 +23,20 @@ static ::ros::console::levels::Level RosLogLevelFromWebRtcLogLevel(webrtc::Trace
   }
 }
 
-RosTraceContext::RosTraceContext() {
+RosLogContext::RosLogContext() {
   webrtc::Trace::CreateTrace();
   if (webrtc::Trace::SetTraceCallback(this) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to enable webrtc ROS trace context");
 }
 
-RosTraceContext::~RosTraceContext() {
+RosLogContext::~RosLogContext() {
   if (webrtc::Trace::SetTraceCallback(NULL) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to disable webrtc ROS trace context");
   webrtc::Trace::ReturnTrace();
 }
 
-void RosTraceContext::Print(webrtc::TraceLevel level, const char* message, int length) {
-  ROS_LOG(RosLogLevelFromWebRtcLogLevel(level), std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc", "%.*s", length, message);
+void RosLogContext::Print(webrtc::TraceLevel level, const char* message, int length) {
+  ROS_LOG(RosLogLevelFromWebRtcTraceLevel(level), std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc", "%.*s", length, message);
 }
 
 }

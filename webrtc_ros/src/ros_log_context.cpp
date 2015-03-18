@@ -1,9 +1,38 @@
 #include "webrtc_ros/ros_log_context.h"
+#include <boost/algorithm/string/trim.hpp>
 #include <ros/ros.h>
+#include <boost/regex.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace webrtc_ros {
 
-static ::ros::console::levels::Level RosLogLevelFromWebRtcTraceLevel(webrtc::TraceLevel webrtc_level) {
+RosLogContext::RosLogContext() {
+  webrtc::Trace::CreateTrace();
+  if (webrtc::Trace::SetTraceCallback(this) != 0)
+    ROS_FATAL_NAMED("webrtc", "Failed to enable webrtc ROS trace context");
+  rtc::LogMessage::LogContext(rtc::LS_INFO);
+  rtc::LogMessage::AddLogToStream(this, rtc::LS_INFO);
+}
+
+RosLogContext::~RosLogContext() {
+  rtc::LogMessage::RemoveLogToStream(this);
+  if (webrtc::Trace::SetTraceCallback(NULL) != 0)
+    ROS_FATAL_NAMED("webrtc", "Failed to disable webrtc ROS trace context");
+  webrtc::Trace::ReturnTrace();
+}
+
+static void CustomRosLog(ros::console::levels::Level level, const std::string& message, const std::string& file, int line, const std::string& function) {
+  std::stringstream ss;
+  ss << message;
+
+  ROSCONSOLE_DEFINE_LOCATION(true, ros::console::levels::Fatal, std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc");
+  ros::console::print(0, __rosconsole_define_location__loc.logger_,
+		      level, ss, file.c_str(), line, function.c_str());
+}
+
+
+// webrtc::TraceCallback
+static ros::console::levels::Level RosLogLevelFromWebRtcTraceLevel(webrtc::TraceLevel webrtc_level) {
   switch (webrtc_level) {
     case webrtc::kTraceStateInfo: return ::ros::console::levels::Debug;
     case webrtc::kTraceWarning: return ::ros::console::levels::Warn;
@@ -18,25 +47,90 @@ static ::ros::console::levels::Level RosLogLevelFromWebRtcTraceLevel(webrtc::Tra
     case webrtc::kTraceInfo: return ::ros::console::levels::Debug;
     case webrtc::kTraceTerseInfo: return ::ros::console::levels::Info;
     default:
-      ROS_WARN_STREAM_NAMED("webrtc", "Unexpected log level" << webrtc_level);
-      return ::ros::console::levels::Fatal;
+      ROS_WARN_STREAM("Unexpected webrtc::TraceLevel: " << webrtc_level);
+      return ::ros::console::levels::Error;
   }
 }
 
-RosLogContext::RosLogContext() {
-  webrtc::Trace::CreateTrace();
-  if (webrtc::Trace::SetTraceCallback(this) != 0)
-    ROS_FATAL_NAMED("webrtc", "Failed to enable webrtc ROS trace context");
-}
-
-RosLogContext::~RosLogContext() {
-  if (webrtc::Trace::SetTraceCallback(NULL) != 0)
-    ROS_FATAL_NAMED("webrtc", "Failed to disable webrtc ROS trace context");
-  webrtc::Trace::ReturnTrace();
-}
-
 void RosLogContext::Print(webrtc::TraceLevel level, const char* message, int length) {
-  ROS_LOG(RosLogLevelFromWebRtcTraceLevel(level), std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc", "%.*s", length, message);
+  CustomRosLog(RosLogLevelFromWebRtcTraceLevel(level), std::string(message, length), "", -1, "");
+}
+
+
+// rtc::StreamInterface
+static boost::regex log_context_regex("^(\\w+)\\(([^:]+):(\\d+)\\): (.*)", boost::regex_constants::ECMAScript|boost::regex_constants::icase|boost::regex_constants::optimize);
+static bool ParseLogMessageContext(const std::string message, rtc::LoggingSeverity* severity, std::string* file, int* line, std::string* actual_message) {
+  boost::smatch match;
+  if (boost::regex_match(message, match, log_context_regex)) {
+    if(match.size() != 5)
+      return false;
+    std::string severity_str = match[1].str();
+    if(severity_str == "Sensitive")
+      *severity = rtc::LS_SENSITIVE;
+    else if(severity_str == "Verbose")
+      *severity = rtc::LS_VERBOSE;
+    else if(severity_str == "Info")
+      *severity = rtc::LS_INFO;
+    else if(severity_str == "Warning")
+      *severity = rtc::LS_WARNING;
+    else if(severity_str == "Error")
+      *severity = rtc::LS_ERROR;
+    else
+      return false;
+    *file = match[2].str();
+    std::string line_str = match[3].str();
+    try {
+      *line = boost::lexical_cast<int>(line_str);
+    } catch(boost::bad_lexical_cast const&) {
+      return false;
+    }
+    *actual_message = match[4].str();
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+static ::ros::console::levels::Level RosLogLevelFromRtcLoggingSeverity(rtc::LoggingSeverity severity) {
+  switch (severity) {
+  case rtc::LS_SENSITIVE: return ::ros::console::levels::Debug;
+  case rtc::LS_VERBOSE:   return ::ros::console::levels::Debug;
+  case rtc::LS_INFO:      return ::ros::console::levels::Info;
+  case rtc::LS_WARNING:   return ::ros::console::levels::Warn;
+  case rtc::LS_ERROR:     return ::ros::console::levels::Error;
+  default:
+    ROS_WARN_STREAM("Unexpected rtc::LoggingSeverity: " << severity);
+    return ::ros::console::levels::Error;
+  }
+}
+rtc::StreamState RosLogContext::GetState() const {
+  return rtc::SS_OPEN;
+}
+rtc::StreamResult RosLogContext::Read(void* buffer, size_t buffer_len,
+				      size_t* read, int* error) {
+  return rtc::SR_EOS;
+}
+rtc::StreamResult RosLogContext::Write(const void* data, size_t data_len,
+				       size_t* written, int* error) {
+  std::string message((const char*)data, data_len);
+  boost::algorithm::trim(message);
+
+  rtc::LoggingSeverity severity;
+  std::string file;
+  int line;
+  std::string actual_message;
+  if(ParseLogMessageContext(message, &severity, &file, &line, &actual_message)) {
+    CustomRosLog(RosLogLevelFromRtcLoggingSeverity(severity), actual_message, file, line, "");
+  }
+  else {
+    ROS_WARN_STREAM_THROTTLE(10.0, "Failed to parse webrtc log message: " << message );
+    CustomRosLog(::ros::console::levels::Info, actual_message, "", -1, "");
+  }
+
+  *written = data_len;
+  return rtc::SR_SUCCESS;
+}
+void RosLogContext::Close() {
 }
 
 }

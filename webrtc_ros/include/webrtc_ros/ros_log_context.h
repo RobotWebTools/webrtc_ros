@@ -8,14 +8,22 @@
 namespace webrtc_ros
 {
 
-class RosLogContext : public webrtc::TraceCallback {
+class RosLogContext : public webrtc::TraceCallback, public rtc::StreamInterface {
  public:
   RosLogContext();
   virtual ~RosLogContext();
 
+  // webrtc::TraceCallback
   virtual void Print(webrtc::TraceLevel level, const char* message, int length);
-};
 
+  // rtc::StreamInterface
+  virtual rtc::StreamState GetState() const;
+  virtual rtc::StreamResult Read(void* buffer, size_t buffer_len,
+				 size_t* read, int* error);
+  virtual rtc::StreamResult Write(const void* data, size_t data_len,
+				  size_t* written, int* error);
+  virtual void Close();
+};
 
 }
 

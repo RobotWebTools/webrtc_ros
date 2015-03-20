@@ -5,9 +5,22 @@ compiler:
 
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y ppa:apokluda/boost1.53
   - sudo apt-get update -qq
   - sudo apt-get install -qq g++-4.8
+  - sudo apt-get install -qq libboost1.53-all-dev
   - export CXX="g++-4.8"
+
+  # make libboost-all-dev marked as installed
+  - sudo ln -s /usr/lib/libboost_signals.so /usr/lib/libboost_signals-mt.so
+  - sudo ln -s /usr/lib/libboost_filesystem.so /usr/lib/libboost_filesystem-mt.so
+  - sudo ln -s /usr/lib/libboost_regex.so /usr/lib/libboost_regex-mt.so
+  - sudo ln -s /usr/lib/libboost_system.so /usr/lib/libboost_system-mt.so
+  - sudo ln -s /usr/lib/libboost_date_time.so /usr/lib/libboost_date_time-mt.so
+  - sudo ln -s /usr/lib/libboost_thread.so /usr/lib/libboost_thread-mt.so
+  - sudo apt-get install -qq equivs
+  - equivs-build .travis-boost-config
+  - sudo dpkg -i libboost-all-dev_42_all.deb
 
 install:
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'

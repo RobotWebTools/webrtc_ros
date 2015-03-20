@@ -1,0 +1,9 @@
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+
+Package: libboost-all-dev
+Version: 1:42
+Maintainer: Your Name <your@email.address>
+Architecture: all
+Description: fake pkgname to block a dumb dependency

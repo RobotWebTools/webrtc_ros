@@ -25,9 +25,11 @@ static void CustomRosLog(ros::console::levels::Level level, const std::string& m
   std::stringstream ss;
   ss << message;
 
-  ROSCONSOLE_DEFINE_LOCATION(true, ros::console::levels::Fatal, std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc");
-  ros::console::print(0, __rosconsole_define_location__loc.logger_,
-		      level, ss, file.c_str(), line, function.c_str());
+  ROSCONSOLE_DEFINE_LOCATION(true, level, std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc");
+  if (ROS_UNLIKELY(__rosconsole_define_location__enabled)) {
+    ros::console::print(0, __rosconsole_define_location__loc.logger_,
+			level, ss, file.c_str(), line, function.c_str());
+  }
 }
 
 

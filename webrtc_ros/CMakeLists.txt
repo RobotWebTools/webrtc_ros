@@ -7,9 +7,12 @@ find_package(catkin REQUIRED COMPONENTS
   webrtc
   image_transport
   nodelet
-  async_web_server_cpp
 )
 
+execute_process(
+  COMMAND ./checkout_async_web_server_cpp.sh
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GTK2 REQUIRED gtk+-2.0)
@@ -59,8 +62,7 @@ add_definitions(-DUSE_SYSTEM_LIBSRTP)
 
 
 catkin_package(
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet async_web_server_cpp
+  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet
 )
 
 ###########
@@ -73,7 +75,11 @@ set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}")
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  async_web_server_cpp_src/include
 )
+
+file(GLOB_RECURSE ASYNC_WEB_SERVER_CPP_SRCS "async_web_server_cpp_src/src/**.cpp")
+add_library(async_web_server_cpp_cpp11 ${ASYNC_WEB_SERVER_CPP_SRCS})
 
 
 add_library(ros_webrtc_devices
@@ -100,6 +106,7 @@ add_library(webrtc_ros_server
 )
 target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}
+  async_web_server_cpp_cpp11
   ros_webrtc_devices
   webrtc_ros_messages
   ros_trace_context
@@ -129,6 +136,7 @@ target_link_libraries(webrtc_ros_server_nodelet
 
 # Mark nodes and libraries for installation
 install(TARGETS
+  async_web_server_cpp_cpp11
   ros_webrtc_devices
   ros_trace_context
   webrtc_ros_messages

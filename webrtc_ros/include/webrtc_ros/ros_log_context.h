@@ -10,7 +10,7 @@ namespace webrtc_ros
 
 class RosLogContext : public webrtc::TraceCallback, public rtc::StreamInterface {
  public:
-  RosLogContext();
+  RosLogContext(bool disable_log_to_debug);
   virtual ~RosLogContext();
 
   // webrtc::TraceCallback
@@ -23,6 +23,10 @@ class RosLogContext : public webrtc::TraceCallback, public rtc::StreamInterface 
   virtual rtc::StreamResult Write(const void* data, size_t data_len,
 				  size_t* written, int* error);
   virtual void Close();
+
+private:
+  int old_log_to_debug_;
+  bool disabled_debug_;
 };
 
 }

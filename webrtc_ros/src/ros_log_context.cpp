@@ -6,15 +6,23 @@
 
 namespace webrtc_ros {
 
-RosLogContext::RosLogContext() {
+RosLogContext::RosLogContext(bool disable_log_to_debug) {
   webrtc::Trace::CreateTrace();
   if (webrtc::Trace::SetTraceCallback(this) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to enable webrtc ROS trace context");
   rtc::LogMessage::LogContext(rtc::LS_INFO);
   rtc::LogMessage::AddLogToStream(this, rtc::LS_INFO);
+  disabled_debug_ = disable_log_to_debug;
+  if(disable_log_to_debug) {
+    old_log_to_debug_ = rtc::LogMessage::GetLogToDebug();
+    rtc::LogMessage::LogToDebug(rtc::LogMessage::NO_LOGGING);
+  }
 }
 
 RosLogContext::~RosLogContext() {
+  if(disabled_debug_) {
+    rtc::LogMessage::LogToDebug(old_log_to_debug_);
+  }
   rtc::LogMessage::RemoveLogToStream(this);
   if (webrtc::Trace::SetTraceCallback(NULL) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to disable webrtc ROS trace context");

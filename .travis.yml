@@ -5,9 +5,22 @@ compiler:
 
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y ppa:apokluda/boost1.53
   - sudo apt-get update -qq
   - sudo apt-get install -qq g++-4.8
+  - sudo apt-get install -qq libboost1.53-all-dev
   - export CXX="g++-4.8"
+
+  # make libboost-all-dev marked as installed
+  - sudo ln -s /usr/lib/libboost_signals.so /usr/lib/libboost_signals-mt.so
+  - sudo ln -s /usr/lib/libboost_filesystem.so /usr/lib/libboost_filesystem-mt.so
+  - sudo ln -s /usr/lib/libboost_regex.so /usr/lib/libboost_regex-mt.so
+  - sudo ln -s /usr/lib/libboost_system.so /usr/lib/libboost_system-mt.so
+  - sudo ln -s /usr/lib/libboost_date_time.so /usr/lib/libboost_date_time-mt.so
+  - sudo ln -s /usr/lib/libboost_thread.so /usr/lib/libboost_thread-mt.so
+  - sudo apt-get install -qq equivs
+  - equivs-build .travis-boost-config
+  - sudo dpkg -i libboost-all-dev_42_all.deb
 
 install:
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -21,19 +34,28 @@ install:
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
 
-script:
-  - source /opt/ros/hydro/setup.bash
-  - sudo apt-get remove libvpx-dev -qq
-  - sudo apt-get install yasm -qq
-  - git clone http://git.chromium.org/webm/libvpx.git
-  - cd libvpx
-  - ./configure --prefix=/usr --enable-shared --disable-static
+  # Workaround for outdated autotools on travis
+  - cd /tmp
+  - wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+  - tar -zxvf autoconf-2.69.tar.gz
+  - cd autoconf-2.69/
+  - ./configure
   - make
   - sudo make install
-  - cd ../
-  - rm -rf libvpx
+  - cd /tmp
+  - wget http://ftp.gnu.org/gnu/automake/automake-1.14.1.tar.gz
+  - tar -zxvf automake-1.14.1.tar.gz
+  - cd automake-1.14.1/
+  - ./configure
+  - make
+  - sudo make install
+
+script:
+  - cd /tmp/ws
+  - source /opt/ros/hydro/setup.bash
+  - sudo apt-get install yasm -qq
   - catkin init
   - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
   - catkin config --install
-  - catkin build -p2 -j4 --no-status
+  - catkin build -p1 -j4 --no-status
   - source install/setup.bash

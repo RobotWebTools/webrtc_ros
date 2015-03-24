@@ -79,7 +79,7 @@ void WebrtcClient::invalidate()
 }
 bool WebrtcClient::valid()
 {
-  return keep_alive_this_;
+  return keep_alive_this_ != nullptr;
 }
 
 

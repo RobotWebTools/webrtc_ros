@@ -1,0 +1,44 @@
+Index: webrtc/base/openssladapter.cc
+===================================================================
+--- webrtc/base/openssladapter.cc	(revision 8119)
++++ webrtc/base/openssladapter.cc	(working copy)
+@@ -74,7 +74,7 @@
+ static int socket_new(BIO* h);
+ static int socket_free(BIO* data);
+ 
+-static const BIO_METHOD methods_socket = {
++static BIO_METHOD methods_socket = {
+   BIO_TYPE_BIO,
+   "socket",
+   socket_write,
+@@ -87,7 +87,7 @@
+   NULL,
+ };
+ 
+-static const BIO_METHOD* BIO_s_socket2() { return(&methods_socket); }
++static BIO_METHOD* BIO_s_socket2() { return(&methods_socket); }
+ 
+ static BIO* BIO_new_socket(rtc::AsyncSocket* socket) {
+   BIO* ret = BIO_new(BIO_s_socket2());
+Index: webrtc/base/opensslstreamadapter.cc
+===================================================================
+--- webrtc/base/opensslstreamadapter.cc	(revision 8119)
++++ webrtc/base/opensslstreamadapter.cc	(working copy)
+@@ -67,7 +67,7 @@
+ static int stream_new(BIO* h);
+ static int stream_free(BIO* data);
+ 
+-static const BIO_METHOD methods_stream = {
++static BIO_METHOD methods_stream = {
+   BIO_TYPE_BIO,
+   "stream",
+   stream_write,
+@@ -80,7 +80,7 @@
+   NULL,
+ };
+ 
+-static const BIO_METHOD* BIO_s_stream() { return(&methods_stream); }
++static BIO_METHOD* BIO_s_stream() { return(&methods_stream); }
+ 
+ static BIO* BIO_new_stream(StreamInterface* stream) {
+   BIO* ret = BIO_new(BIO_s_stream());

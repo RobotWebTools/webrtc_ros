@@ -23,7 +23,7 @@ catkin_package(
   INCLUDE_DIRS
     "webrtc_src"
     "yuv_src/include"
-  LIBRARIES jingle webrtc usrsctp srtp opus yuv
+  LIBRARIES webrtc webrtc_usrsctp srtp webrtc_opus yuv webrtc_vpx
   DEPENDS JSONCPP
 )
 
@@ -33,9 +33,7 @@ add_definitions(-D_DEBUG)
 include_directories(
   "chromium_src"
   "webrtc_src"
-  "opus_src/include"
   "yuv_src/include"
-  "usrsctp_src/"
   "/usr/include/srtp"
 )
 include_directories(${EXPAT_INCLUDE_DIRS})
@@ -52,33 +50,24 @@ add_definitions(-DPOSIX)
 
 
 
-file(GLOB_RECURSE OPUS_SRCS "opus_src/**.c")
-foreach(src ${OPUS_SRCS})
-  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*tests/.*$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*tests/.*$")
-  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*doc/.*$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/opus_src/.*doc/.*$")
-  if(src MATCHES "_demo.c$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "_demo.c$")
-  if(src MATCHES "_FIX.c$")
-    list(REMOVE_ITEM OPUS_SRCS "${src}")
-  endif(src MATCHES "_FIX.c$")
-endforeach()
-list(REMOVE_ITEM OPUS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/opus_src/celt/dump_modes/dump_modes.c")
-list(REMOVE_ITEM OPUS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/opus_src/src/mlp_train.c")
-list(REMOVE_ITEM OPUS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/opus_src/src/opus_compare.c")
+include_directories("opus_src/include"
+  # WebRTC uses internal APIs
+  "opus_src/celt"
+  "opus_src/src"
+)
+set(LIBOPUS_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/opus_build/)
+set(LIBOPUS_LIBRARY ${LIBOPUS_BUILD_DIRECTORY}/.libs/libwebrtc_opus.so)
+file(MAKE_DIRECTORY ${LIBOPUS_BUILD_DIRECTORY})
+add_custom_target(build_opus
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/opus_src/configure --enable-custom-modes --disable-doc --disable-extra-programs
+  COMMAND ${CMAKE_MAKE_PROGRAM}
+  WORKING_DIRECTORY ${LIBOPUS_BUILD_DIRECTORY}
+  COMMENT "Build opus")
 
-add_definitions(-DVAR_ARRAYS)
-add_definitions(-DHAVE_LRINT)
-add_definitions(-DHAVE_LRINTF)
-add_definitions(-DOPUS_EXPORT=)
-add_definitions(-DOPUS_BUILD)
-add_definitions(-D__OPTIMIZE__)
-include_directories("opus_src/celt" "opus_src/silk" "opus_src/silk/float")
-add_library(opus ${OPUS_SRCS})
+add_library(webrtc_opus SHARED)
+add_custom_command(TARGET webrtc_opus POST_BUILD COMMAND cp "${LIBOPUS_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_opus.so)
+set_target_properties(webrtc_opus PROPERTIES LINKER_LANGUAGE CXX)
+add_dependencies(webrtc_opus build_opus)
 
 
 
@@ -99,20 +88,43 @@ add_library(yuv ${YUV_SRCS})
 
 
 
-file(GLOB_RECURSE USRSCTP_SRCS "usrsctp_src/usrsctplib/**.c")
-foreach(src ${USRSCTP_SRCS})
-endforeach()
+include_directories("usrsctp_src/")
+set(LIBUSRSCTP_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/usrsctp_build/)
+set(LIBUSRSCTP_LIBRARY ${LIBUSRSCTP_BUILD_DIRECTORY}/usrsctplib/.libs/libwebrtc_usrsctp.so)
+file(MAKE_DIRECTORY ${LIBUSRSCTP_BUILD_DIRECTORY})
+add_custom_target(build_usrsctp
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/usrsctp_src/configure
+  COMMAND ${CMAKE_MAKE_PROGRAM}
+  WORKING_DIRECTORY ${LIBUSRSCTP_BUILD_DIRECTORY}
+  COMMENT "Build usrsctp")
 
-add_definitions(-DSCTP_PROCESS_LEVEL_LOCKS)
-add_definitions(-DSCTP_SIMPLE_ALLOCATOR)
-add_definitions(-D__Userspace__)
-add_definitions(-D__Userspace_os_Linux)
-add_library(usrsctp ${USRSCTP_SRCS})
-include_directories("usrsctp_src/usrsctplib")
+add_library(webrtc_usrsctp SHARED)
+add_custom_command(TARGET webrtc_usrsctp POST_BUILD COMMAND cp "${LIBUSRSCTP_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_usrsctp.so)
+set_target_properties(webrtc_usrsctp PROPERTIES LINKER_LANGUAGE CXX)
+add_dependencies(webrtc_usrsctp build_usrsctp)
 
 
 
 
+
+
+
+
+
+include_directories("libvpx")
+set(LIBVPX_BUILD_DIRECTORY ${CMAKE_BINARY_DIR}/libvpx_build/)
+set(LIBVPX_LIBRARY ${LIBVPX_BUILD_DIRECTORY}/libvpx.so)
+file(MAKE_DIRECTORY ${LIBVPX_BUILD_DIRECTORY})
+add_custom_target(build_libvpx
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/libvpx/configure --disable-examples --disable-docs --enable-shared --disable-unit-tests
+  COMMAND ${CMAKE_MAKE_PROGRAM} SONAME=libwebrtc_vpx.so
+  WORKING_DIRECTORY ${LIBVPX_BUILD_DIRECTORY}
+  COMMENT "Build libvpx")
+
+add_library(webrtc_vpx SHARED)
+add_custom_command(TARGET webrtc_vpx POST_BUILD COMMAND cp "${LIBVPX_LIBRARY}" ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwebrtc_vpx.so)
+set_target_properties(webrtc_vpx PROPERTIES LINKER_LANGUAGE CXX)
+add_dependencies(webrtc_vpx build_libvpx)
 
 
 
@@ -139,6 +151,10 @@ foreach(src ${WEBRTC_SRCS})
     list(REMOVE_ITEM WEBRTC_SRCS "${src}")
   endif(src MATCHES "_unittest_helper.cc?$")
 
+  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/build.*$")
+    list(REMOVE_ITEM WEBRTC_SRCS "${src}")
+  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/build.*$")
+
   if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/overrides.*$")
     list(REMOVE_ITEM WEBRTC_SRCS "${src}")
   endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/overrides.*$")
@@ -146,6 +162,10 @@ foreach(src ${WEBRTC_SRCS})
   if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/examples.*$")
     list(REMOVE_ITEM WEBRTC_SRCS "${src}")
   endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/examples.*$")
+
+  if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/libjingle/examples.*$")
+    list(REMOVE_ITEM WEBRTC_SRCS "${src}")
+  endif(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/libjingle/examples.*$")
 
   if(src MATCHES "^${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/.+/test/.+$")
     list(REMOVE_ITEM WEBRTC_SRCS "${src}")
@@ -234,6 +254,7 @@ list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/modu
 list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/modules/video_capture/external/video_capture_external.cc")
 list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/common_audio/real_fourier.cc")
 list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/common_audio/lapped_transform.cc")
+list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/modules/audio_processing/beamformer/beamformer.cc")
 list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/video/full_stack.cc")
 list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/video/replay.cc")
 list(REMOVE_ITEM WEBRTC_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/webrtc_src/webrtc/video/loopback.cc")
@@ -266,14 +287,7 @@ include_directories(
   "webrtc_src/webrtc/modules/audio_coding/codecs/g711/include"
   "webrtc_src/webrtc/modules/audio_coding/codecs/cng/include"
   "webrtc_src/webrtc/modules/audio_coding/codecs/g722/include"
-
-  "opus_src/celt"
-  "opus_src/src"
 )
-add_library(webrtc ${WEBRTC_SRCS})
-set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(webrtc ${EXPAT_LIBRARIES} opus yuv ${CMAKE_THREAD_LIBS_INIT} vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES})
-
 
 
 file(GLOB_RECURSE JINGLE_SRCS "webrtc_src/talk/app/**.cc" "webrtc_src/talk/session/**.cc" "webrtc_src/talk/media/**.cc")
@@ -309,8 +323,10 @@ add_definitions(-DHAVE_SRTP)
 add_definitions(-DSRTP_RELATIVE_PATH)
 add_definitions(-DUSE_SYSTEM_LIBSRTP)
 add_definitions(-DLIBPEERCONNECTION_LIB)
-add_library(jingle ${JINGLE_SRCS})
-target_link_libraries(jingle webrtc usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
+
+add_library(webrtc ${WEBRTC_SRCS} ${JINGLE_SRCS})
+set_target_properties(webrtc PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(webrtc ${EXPAT_LIBRARIES} webrtc_opus yuv ${CMAKE_THREAD_LIBS_INIT} webrtc_vpx rt dl X11 Xext Xrender Xfixes Xcomposite Xdamage ${OPENSSL_LIBRARIES} ${JSONCPP_LIBRARIES} webrtc_usrsctp srtp gthread-2.0 gobject-2.0 ${GTK2_LIBRARIES})
 
 
 
@@ -322,7 +338,7 @@ add_executable(peerconnection_server
   "webrtc_src/talk/examples/peerconnection/server/peer_channel.cc"
   "webrtc_src/talk/examples/peerconnection/server/utils.cc"
 )
-target_link_libraries(peerconnection_server jingle)
+target_link_libraries(peerconnection_server webrtc)
 
 add_executable(peerconnection_client
   "webrtc_src/talk/examples/peerconnection/client/linux/main.cc"
@@ -331,23 +347,23 @@ add_executable(peerconnection_client
   "webrtc_src/talk/examples/peerconnection/client/linux/main_wnd.cc"
   "webrtc_src/talk/examples/peerconnection/client/peer_connection_client.cc"
 )
-target_link_libraries(peerconnection_client jingle ${GTK2_LIBRARIES})
+target_link_libraries(peerconnection_client webrtc ${GTK2_LIBRARIES})
 
 add_executable(stunserver
   "webrtc_src/talk/examples/stunserver/stunserver_main.cc"
 )
-target_link_libraries(stunserver jingle)
+target_link_libraries(stunserver webrtc)
 
 
 add_executable(turnserver
   "webrtc_src/talk/examples/turnserver/turnserver_main.cc"
 )
-target_link_libraries(turnserver jingle)
+target_link_libraries(turnserver webrtc)
 
 add_executable(relayserver
   "webrtc_src/talk/examples/turnserver/turnserver_main.cc"
 )
-target_link_libraries(relayserver jingle)
+target_link_libraries(relayserver webrtc)
 
 
 #############
@@ -355,7 +371,7 @@ target_link_libraries(relayserver jingle)
 #############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS yuv usrsctp opus webrtc jingle peerconnection_server peerconnection_client stunserver turnserver relayserver
+install(TARGETS yuv webrtc_usrsctp webrtc_opus webrtc peerconnection_server peerconnection_client stunserver turnserver relayserver webrtc_vpx
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

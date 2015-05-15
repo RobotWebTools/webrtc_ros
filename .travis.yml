@@ -53,7 +53,7 @@ install:
 script:
   # Call travis wait cause this takes a while and doesn't produce any output for a while sometimes
   - cd /tmp/ws/src/package/webrtc/
-  - travis_wait checkout_source.sh
+  - travis_wait ./checkout_source.sh
 
   - cd /tmp/ws
   - source /opt/ros/hydro/setup.bash

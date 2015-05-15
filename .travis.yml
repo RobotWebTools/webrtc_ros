@@ -51,13 +51,15 @@ install:
   #- sudo make install
 
 script:
+  # Call travis wait cause this takes a while and doesn't produce any output for a while sometimes
+  - cd /tmp/ws/src/package/webrtc/
+  - travis_wait checkout_source.sh
+
   - cd /tmp/ws
   - source /opt/ros/hydro/setup.bash
   #- sudo apt-get install yasm -qq
   - catkin init
   - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
   - catkin config --install
-  # Call travis wait cause this takes a while and doesn't produce any output for a while sometimes
-  - travis_wait src/package/webrtc/checkout_source.sh
   - catkin build -p1 -j4 --no-status
   - source install/setup.bash

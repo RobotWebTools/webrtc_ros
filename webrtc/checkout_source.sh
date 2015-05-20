@@ -9,7 +9,7 @@ if [ ! -d depot_tools ]; then git clone https://chromium.googlesource.com/chromi
 
     # Don't use clang (use gcc)
     # fastbuld=2 disables debug symbols and makes build faster
-    export GYP_DEFINES="clang=0 fastbuild=2 use_gnome_keyring=0 use_gio=0 use_gconf=0 use_libpci=0"
+    export GYP_DEFINES="clang=0 fastbuild=2 use_gnome_keyring=0 use_gio=0 use_gconf=0 use_libpci=0 use_x11=0"
 
     if [ -z "$1" ]; then
 	echo "No build directory specified, generating build files in source tree"

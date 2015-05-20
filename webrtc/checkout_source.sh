@@ -18,9 +18,12 @@ if [ ! -d depot_tools ]; then git clone https://chromium.googlesource.com/chromi
 	export GYP_GENERATOR_OUTPUT="$1"
     fi
 
-    # This and --no-history below make it so we clone the minimum amount with git
-    export CHROMIUM_NO_HISTORY=1
+    WEBRTC_REVISION="src@70dfed74a3141b13849dcd19321523140b3e614b" # Chrome 41
+    gclient sync --no-history --with_branch_heads --nohooks --revision $WEBRTC_REVISION
 
-    REVISION="src@70dfed74a3141b13849dcd19321523140b3e614b" # Chrome 41
-    gclient sync --no-history --with_branch_heads --revision $REVISION
+    ./sync_chromium.py
+
+    python src/setup_links.py
+
+    python src/webrtc/build/gyp_webrtc -I../build.gypi
 )

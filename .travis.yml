@@ -33,7 +33,7 @@ install:
   - ln -s `pwd` /tmp/ws/src/package
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
-  - sudo apt-get install -qq libxss-dev libpci-dev
+  - sudo apt-get install -qq libxss-dev
 
 script:
   - cd /tmp/ws

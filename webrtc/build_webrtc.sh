@@ -4,7 +4,7 @@ export PATH=`pwd`/depot_tools:"$PATH"
 
 if [[ $TRAVIS == "true" ]]; then
     echo "Building on travis"
-    TRAVIS_NINJA_ARGS=("-j" "1")
+    TRAVIS_NINJA_ARGS=("-j" "2")
 else
     TRAVIS_NINJA_ARGS=()
 fi

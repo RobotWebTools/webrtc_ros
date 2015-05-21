@@ -1,6 +1,4 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -B@webrtc_src_root@/third_party/binutils/Linux_x64/Release/bin")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-z,defs")
+set(WEBRTC_CXX_FLAGS "-std=gnu++11 -B@webrtc_src_root@/third_party/binutils/Linux_x64/Release/bin -Wl,-z,defs")
 
 set(__WEBRTC_LIBRARIES
   -l@webrtc_build_root@/obj/chromium/src/third_party/jsoncpp/libjsoncpp.a

@@ -7,17 +7,13 @@ find_package(catkin REQUIRED COMPONENTS
   webrtc
   image_transport
   nodelet
-)
-
-execute_process(
-  COMMAND ./checkout_async_web_server_cpp.sh
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+  async_web_server_cpp
 )
 
 find_package(OpenSSL)
 
 catkin_package(
-  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet
+  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet async_web_server_cpp
 )
 
 ###########
@@ -28,14 +24,17 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${WEBRTC_INCLUDE_DIRS}
-  async_web_server_cpp_src/include
 )
 
-add_definitions(${WEBRTC_DEFINITIONS})
+add_library(webrtc_ros_server_noncpp11
+  src/webrtc_web_server.cpp
+)
+target_link_libraries(webrtc_ros_server_noncpp11
+  ${catkin_LIBRARIES}
+)
 
-file(GLOB_RECURSE ASYNC_WEB_SERVER_CPP_SRCS "async_web_server_cpp_src/src/**.cpp")
-add_library(async_web_server_cpp_cpp11 ${ASYNC_WEB_SERVER_CPP_SRCS})
-target_link_libraries(async_web_server_cpp_cpp11 ${OPENSSL_LIBRARIES} boost_system boost_thread boost_regex pthread)
+string(REPLACE ";" " " WEBRTC_DEFINITIONS_STR "${WEBRTC_DEFINITIONS}") # this is defined as a list so we need to replace ; with ' '
+
 
 add_library(webrtc_ros_server
   src/ros_video_capturer.cpp
@@ -56,8 +55,10 @@ add_library(webrtc_ros_server
 target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}
   ${WEBRTC_LIBRARIES}
-  async_web_server_cpp_cpp11
+  webrtc_ros_server_noncpp11
 )
+set_target_properties(webrtc_ros_server PROPERTIES COMPILE_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
+set_target_properties(webrtc_ros_server PROPERTIES LINK_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
 
 add_executable(webrtc_ros_server_node
   src/webrtc_ros_server_node.cpp
@@ -66,6 +67,8 @@ target_link_libraries(webrtc_ros_server_node
   ${catkin_LIBRARIES}
   webrtc_ros_server
 )
+set_target_properties(webrtc_ros_server_node PROPERTIES COMPILE_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
+set_target_properties(webrtc_ros_server_node PROPERTIES LINK_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
 
 add_library(webrtc_ros_server_nodelet
   src/webrtc_ros_server_nodelet.cpp
@@ -74,6 +77,8 @@ target_link_libraries(webrtc_ros_server_nodelet
   ${catkin_LIBRARIES}
   webrtc_ros_server
 )
+set_target_properties(webrtc_ros_server_nodelet PROPERTIES COMPILE_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
+set_target_properties(webrtc_ros_server_nodelet PROPERTIES LINK_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
 
 
 #############
@@ -82,7 +87,6 @@ target_link_libraries(webrtc_ros_server_nodelet
 
 # Mark nodes and libraries for installation
 install(TARGETS
-  async_web_server_cpp_cpp11
   webrtc_ros_server
   webrtc_ros_server_node
   webrtc_ros_server_nodelet

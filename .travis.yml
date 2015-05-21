@@ -4,6 +4,7 @@ compiler:
   - gcc
 
 before_install:
+  - sudo add-apt-repository -y ppa:libreoffice/ppa # for libicu-dev with pc files
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo add-apt-repository -y ppa:apokluda/boost1.53
   - sudo apt-get update -qq
@@ -33,7 +34,7 @@ install:
   - ln -s `pwd` /tmp/ws/src/package
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
-  - sudo apt-get install -qq libnss3-dev
+  - sudo apt-get install -qq libnss3-dev libicu-dev
 
 script:
   - cd /tmp/ws

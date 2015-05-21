@@ -24,6 +24,7 @@ CHROMIUM_SRC_DIRS = [
     "testing",
     "build",
     "tools/clang",
+    "tools/generate_shim_headers",
     "tools/protoc_wrapper",
     "third_party/jsoncpp",
     "third_party/usrsctp",
@@ -39,7 +40,6 @@ CHROMIUM_SRC_FILES = [
 ]
 
 CHROMIUM_DEPS = [
-    "third_party/icu",
     "third_party/libyuv",
     "third_party/libsrtp",
     "third_party/libvpx",
@@ -198,6 +198,28 @@ def main():
             subprocess.check_call(["git", "checkout", dep_revision], cwd=dep_destination)
         else:
             print name + " is up to date at " + current_revision
+
+
+    # handle using system libraries
+    replace_gyp_files_location = os.path.join(CHROMIUM_SRC_DIR, "build", "linux", "unbundle")
+    sys.path.append(replace_gyp_files_location)
+    SYSTEM_REPLACEMENTS = __import__("replace_gyp_files").REPLACEMENTS
+
+    defines = os.environ['GYP_DEFINES']
+    # ensure file to be replace exist
+    for flag, path in SYSTEM_REPLACEMENTS.items():
+        if '%s=1' % flag in defines:
+            replaced_file = os.path.join(CHROMIUM_SRC_DIR, path)
+            if not os.path.isfile(replaced_file):
+                if not os.path.isdir(os.path.dirname(replaced_file)):
+                    os.makedirs(os.path.dirname(replaced_file))
+                with open(replaced_file, 'w') as f:
+                    f.write("")
+
+    command = ["python", "replace_gyp_files.py"]
+    command.extend(["-D"+define for define in defines.split()])
+    print command
+    subprocess.check_call(command, cwd=replace_gyp_files_location)
 
     hook_wd = CHROMIUM_DIR
     for name in CHROMIUM_HOOKS:

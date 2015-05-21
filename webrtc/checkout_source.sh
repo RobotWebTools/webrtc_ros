@@ -19,7 +19,8 @@ if [ ! -d depot_tools ]; then git clone https://chromium.googlesource.com/chromi
     fi
 
     WEBRTC_REVISION="src@70dfed74a3141b13849dcd19321523140b3e614b" # Chrome 41
-    gclient sync --no-history --with_branch_heads --nohooks --revision $WEBRTC_REVISION
+    echo "Syncing webrtc"
+    gclient sync --no-history --with_branch_heads --with_tags --nohooks --revision $WEBRTC_REVISION
 
     ./sync_chromium.py
 

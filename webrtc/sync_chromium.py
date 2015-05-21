@@ -181,6 +181,13 @@ def main():
 
         if not os.path.isdir(dep_destination):
             subprocess.check_call(["git", "clone", dep_repo, dep_destination])
+            subprocess.check_call(['git', 'config', 'remote.origin.fetch',
+                                   '+refs/branch-heads/*:refs/remotes/branch-heads/*',
+                                   '^\\+refs/branch-heads/\\*:.*$'], cwd=dep_destination)
+            subprocess.check_call(['git', 'config', 'remote.origin.fetch',
+                                   '+refs/tags/*:refs/tags/*',
+                                   '^\\+refs/tags/\\*:.*$'], cwd=dep_destination)
+            subprocess.check_call(["git", "fetch", "--all"], cwd=dep_destination)
 
         current_revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=dep_destination).strip()
         if current_revision != dep_revision:

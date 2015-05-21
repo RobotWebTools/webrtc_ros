@@ -218,7 +218,6 @@ def main():
 
     command = ["python", "replace_gyp_files.py"]
     command.extend(["-D"+define for define in defines.split()])
-    print command
     subprocess.check_call(command, cwd=replace_gyp_files_location)
 
     hook_wd = CHROMIUM_DIR

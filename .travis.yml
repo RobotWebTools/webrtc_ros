@@ -8,9 +8,11 @@ before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test # for g++4.8 (for c++11)
   - sudo add-apt-repository -y ppa:apokluda/boost1.53 # Need new boost for c++11
   - sudo apt-get update -qq
-  - sudo apt-get install -qq g++-4.8
+  - sudo apt-get install -qq gcc-4.8 g++-4.8
   - sudo apt-get install -qq libboost1.53-all-dev
-  - export CXX="g++-4.8"
+
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 90
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
   # Need to satisfy apt deps
   # make libboost-all-dev marked as installed
@@ -51,7 +53,6 @@ script:
   - cd /tmp/ws
   - source /opt/ros/hydro/setup.bash
   - catkin init
-  - catkin config --cmake-args "-DCMAKE_CXX_COMPILER=g++-4.8"
   - catkin config --install
   - catkin build -p1 -j4 --no-status
   - source install/setup.bash

@@ -26,5 +26,6 @@ if [ ! -d depot_tools ]; then git clone https://chromium.googlesource.com/chromi
 	export GYP_GENERATOR_OUTPUT="$1"
     fi
 
-    python src/webrtc/build/gyp_webrtc -I../build.gypi
+    cd src
+    python webrtc/build/gyp_webrtc -I../build.gypi ../bare.gyp all.gyp
 )

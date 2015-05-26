@@ -11,9 +11,14 @@ execute_process(
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
 
+set(CMAKE_EXTRAS_FILE ${CMAKE_BINARY_DIR}/webrtc-extras.cmake)
+execute_process(
+  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} generate-cmake-extras ${CMAKE_EXTRAS_FILE} ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_LIB_DESTINATION} # this must come before catkin_packate, which sets up CATKIN_PACKAGE_* macros so use global instead of package
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)
+
 catkin_package(
-  INCLUDE_DIRS
-  CFG_EXTRAS webrtc-extras.cmake
+  CFG_EXTRAS ${CMAKE_EXTRAS_FILE}
 )
 
 #############
@@ -22,6 +27,7 @@ catkin_package(
 
 add_custom_target(webrtc ALL
   COMMAND ./build_webrtc.sh ${webrtc_build_root}
+  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} copy-libs ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_LIB_DESTINATION}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
 

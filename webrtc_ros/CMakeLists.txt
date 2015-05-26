@@ -23,7 +23,6 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${WEBRTC_INCLUDE_DIRS}
 )
 
 add_library(webrtc_ros_server_noncpp11
@@ -32,9 +31,6 @@ add_library(webrtc_ros_server_noncpp11
 target_link_libraries(webrtc_ros_server_noncpp11
   ${catkin_LIBRARIES}
 )
-
-string(REPLACE ";" " " WEBRTC_DEFINITIONS_STR "${WEBRTC_DEFINITIONS}") # this is defined as a list so we need to replace ; with ' '
-
 
 add_library(webrtc_ros_server
   src/ros_video_capturer.cpp
@@ -57,8 +53,10 @@ target_link_libraries(webrtc_ros_server
   ${WEBRTC_LIBRARIES}
   webrtc_ros_server_noncpp11
 )
-set_target_properties(webrtc_ros_server PROPERTIES COMPILE_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
-set_target_properties(webrtc_ros_server PROPERTIES LINK_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
+target_compile_definitions(webrtc_ros_server PUBLIC ${WEBRTC_COMPILE_DEFINITIONS})
+target_compile_options(webrtc_ros_server PUBLIC ${WEBRTC_COMPILE_OPTIONS})
+target_include_directories(webrtc_ros_server PUBLIC ${WEBRTC_INCLUDE_DIRS})
+set_target_properties(webrtc_ros_server PROPERTIES LINK_FLAGS "${WEBRTC_LINK_FLAGS}")
 
 add_executable(webrtc_ros_server_node
   src/webrtc_ros_server_node.cpp
@@ -67,8 +65,6 @@ target_link_libraries(webrtc_ros_server_node
   ${catkin_LIBRARIES}
   webrtc_ros_server
 )
-set_target_properties(webrtc_ros_server_node PROPERTIES COMPILE_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
-set_target_properties(webrtc_ros_server_node PROPERTIES LINK_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
 
 add_library(webrtc_ros_server_nodelet
   src/webrtc_ros_server_nodelet.cpp
@@ -77,8 +73,6 @@ target_link_libraries(webrtc_ros_server_nodelet
   ${catkin_LIBRARIES}
   webrtc_ros_server
 )
-set_target_properties(webrtc_ros_server_nodelet PROPERTIES COMPILE_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
-set_target_properties(webrtc_ros_server_nodelet PROPERTIES LINK_FLAGS "${WEBRTC_CXX_FLAGS} ${WEBRTC_DEFINITIONS_STR}")
 
 
 #############

@@ -71,6 +71,9 @@ subparsers = parser.add_subparsers(dest='action')
 copy_libs_parser = subparsers.add_parser('copy-libs')
 copy_libs_parser.add_argument('library_output_dir')
 
+built_libs_parser = subparsers.add_parser('list-built-libs')
+built_libs_parser.add_argument('library_output_dir')
+
 install_includes_parser = subparsers.add_parser('install-includes')
 install_includes_parser.add_argument('include_install_dir')
 
@@ -120,7 +123,11 @@ if args.action == 'copy-libs':
                 else:
                     shutil.copyfile(input_lib, output_lib)
 
-if args.action == 'install-includes':
+elif args.action == 'list-built-libs':
+    print ';'.join(os.path.join(args.library_output_dir, lib[1]) for lib in built_libs)
+
+elif args.action == 'install-includes':
+    print 'Installing includes'
     seen = set()
     dirs = reversed([include_dir for include_dir in src_include_dirs if not (include_dir in seen or seen.add(include_dir))])
     for include_dir in dirs:
@@ -132,7 +139,7 @@ if args.action == 'install-includes':
                 if filename.endswith('.h'):
                     input_file = os.path.join(root, filename)
                     output_file = os.path.join(args.include_install_dir, os.path.relpath(input_file, include_dir))
-                    print 'Installing: ' + output_file
+                    #print 'Installing: ' + output_file
                     shutil.copyfile(input_file, output_file)
 
 elif args.action == 'generate-cmake-extras':

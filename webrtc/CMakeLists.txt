@@ -42,9 +42,9 @@ add_custom_target(webrtc ALL
 #  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-## Copy header files
-#install(DIRECTORY webrtc_src/talk
-#  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
-#  FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h"
-#  PATTERN ".svn" EXCLUDE
-#)
+
+install(CODE "
+execute_process(
+  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} install-includes ${CMAKE_INSTALL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+)")

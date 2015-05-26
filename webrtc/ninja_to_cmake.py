@@ -71,7 +71,8 @@ subparsers = parser.add_subparsers(dest='action')
 copy_libs_parser = subparsers.add_parser('copy-libs')
 copy_libs_parser.add_argument('library_output_dir')
 
-src_include_dirs_parser = subparsers.add_parser('src-include-dirs')
+install_includes_parser = subparsers.add_parser('install-includes')
+install_includes_parser.add_argument('include_install_dir')
 
 generate_cmake_extras_parser = subparsers.add_parser('generate-cmake-extras')
 generate_cmake_extras_parser.add_argument('output_file')
@@ -101,13 +102,14 @@ for lib in built_lib_paths:
 src_include_dirs = map(lambda include: os.path.normpath(os.path.join(args.build_root, re.sub('^-I', '', include))), definitions['includes'].split())
 src_include_dirs = filter(lambda path: not path.endswith('third_party/webrtc'), src_include_dirs) # this path is added but does not exist in this source configuration
 
+
 if args.action == 'copy-libs':
     for lib in built_libs:
         input_lib = lib[0]
         output_lib = os.path.join(args.library_output_dir, lib[1])
         input_time = os.path.getmtime(input_lib)
         output_time = 0 if not os.path.isfile(output_lib) else os.path.getmtime(output_lib)
-        if output_time <= input_time:
+        if output_time < input_time:
             with open(input_lib, 'r') as input_f:
                 if input_f.readline() == '!<thin>\n': # if is a thin archive create a normal one, otherwise just copy the archive
                     ar = 'ar' # TODO should eventually import ar tool name from build.ninja
@@ -117,6 +119,21 @@ if args.action == 'copy-libs':
                     subprocess.check_call([ar, 'rs', output_lib] + object_files, cwd=os.path.dirname(input_lib))
                 else:
                     shutil.copyfile(input_lib, output_lib)
+
+if args.action == 'install-includes':
+    seen = set()
+    dirs = reversed([include_dir for include_dir in src_include_dirs if not (include_dir in seen or seen.add(include_dir))])
+    for include_dir in dirs:
+        for root, dirs, files in os.walk(include_dir, followlinks=True):
+            dest_dir = os.path.join(args.include_install_dir, os.path.relpath(root, include_dir))
+            if not os.path.isdir(dest_dir):
+                os.makedirs(dest_dir)
+            for filename in files:
+                if filename.endswith('.h'):
+                    input_file = os.path.join(root, filename)
+                    output_file = os.path.join(args.include_install_dir, os.path.relpath(input_file, include_dir))
+                    print 'Installing: ' + output_file
+                    shutil.copyfile(input_file, output_file)
 
 elif args.action == 'generate-cmake-extras':
     with open(args.output_file, 'w') as f:

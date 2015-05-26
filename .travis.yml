@@ -24,6 +24,16 @@ before_install:
   - equivs-build .travis-boost-config
   - sudo dpkg -i libboost-all-dev_42_all.deb
 
+  # Need cmake 2.8.12
+  - pushd /tmp
+  - wget http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz
+  - tar -xzf cmake-2.8.12.2.tar.gz
+  - cd cmake-2.8.12.2
+  - ./bootstrap
+  - make
+  - sudo make install
+  - popd
+
 install:
   - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
   - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -

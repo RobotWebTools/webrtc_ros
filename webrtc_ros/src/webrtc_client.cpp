@@ -53,7 +53,9 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_chan
     ros_media_device_manager_(it_)
 {
   ROS_INFO("Creating WebrtcClient");
-  peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
+  signaling_thread_.Start();
+  worker_thread_.Start();
+  peer_connection_factory_  = webrtc::CreatePeerConnectionFactory(&worker_thread_, &signaling_thread_, nullptr, nullptr, nullptr);
   if (!peer_connection_factory_.get())
   {
     ROS_WARN("Could not create peer connection factory");
@@ -67,7 +69,7 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_chan
 }
 WebrtcClient::~WebrtcClient()
 {
-  ROS_INFO("Webrtc Client Destroyed");
+  ROS_INFO("Destroying Webrtc Client");
 }
 
 void WebrtcClient::init()

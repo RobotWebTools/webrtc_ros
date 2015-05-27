@@ -48,10 +48,11 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
 }
 
 
-WebrtcClient::WebrtcClient(ros::NodeHandle& nh, async_web_server_cpp::WebsocketConnectionPtr signaling_channel)
+WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_channel)
   : nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
     ros_media_device_manager_(it_)
 {
+  ROS_INFO("Creating WebrtcClient");
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
   if (!peer_connection_factory_.get())
   {
@@ -109,11 +110,22 @@ bool WebrtcClient::initPeerConnection()
   }
 }
 
+class MessageHandlerImpl : public MessageHandler {
+public:
+  MessageHandlerImpl(WebrtcClientWeakPtr weak_this) : weak_this_(weak_this){}
+  void handle_message(MessageHandler::Type type, const std::string& raw)
+  {
+    WebrtcClientPtr _this = weak_this_.lock();
+    if (_this)
+      _this->handle_message(type, raw);
+  }
+private:
+  WebrtcClientWeakPtr weak_this_;
+};
 
-async_web_server_cpp::WebsocketConnection::MessageHandler WebrtcClient::createMessageHandler()
+MessageHandler* WebrtcClient::createMessageHandler()
 {
-  WebrtcClientWeakPtr weak_this(shared_from_this());
-  return boost::bind(&WebrtcClient::static_handle_message, weak_this, _1);
+  return new MessageHandlerImpl(shared_from_this());
 }
 
 void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event)
@@ -157,24 +169,15 @@ protected:
   ~DummySetSessionDescriptionObserver() {}
 };
 
-void WebrtcClient::static_handle_message(WebrtcClientWeakPtr weak_this,
-    const async_web_server_cpp::WebsocketMessage& message)
+void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& raw)
 {
-  WebrtcClientPtr _this = weak_this.lock();
-  if (_this)
-    _this->handle_message(message);
-}
-
-
-void WebrtcClient::handle_message(const async_web_server_cpp::WebsocketMessage& message)
-{
-  if (message.type == async_web_server_cpp::WebsocketMessage::type_text)
+  if (type == MessageHandler::TEXT)
   {
     Json::Reader reader;
     Json::Value message_json;
-    if (!reader.parse(message.content, message_json))
+    if (!reader.parse(raw, message_json))
     {
-      ROS_WARN_STREAM("Could not parse message: " << message.content);
+      ROS_WARN_STREAM("Could not parse message: " << raw);
       invalidate();
       return;
     }
@@ -283,22 +286,22 @@ void WebrtcClient::handle_message(const async_web_server_cpp::WebsocketMessage& 
     }
     else
     {
-      std::string type;
-      WebrtcRosMessage::getType(message_json, &type);
-      ROS_WARN_STREAM("Unexpected message type: " << type << ": " << message.content);
+      std::string message_type;
+      WebrtcRosMessage::getType(message_json, &message_type);
+      ROS_WARN_STREAM("Unexpected message type: " << message_type << ": " << raw);
     }
   }
-  else if (message.type == async_web_server_cpp::WebsocketMessage::type_pong)
+  else if (type == MessageHandler::PONG)
   {
     // got a pong from the last ping
   }
-  else if (message.type == async_web_server_cpp::WebsocketMessage::type_close)
+  else if (type == MessageHandler::CLOSE)
   {
     invalidate();
   }
   else
   {
-    ROS_WARN_STREAM("Unexpected websocket message type: " << message.type << ": " << message.content);
+    ROS_WARN_STREAM("Unexpected signaling message type: " << type << ": " << raw);
   }
 }
 

@@ -4,14 +4,15 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include "webrtc_ros/ros_media_device_manager.h"
-#include <async_web_server_cpp/websocket_request_handler.hpp>
 #include "talk/app/webrtc/mediastreaminterface.h"
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/test/fakeconstraints.h"
 #include "webrtc_ros/configure_message.h"
+#include "webrtc_ros/webrtc_web_server.h"
 
 namespace webrtc_ros
 {
@@ -39,14 +40,14 @@ private:
 
 };
 
-
+class MessageHandlerImpl;
 class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
   private boost::noncopyable
 {
 public:
-  WebrtcClient(ros::NodeHandle& nh, async_web_server_cpp::WebsocketConnectionPtr signaling_channel);
+  WebrtcClient(ros::NodeHandle& nh, SignalingChannel *signaling_channel);
   ~WebrtcClient();
-  async_web_server_cpp::WebsocketConnection::MessageHandler createMessageHandler();
+  MessageHandler* createMessageHandler();
 
   void init();
   void invalidate();
@@ -60,9 +61,7 @@ private:
 
   void ping_timer_callback(const ros::TimerEvent&);
 
-  static void static_handle_message(WebrtcClientWeakPtr weak_this,
-                                    const async_web_server_cpp::WebsocketMessage& message);
-  void handle_message(const async_web_server_cpp::WebsocketMessage& message);
+  void handle_message(MessageHandler::Type type, const std::string& message);
 
   void OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterface*);
   void OnSessionDescriptionFailure(const std::string&);
@@ -71,7 +70,7 @@ private:
 
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
-  async_web_server_cpp::WebsocketConnectionPtr signaling_channel_;
+  boost::scoped_ptr<SignalingChannel> signaling_channel_;
 
   RosMediaDeviceManager ros_media_device_manager_;
   ConfigureMessage last_configuration_;
@@ -87,6 +86,7 @@ private:
   ros::Timer ping_timer_;
 
   friend WebrtcClientObserverProxy;
+  friend MessageHandlerImpl;
 };
 
 }

@@ -34,7 +34,7 @@ static void CustomRosLog(ros::console::levels::Level level, const std::string& m
   ss << message;
 
   ROSCONSOLE_DEFINE_LOCATION(true, level, std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc");
-#if ROS_VERSION_MINIMUM(1, 11, 0) // Indigo
+#if ROS_VERSION_MINIMUM(1, 11, 0) // Indigo & Jade
   if (ROS_UNLIKELY(__rosconsole_define_location__enabled)) {
     ros::console::print(0, __rosconsole_define_location__loc.logger_,
 			level, ss, file.c_str(), line, function.c_str());

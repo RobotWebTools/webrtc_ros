@@ -34,9 +34,12 @@ public:
 private:
   DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);
 
+  void SignalFrameCapturedOnStartThread(cricket::CapturedFrame *frame);
+
   image_transport::ImageTransport it_;
   const std::string topic_;
   image_transport::Subscriber sub_;
+  rtc::Thread* start_thread_;
 };
 
 

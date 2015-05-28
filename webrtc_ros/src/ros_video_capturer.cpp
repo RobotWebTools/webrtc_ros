@@ -1,11 +1,12 @@
 #include "webrtc_ros/ros_video_capturer.h"
+#include "webrtc/base/bind.h"
 
 namespace webrtc_ros
 {
 
 
 RosVideoCapturer::RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic)
-  : it_(it), topic_(topic)
+  : it_(it), topic_(topic), start_thread_(nullptr)
 {
 
   // Default supported formats. Use ResetSupportedFormats to over write.
@@ -28,6 +29,7 @@ RosVideoCapturer::~RosVideoCapturer()
 
 cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& capture_format)
 {
+  start_thread_ = rtc::Thread::Current();
   try
   {
     ROS_INFO("Starting ROS subscriber");
@@ -49,6 +51,7 @@ cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& captur
 
 void RosVideoCapturer::Stop()
 {
+  start_thread_ = nullptr;
   try
   {
     ROS_INFO("Stopping ROS subscriber");
@@ -100,9 +103,19 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   frame.data_size = yuv.rows * yuv.step;
   frame.data = yuv.data;
 
-  SignalFrameCaptured(this, &frame);
+  // This must be invoked on the worker thread, which should be the thread start was called on
+  // This code is based on talk/media/webrtc/webrtcvideocapturer.cc, WebRtcVideoCapturer::OnIncomingCapturedFrame
+  if (start_thread_->IsCurrent()) {
+    SignalFrameCapturedOnStartThread(&frame);
+  } else {
+    start_thread_->Invoke<void>(rtc::Bind(&RosVideoCapturer::SignalFrameCapturedOnStartThread,
+					  this, &frame));
+  }
 }
 
+void RosVideoCapturer::SignalFrameCapturedOnStartThread(cricket::CapturedFrame *frame) {
+  SignalFrameCaptured(this, frame);
+}
 
 bool RosVideoCapturer::IsRunning()
 {

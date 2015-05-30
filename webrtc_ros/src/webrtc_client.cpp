@@ -6,6 +6,7 @@
 #include "webrtc/base/json.h"
 #include "talk/media/devices/devicemanager.h"
 #include "talk/app/webrtc/videosourceinterface.h"
+#include "webrtc/base/bind.h"
 
 namespace webrtc_ros
 {
@@ -50,12 +51,10 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
 
 WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_channel)
   : nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
-    ros_media_device_manager_(it_)
+    ros_media_device_manager_(it_), signaling_thread_(rtc::Thread::Current())
 {
   ROS_INFO("Creating WebrtcClient");
-  signaling_thread_.Start();
-  worker_thread_.Start();
-  peer_connection_factory_  = webrtc::CreatePeerConnectionFactory(&worker_thread_, &signaling_thread_, nullptr, nullptr, nullptr);
+  peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
   if (!peer_connection_factory_.get())
   {
     ROS_WARN("Could not create peer connection factory");
@@ -69,12 +68,15 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_chan
 }
 WebrtcClient::~WebrtcClient()
 {
+  if(valid()) {
+    ROS_FATAL("WebrtcClient destructor should only be called once it's invalidated");
+  }
   ROS_INFO("Destroying Webrtc Client");
 }
 
-void WebrtcClient::init()
+void WebrtcClient::init(boost::shared_ptr<WebrtcClient>& keep_alive_ptr)
 {
-  keep_alive_this_ = shared_from_this();
+  keep_alive_this_ = keep_alive_ptr;
 }
 void WebrtcClient::invalidate()
 {
@@ -88,10 +90,14 @@ bool WebrtcClient::valid()
 
 bool WebrtcClient::initPeerConnection()
 {
+  if(!valid()) {
+    ROS_ERROR("Tried to initialize invalidated webrtc client");
+    return false;
+  }
   if (!peer_connection_)
   {
     webrtc::PeerConnectionInterface::IceServers servers;
-    WebrtcClientWeakPtr weak_this(shared_from_this());
+    WebrtcClientWeakPtr weak_this(keep_alive_this_);
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(servers,
                        &peer_connection_constraints_,
@@ -119,7 +125,8 @@ public:
   {
     WebrtcClientPtr _this = weak_this_.lock();
     if (_this)
-      _this->handle_message(type, raw);
+      _this->signaling_thread_->Invoke<void>(rtc::Bind(&WebrtcClient::handle_message,
+						       _this.get(), type, raw));
   }
 private:
   WebrtcClientWeakPtr weak_this_;
@@ -127,7 +134,7 @@ private:
 
 MessageHandler* WebrtcClient::createMessageHandler()
 {
-  return new MessageHandlerImpl(shared_from_this());
+  return new MessageHandlerImpl(keep_alive_this_);
 }
 
 void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event)

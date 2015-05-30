@@ -19,20 +19,17 @@ RosVideoCapturer::RosVideoCapturer(image_transport::ImageTransport it, const std
                                          cricket::VideoFormat::FpsToInterval(30), cricket::FOURCC_I420));
   formats.push_back(cricket::VideoFormat(160, 120,
                                          cricket::VideoFormat::FpsToInterval(30), cricket::FOURCC_I420));
-  ROS_ERROR("Capturer Construction: %p", rtc::Thread::Current());
 }
 
 
 RosVideoCapturer::~RosVideoCapturer()
 {
-  ROS_ERROR("Capturer Destruction: %p", rtc::Thread::Current());
   Stop(); // Make sure were stopped so callbacks stop
 }
 
 
 cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& capture_format)
 {
-  ROS_ERROR("Capturer Start: %p", rtc::Thread::Current());
   start_thread_ = rtc::Thread::Current();
   if (capture_state() == cricket::CS_RUNNING) {
     ROS_WARN("Start called when it's already started.");
@@ -48,7 +45,6 @@ cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& captur
 
 void RosVideoCapturer::Stop()
 {
-  ROS_ERROR("Capturer Stop: %p", rtc::Thread::Current());
   impl_->Stop();
   start_thread_ = nullptr;
   SetCaptureFormat(NULL);
@@ -57,7 +53,6 @@ void RosVideoCapturer::Stop()
 
 void RosVideoCapturer::imageCallback(cricket::CapturedFrame *frame)
 {
-  ROS_ERROR("imageCallback (ROS): %p", rtc::Thread::Current());
   // This must be invoked on the worker thread, which should be the thread start was called on
   // This code is based on talk/media/webrtc/webrtcvideocapturer.cc, WebRtcVideoCapturer::OnIncomingCapturedFrame
   if (start_thread_->IsCurrent()) {
@@ -79,7 +74,6 @@ void ImageMessageHandler::OnMessage(rtc::Message* msg)
 }
 
 void RosVideoCapturer::SignalFrameCapturedOnStartThread(cricket::CapturedFrame *frame) {
-  ROS_ERROR("Capturer frame captured (start thread): %p", rtc::Thread::Current());
   SignalFrameCaptured(this, frame);
 }
 

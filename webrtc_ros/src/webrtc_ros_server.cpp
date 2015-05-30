@@ -29,7 +29,6 @@ void WebrtcRosServer::cleanupWebrtcClient(WebrtcClient *client) {
     std::unique_lock<std::mutex> lock(clients_mutex_);
     clients_.erase(client);
     delete client; // delete while holding the lock so that we do not exit before were done
-    ROS_ERROR("Cleaned up client: %lu", clients_.size());
   }
   shutdown_cv_.notify_all();
 }
@@ -43,7 +42,6 @@ MessageHandler* WebrtcRosServer::handle_new_signaling_channel(SignalingChannel *
   {
     std::unique_lock<std::mutex> lock(clients_mutex_);
     clients_[client.get()] = WebrtcClientWeakPtr(client);
-    ROS_ERROR("New client: %lu", clients_.size());
   }
   return client->createMessageHandler();
 }

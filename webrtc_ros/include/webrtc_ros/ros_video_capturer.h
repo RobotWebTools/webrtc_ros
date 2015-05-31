@@ -49,7 +49,7 @@ private:
 
   void SignalFrameCapturedOnStartThread(cricket::CapturedFrame *frame);
 
-  rtc::Thread* start_thread_;
+  rtc::Thread* volatile start_thread_;
   ImageMessageHandler handler_;
   boost::shared_ptr<RosVideoCapturerImpl> impl_;
 

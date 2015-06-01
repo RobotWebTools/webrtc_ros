@@ -11,7 +11,7 @@ MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, Signal
 }
 
 WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
-  : nh_(nh), pnh_(pnh)
+  : nh_(nh), pnh_(pnh), log_context_(true)
 {
   rtc::InitializeSSL();
 

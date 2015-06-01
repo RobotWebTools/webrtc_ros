@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 #include <boost/shared_ptr.hpp>
 #include <webrtc_ros/webrtc_client.h>
-#include <webrtc_ros/ros_trace_context.h>
+#include <webrtc_ros/ros_log_context.h>
 #include <webrtc_ros/webrtc_web_server.h>
 
 namespace webrtc_ros
@@ -26,7 +26,7 @@ private:
   ros::NodeHandle pnh_;
 
   boost::shared_ptr<webrtc_ros::WebrtcWebServer> server_;
-  RosTraceContext trace_context_;
+  RosLogContext log_context_;
 };
 
 }

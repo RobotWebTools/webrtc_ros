@@ -36,13 +36,13 @@ public:
 
   void imageCallback(cricket::CapturedFrame *frame);
 
-  virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) OVERRIDE;
-  virtual void Stop() OVERRIDE;
-  virtual bool IsRunning() OVERRIDE;
-  virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs) OVERRIDE;
+  virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) override;
+  virtual void Stop() override;
+  virtual bool IsRunning() override;
+  virtual bool GetPreferredFourccs(std::vector<uint32>* fourccs) override;
   virtual bool GetBestCaptureFormat(const cricket::VideoFormat& desired,
-                                    cricket::VideoFormat* best_format) OVERRIDE;
-  virtual bool IsScreencast() const OVERRIDE;
+                                    cricket::VideoFormat* best_format) override;
+  virtual bool IsScreencast() const override;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);

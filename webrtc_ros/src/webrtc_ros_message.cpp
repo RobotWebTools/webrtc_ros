@@ -13,7 +13,7 @@ bool WebrtcRosMessage::isType(const Json::Value& message_json, const std::string
 
 bool WebrtcRosMessage::getType(const Json::Value& message_json, std::string* type)
 {
-  return GetStringFromJsonObject(message_json, kMessageTypeFieldName, type);
+  return rtc::GetStringFromJsonObject(message_json, kMessageTypeFieldName, type);
 }
 
 std::string WebrtcRosMessage::kMessageTypeFieldName = "type";

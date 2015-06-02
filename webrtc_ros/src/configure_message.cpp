@@ -12,13 +12,13 @@ bool ConfigureMessage::fromJson(const Json::Value& message_json)
 {
   if (isConfigure(message_json))
   {
-    if (!GetStringFromJsonObject(message_json, kSubscribedVideoTopicFieldName, &subscribed_video_topic))
+    if (!rtc::GetStringFromJsonObject(message_json, kSubscribedVideoTopicFieldName, &subscribed_video_topic))
       subscribed_video_topic = "";
-    if (!GetStringFromJsonObject(message_json, kSubscribedAudioTopicFieldName, &subscribed_audio_topic))
+    if (!rtc::GetStringFromJsonObject(message_json, kSubscribedAudioTopicFieldName, &subscribed_audio_topic))
       subscribed_audio_topic = "";
-    if (!GetStringFromJsonObject(message_json, kPublishedVideoTopicFieldName, &published_video_topic))
+    if (!rtc::GetStringFromJsonObject(message_json, kPublishedVideoTopicFieldName, &published_video_topic))
       published_video_topic = "";
-    if (!GetStringFromJsonObject(message_json, kPublishedAudioTopicFieldName, &published_audio_topic))
+    if (!rtc::GetStringFromJsonObject(message_json, kPublishedAudioTopicFieldName, &published_audio_topic))
       published_audio_topic = "";
     return true;
   }

@@ -12,7 +12,7 @@ if [ ! -d depot_tools ]; then git clone https://chromium.googlesource.com/chromi
     # glibcxx_debug flags will not compile with ROS
     export GYP_DEFINES="clang=0 fastbuild=2 use_gnome_keyring=0 use_gio=0 use_gconf=0 use_libpci=0 use_x11=0 use_system_icu=1 disable_glibcxx_debug=1"
 
-    WEBRTC_REVISION="src@dfaff05ec1d665ee2e206eaec3bbfc86b1efddf3" # Chrome 42
+    WEBRTC_REVISION="src@0a8a5e5bd1cec4782d1aa30fec5e85dddfc0d2b4" # Chrome 43
     echo "Syncing webrtc"
     gclient sync --no-history --with_branch_heads --with_tags --nohooks --revision $WEBRTC_REVISION
 

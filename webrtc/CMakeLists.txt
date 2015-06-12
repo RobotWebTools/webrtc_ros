@@ -4,7 +4,11 @@ project(webrtc)
 find_package(catkin REQUIRED)
 
 set(webrtc_src_root ${PROJECT_SOURCE_DIR}/src)
-set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Release)
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Debug)
+else(CMAKE_BUILD_TYPE MATCHES Debug)
+  set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Release)
+endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
 # checkout source to build and generate ninja build files
 execute_process(

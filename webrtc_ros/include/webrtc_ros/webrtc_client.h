@@ -13,6 +13,7 @@
 #include "talk/app/webrtc/test/fakeconstraints.h"
 #include "webrtc_ros/configure_message.h"
 #include "webrtc_ros/webrtc_web_server.h"
+#include "webrtc/base/thread.h"
 
 namespace webrtc_ros
 {
@@ -41,15 +42,14 @@ private:
 };
 
 class MessageHandlerImpl;
-class WebrtcClient : public boost::enable_shared_from_this<WebrtcClient>,
-  private boost::noncopyable
+class WebrtcClient : private boost::noncopyable
 {
 public:
   WebrtcClient(ros::NodeHandle& nh, SignalingChannel *signaling_channel);
   ~WebrtcClient();
   MessageHandler* createMessageHandler();
 
-  void init();
+  void init(boost::shared_ptr<WebrtcClient>& keep_alive_ptr);
   void invalidate();
   bool valid();
 
@@ -74,6 +74,8 @@ private:
 
   RosMediaDeviceManager ros_media_device_manager_;
   ConfigureMessage last_configuration_;
+
+  rtc::Thread *signaling_thread_;
 
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   boost::shared_ptr<RosVideoRenderer> video_renderer_;

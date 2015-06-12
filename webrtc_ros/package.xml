@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>webrtc_ros</name>
   <version>0.0.0</version>
   <description>A package with ROS utilities for talking to WebRTC</description>
@@ -11,18 +11,12 @@
   <author email="mwills@wpi.edu">Mitchell Wills</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>cv_bridge</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>webrtc</build_depend>
-  <build_depend>image_transport</build_depend>
-  <build_depend>nodelet</build_depend>
-  <build_depend>async_web_server_cpp</build_depend>
-  <run_depend>cv_bridge</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>webrtc</run_depend>
-  <run_depend>image_transport</run_depend>
-  <run_depend>nodelet</run_depend>
-  <run_depend>async_web_server_cpp</run_depend>
+  <depend>cv_bridge</depend>
+  <depend>roscpp</depend>
+  <depend>webrtc</depend>
+  <depend>image_transport</depend>
+  <depend>nodelet</depend>
+  <depend>async_web_server_cpp</depend>
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

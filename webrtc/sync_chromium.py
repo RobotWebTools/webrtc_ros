@@ -49,8 +49,7 @@ CHROMIUM_DEPS = [
     "third_party/yasm/source/patched-yasm",
     "third_party/usrsctp/usrsctplib",
     "tools/gyp",
-    "third_party/jsoncpp/source/src/lib_json",
-    "third_party/jsoncpp/source/include",
+    "third_party/jsoncpp/source",
 ]
 
 CHROMIUM_HOOKS = [

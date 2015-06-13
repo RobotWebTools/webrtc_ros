@@ -117,7 +117,9 @@ if args.action == 'copy-libs':
         output_lib = os.path.join(args.library_output_dir, lib[1])
         input_time = os.path.getmtime(input_lib)
         output_time = 0 if not os.path.isfile(output_lib) else os.path.getmtime(output_lib)
-        if output_time < input_time:
+        # need a fudge factor because copystat below does not appear to be able to copy the exect modification time
+        # potentially related to http://stackoverflow.com/questions/17086426/file-modification-times-not-equal-after-calling-shutil-copystatfile1-file2-un
+        if output_time < input_time - 1e-6:
             with open(input_lib, 'r') as input_f:
                 if input_f.readline() == '!<thin>\n': # if is a thin archive create a normal one, otherwise just copy the archive
                     ar = 'ar' # TODO should eventually import ar tool name from build.ninja

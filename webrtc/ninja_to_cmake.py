@@ -71,6 +71,9 @@ subparsers = parser.add_subparsers(dest='action')
 copy_libs_parser = subparsers.add_parser('copy-libs')
 copy_libs_parser.add_argument('library_output_dir')
 
+copy_libs_parser = subparsers.add_parser('copy-tools')
+copy_libs_parser.add_argument('tool_output_dir')
+
 built_libs_parser = subparsers.add_parser('list-built-libs')
 built_libs_parser.add_argument('library_output_dir')
 
@@ -107,6 +110,8 @@ src_include_dirs = filter(lambda path: not path.endswith('third_party/webrtc'), 
 
 
 if args.action == 'copy-libs':
+    if not os.path.isdir(args.library_output_dir):
+        os.makedirs(args.library_output_dir)
     for lib in built_libs:
         input_lib = lib[0]
         output_lib = os.path.join(args.library_output_dir, lib[1])
@@ -120,8 +125,20 @@ if args.action == 'copy-libs':
                     if os.path.isfile(output_lib):
                         os.remove(output_lib)
                     subprocess.check_call([ar, 'rs', output_lib] + object_files, cwd=os.path.dirname(input_lib))
+                    shutil.copystat(input_lib, output_lib)
                 else:
-                    shutil.copyfile(input_lib, output_lib)
+                    shutil.copy(input_lib, output_lib)
+
+elif args.action == 'copy-tools':
+    if not os.path.isdir(args.tool_output_dir):
+        os.makedirs(args.tool_output_dir)
+    for tool in ['stunserver', 'turnserver', 'relayserver']:
+        input_tool = os.path.join(args.build_root, tool)
+        output_tool = os.path.join(args.tool_output_dir, tool)
+        input_time = os.path.getmtime(input_tool)
+        output_time = 0 if not os.path.isfile(output_tool) else os.path.getmtime(output_tool)
+        if output_time < input_time:
+            shutil.copy(input_tool, output_tool)
 
 elif args.action == 'list-built-libs':
     print ';'.join(os.path.join(args.library_output_dir, lib[1]) for lib in built_libs)

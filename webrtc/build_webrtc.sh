@@ -8,4 +8,4 @@ if [[ $TRAVIS == "true" ]]; then
 else
     TRAVIS_NINJA_ARGS=()
 fi
-ninja "${TRAVIS_NINJA_ARGS[@]}" -C $1 bare_executable
+ninja "${TRAVIS_NINJA_ARGS[@]}" -C $1 bare_executable relayserver stunserver turnserver

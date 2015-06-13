@@ -35,6 +35,7 @@ catkin_package(
 add_custom_target(webrtc ALL
   COMMAND ./build_webrtc.sh ${webrtc_build_root}
   COMMAND ./ninja_to_cmake.py ${webrtc_build_root} copy-libs ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_LIB_DESTINATION}
+  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} copy-tools ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
 )
 
@@ -53,6 +54,14 @@ execute_process(
 # Install libraries
 install(FILES ${BUILT_LIBRARIES}
   DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+# Install tools
+install(PROGRAMS
+  ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/stunserver
+  ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/turnserver
+  ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/relayserver
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 # Install includes

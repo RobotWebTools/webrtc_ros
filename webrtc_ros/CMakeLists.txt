@@ -85,6 +85,7 @@ target_link_libraries(webrtc_ros_server_nodelet
 
 # Mark nodes and libraries for installation
 install(TARGETS
+  webrtc_ros_server_noncpp11
   webrtc_ros_server
   webrtc_ros_server_node
   webrtc_ros_server_nodelet

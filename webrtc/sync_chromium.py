@@ -194,7 +194,7 @@ def main():
             if subprocess.call(["git", "rev-parse", dep_revision], cwd=dep_destination, stdout=dev_null, stderr=dev_null) != 0:
                 print "Could not find requested commit: "+dep_revision+", fetching"
                 subprocess.check_call(["git", "fetch", "--all"], cwd=dep_destination)
-            print "Checking out: " + dep_revision
+            print "Checking out: " + dep_revision + ' for ' + name
             subprocess.check_call(["git", "checkout", dep_revision], cwd=dep_destination)
         else:
             print name + " is up to date at " + current_revision

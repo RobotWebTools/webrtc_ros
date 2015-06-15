@@ -30,3 +30,8 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
+
+===================================================================
+
+Licenses for webrtc and supporting libraries are installed as LICENSE_THIRD_PARTY_talk, LICENSE_THIRD_PARTY_webrtc, LICENSE_webrtc.
+They are located in webrtc/src/webrtc/LICENSE, webrtc/src/webrtc/LICENSE_THIRD_PARTY, and webrtc/src/talk/LICENSE_THIRD_PARTY in the source tree

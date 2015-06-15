@@ -16,9 +16,9 @@ bool SdpMessage::fromJson(const Json::Value& message_json)
 {
   if (isSdpOffer(message_json) || isSdpAnswer(message_json))
   {
-    if (!GetStringFromJsonObject(message_json, WebrtcRosMessage::kMessageTypeFieldName, &type))
+    if (!rtc::GetStringFromJsonObject(message_json, WebrtcRosMessage::kMessageTypeFieldName, &type))
       return false;
-    if (!GetStringFromJsonObject(message_json, kSdpFieldName, &sdp))
+    if (!rtc::GetStringFromJsonObject(message_json, kSdpFieldName, &sdp))
       return false;
     return true;
   }

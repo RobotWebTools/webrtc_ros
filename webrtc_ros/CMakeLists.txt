@@ -10,8 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   async_web_server_cpp
 )
 
-find_package(OpenSSL)
-
 catkin_package(
   CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet async_web_server_cpp
 )
@@ -25,6 +23,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+# This library contains code that cannot be compiled with c++11 enabled
+# This is due to ABI incompatibilities between the two
+# While most of ROS appears to work with the webrtc compiler options,
+# this is needed for async_web_server_cpp, which relies on Boost ASIO types
+# Boost ASIO cannot be mixed between c++11 and non-c++11 compilation units
 add_library(webrtc_ros_server_noncpp11
   src/webrtc_web_server.cpp
 )
@@ -32,6 +35,7 @@ target_link_libraries(webrtc_ros_server_noncpp11
   ${catkin_LIBRARIES}
 )
 
+# This library is built with the same options used to build the webrtc library
 add_library(webrtc_ros_server
   src/ros_video_capturer.cpp
   src/ros_media_device_manager.cpp
@@ -81,6 +85,7 @@ target_link_libraries(webrtc_ros_server_nodelet
 
 # Mark nodes and libraries for installation
 install(TARGETS
+  webrtc_ros_server_noncpp11
   webrtc_ros_server
   webrtc_ros_server_node
   webrtc_ros_server_nodelet
@@ -100,9 +105,12 @@ install(FILES
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
 )
 
 install(DIRECTORY web
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  PATTERN "Gruntfile.js" EXCLUDE
+  PATTERN "node_modules" EXCLUDE
+  PATTERN "package.json" EXCLUDE
+  PATTERN ".gitignore" EXCLUDE
 )

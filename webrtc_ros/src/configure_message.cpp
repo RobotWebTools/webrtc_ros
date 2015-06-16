@@ -3,6 +3,33 @@
 namespace webrtc_ros
 {
 
+bool ConfigureAction::fromJson(const Json::Value& action_json)
+{
+  if (!rtc::GetStringFromJsonObject(action_json, kTypeFieldName, &type))
+    return false;
+  properties.clear();
+  for(Json::ValueIterator itr = action_json.begin(); itr != action_json.end(); itr++)
+  {
+    if(itr.key() != kTypeFieldName)
+    {
+      properties[itr.key().asString()] = (*itr).asString();
+    }
+  }
+  return true;
+}
+void ConfigureAction::toJson(Json::Value* action_json) const
+{
+  (*action_json)[kTypeFieldName] = type;
+}
+
+std::string ConfigureAction::kTypeFieldName = "type";
+
+std::string ConfigureAction::kAddStreamActionName = "add_stream";
+std::string ConfigureAction::kAddVideoTrackActionName = "add_video_track";
+std::string ConfigureAction::kExpectStreamActionName = "expect_stream";
+std::string ConfigureAction::kExpectVideoTrackActionName = "expect_video_track";
+std::string ConfigureAction::kRemoveStreamActionName = "remove_stream";
+
 bool ConfigureMessage::isConfigure(const Json::Value& message_json)
 {
   return WebrtcRosMessage::isType(message_json, kConfigureType);
@@ -12,37 +39,37 @@ bool ConfigureMessage::fromJson(const Json::Value& message_json)
 {
   if (isConfigure(message_json))
   {
-    if (!rtc::GetStringFromJsonObject(message_json, kSubscribedVideoTopicFieldName, &subscribed_video_topic))
-      subscribed_video_topic = "";
-    if (!rtc::GetStringFromJsonObject(message_json, kSubscribedAudioTopicFieldName, &subscribed_audio_topic))
-      subscribed_audio_topic = "";
-    if (!rtc::GetStringFromJsonObject(message_json, kPublishedVideoTopicFieldName, &published_video_topic))
-      published_video_topic = "";
-    if (!rtc::GetStringFromJsonObject(message_json, kPublishedAudioTopicFieldName, &published_audio_topic))
-      published_audio_topic = "";
+    Json::Value action_array_json = message_json[kActionsFieldName];
+    if(!action_array_json.isArray())
+      return false;
+
+    actions.resize(action_array_json.size());
+    for(int i = 0; i < action_array_json.size(); ++i) {
+      actions[i].fromJson(action_array_json[i]);
+    }
     return true;
   }
   else
     return false;
 }
 
-std::string ConfigureMessage::toJson()
+std::string ConfigureMessage::toJson() const
 {
   Json::FastWriter writer;
   Json::Value message_json;
-  message_json[kSubscribedVideoTopicFieldName] = subscribed_video_topic;
-  message_json[kSubscribedAudioTopicFieldName] = subscribed_audio_topic;
-  message_json[kPublishedVideoTopicFieldName] = published_video_topic;
-  message_json[kPublishedAudioTopicFieldName] = published_audio_topic;
+  Json::Value action_array_json(Json::arrayValue);
+  for(const ConfigureAction& action : actions) {
+    Json::Value action_json;
+    action.toJson(&action_json);
+    action_array_json.append(action_json);
+  }
+  message_json[kActionsFieldName] = action_array_json;
   return writer.write(message_json);
 }
 
 ConfigureMessage::ConfigureMessage() {}
 
-std::string ConfigureMessage::kSubscribedVideoTopicFieldName = "subscribed_video_topic";
-std::string ConfigureMessage::kSubscribedAudioTopicFieldName = "subscribed_audio_topic";
-std::string ConfigureMessage::kPublishedVideoTopicFieldName = "published_video_topic";
-std::string ConfigureMessage::kPublishedAudioTopicFieldName = "published_audio_topic";
+std::string ConfigureMessage::kActionsFieldName = "actions";
 std::string ConfigureMessage::kConfigureType = "configure";
 
 }

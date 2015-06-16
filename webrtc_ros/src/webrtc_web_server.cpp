@@ -51,6 +51,10 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
 				   ros::package::getPath("webrtc_ros") + "/web/viewer.html", any_origin_headers));
   handler_group_.addHandlerForPath("/webrtc_ros.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
 				   ros::package::getPath("webrtc_ros") + "/web/webrtc_ros.js", any_origin_headers));
+  handler_group_.addHandlerForPath("/adapter.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
+				   ros::package::getPath("webrtc_ros") + "/web/adapter.js", any_origin_headers));
+  handler_group_.addHandlerForPath("/viewer.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
+				   ros::package::getPath("webrtc_ros") + "/web/viewer.js", any_origin_headers));
   handler_group_.addHandlerForPath("/webrtc", async_web_server_cpp::WebsocketHttpRequestHandler(boost::bind(&WebrtcWebServerImpl::handle_webrtc_websocket, this, _1, _2)));
   server_.reset(new async_web_server_cpp::HttpServer("0.0.0.0", boost::lexical_cast<std::string>(port),
                 boost::bind(ros_connection_logger, handler_group_, _1, _2, _3, _4), 1));

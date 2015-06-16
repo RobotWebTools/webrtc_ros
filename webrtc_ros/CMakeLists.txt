@@ -107,10 +107,21 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
 )
 
+# Install web files
 install(DIRECTORY web
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   PATTERN "Gruntfile.js" EXCLUDE
   PATTERN "node_modules" EXCLUDE
   PATTERN "package.json" EXCLUDE
   PATTERN ".gitignore" EXCLUDE
+)
+
+# Install license files
+install(FILES
+  ../LICENSE
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+install(FILES
+  LICENSE_webrtc_adapter
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

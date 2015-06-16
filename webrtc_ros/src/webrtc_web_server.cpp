@@ -62,9 +62,7 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
 
 ~WebrtcWebServerImpl()
 {
-  // TODO: should call stop here, but right now it will fail if stop has already been called
-  // This is a bug in async_web_server_cpp
-  //stop();
+  stop();
 }
 
 

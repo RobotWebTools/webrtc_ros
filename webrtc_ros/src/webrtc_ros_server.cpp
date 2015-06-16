@@ -47,9 +47,7 @@ MessageHandler* WebrtcRosServer::handle_new_signaling_channel(SignalingChannel *
 
 WebrtcRosServer::~WebrtcRosServer()
 {
-  // TODO: should call stop here, but right now it will fail if stop has already been called
-  // This is a bug in async_web_server_cpp
-  //stop();
+  stop();
 
   // Send all clients messages to shutdown, cannot call dispose of share ptr while holding clients_mutex_
   // It will deadlock if it is the last shared_ptr because it will try to remove it from the client list

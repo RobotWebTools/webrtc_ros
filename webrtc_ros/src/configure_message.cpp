@@ -25,10 +25,10 @@ void ConfigureAction::toJson(Json::Value* action_json) const
 std::string ConfigureAction::kTypeFieldName = "type";
 
 std::string ConfigureAction::kAddStreamActionName = "add_stream";
+std::string ConfigureAction::kRemoveStreamActionName = "remove_stream";
 std::string ConfigureAction::kAddVideoTrackActionName = "add_video_track";
 std::string ConfigureAction::kExpectStreamActionName = "expect_stream";
 std::string ConfigureAction::kExpectVideoTrackActionName = "expect_video_track";
-std::string ConfigureAction::kRemoveStreamActionName = "remove_stream";
 
 bool ConfigureMessage::isConfigure(const Json::Value& message_json)
 {

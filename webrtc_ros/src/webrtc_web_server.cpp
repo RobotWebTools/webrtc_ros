@@ -49,13 +49,10 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
   handler_group_.addHandlerForPath("/", boost::bind(&WebrtcWebServerImpl::handle_list_streams, this, _1, _2, _3, _4));
   handler_group_.addHandlerForPath("/viewer", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/html",
 				   ros::package::getPath("webrtc_ros") + "/web/viewer.html", any_origin_headers));
-  handler_group_.addHandlerForPath("/webrtc_ros.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
-				   ros::package::getPath("webrtc_ros") + "/web/webrtc_ros.js", any_origin_headers));
-  handler_group_.addHandlerForPath("/adapter.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
-				   ros::package::getPath("webrtc_ros") + "/web/adapter.js", any_origin_headers));
-  handler_group_.addHandlerForPath("/viewer.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
-				   ros::package::getPath("webrtc_ros") + "/web/viewer.js", any_origin_headers));
   handler_group_.addHandlerForPath("/webrtc", async_web_server_cpp::WebsocketHttpRequestHandler(boost::bind(&WebrtcWebServerImpl::handle_webrtc_websocket, this, _1, _2)));
+  handler_group_.addHandlerForPath("/.+", async_web_server_cpp::HttpReply::from_filesystem(async_web_server_cpp::HttpReply::ok,
+											   "/", ros::package::getPath("webrtc_ros") + "/web",
+											   false, any_origin_headers));
   server_.reset(new async_web_server_cpp::HttpServer("0.0.0.0", boost::lexical_cast<std::string>(port),
                 boost::bind(ros_connection_logger, handler_group_, _1, _2, _3, _4), 1));
 }
@@ -110,7 +107,7 @@ async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocke
   return WebsocketMessageHandlerWrapper(callback_(data_, new SignalingChannelImpl(websocket)));
 }
 
-void handle_list_streams(const async_web_server_cpp::HttpRequest &request,
+bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
     async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end)
 {
   std::string image_message_type = ros::message_traits::datatype<sensor_msgs::Image>();
@@ -185,9 +182,10 @@ void handle_list_streams(const async_web_server_cpp::HttpRequest &request,
                     "</form>");
 
   connection->write("</body></html>");
+  return true;
 }
 
-static void ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler forward,
+static bool ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler forward,
                                   const async_web_server_cpp::HttpRequest &request,
                                   async_web_server_cpp::HttpConnectionPtr connection,
                                   const char* begin, const char* end)

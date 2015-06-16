@@ -7,6 +7,7 @@
 #include "talk/media/devices/devicemanager.h"
 #include "talk/app/webrtc/videosourceinterface.h"
 #include "webrtc/base/bind.h"
+#include "webrtc_ros/ros_video_capturer.h"
 
 namespace webrtc_ros
 {
@@ -54,7 +55,7 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
 
 WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_channel)
   : nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
-    ros_media_device_manager_(it_), signaling_thread_(rtc::Thread::Current())
+    signaling_thread_(rtc::Thread::Current())
 {
   ROS_INFO("Creating WebrtcClient");
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory();
@@ -278,8 +279,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 
 	  if(video_type == "ros_image") {
             ROS_DEBUG_STREAM("Subscribing to ROS topic: " << video_path);
-            cricket::Device device(video_path, video_path);
-            cricket::VideoCapturer* capturer = ros_media_device_manager_.CreateVideoCapturer(device);
+            cricket::VideoCapturer* capturer = new RosVideoCapturer(it_, video_path);
 
             rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
               peer_connection_factory_->CreateVideoTrack(
@@ -443,8 +443,7 @@ void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream)
 	}
 
 	if(video_type == "ros_image") {
-	  cricket::Device device(video_path, video_path);
-	  boost::shared_ptr<RosVideoRenderer> renderer = boost::shared_ptr<RosVideoRenderer>(ros_media_device_manager_.CreateVideoRenderer(device));
+	  boost::shared_ptr<RosVideoRenderer> renderer(new RosVideoRenderer(it_, video_path));
 	  track->AddRenderer(renderer.get());
 	  video_renderers_[stream_id].push_back(renderer);
 	}

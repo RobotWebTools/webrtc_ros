@@ -7,7 +7,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include "webrtc_ros/ros_media_device_manager.h"
+#include "webrtc_ros/ros_video_renderer.h"
 #include "talk/app/webrtc/mediastreaminterface.h"
 #include "talk/app/webrtc/peerconnectioninterface.h"
 #include "talk/app/webrtc/test/fakeconstraints.h"
@@ -72,8 +72,6 @@ private:
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   boost::scoped_ptr<SignalingChannel> signaling_channel_;
-
-  RosMediaDeviceManager ros_media_device_manager_;
 
   rtc::Thread *signaling_thread_;
 

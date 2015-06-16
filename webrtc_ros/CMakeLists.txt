@@ -37,9 +37,6 @@ target_link_libraries(webrtc_ros_server_noncpp11
 
 # This library is built with the same options used to build the webrtc library
 add_library(webrtc_ros_server
-  src/ros_video_capturer.cpp
-  src/ros_media_device_manager.cpp
-
   src/webrtc_ros_message.cpp
   src/configure_message.cpp
   src/sdp_message.cpp

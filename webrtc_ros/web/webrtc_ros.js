@@ -1,6 +1,7 @@
 window.WebrtcRos = (function() {
-    var guid = function() {
-	return "TESTUUID";
+    var newStreamId = function() {
+	// Just need unique identifiers for streams
+	return "webrtc_ros_stream-"+Math.floor(Math.random()*1000000000).toString();
     };
     var WebrtcRosConnection = function(signalingServerPath) {
 	this.signalingServerPath = signalingServerPath || "ws://"+window.location.host+"/webrtc";
@@ -121,7 +122,7 @@ window.WebrtcRos = (function() {
     };
 
     WebrtcRosConnection.prototype.addRemoteStream = function(config) {
-	var stream_id = guid();
+	var stream_id = newStreamId();
 	var self = this;
 
 	this.lastConfigureActionPromise = this.lastConfigureActionPromise.then(function(actions) {

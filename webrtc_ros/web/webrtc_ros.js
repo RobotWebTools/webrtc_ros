@@ -127,20 +127,20 @@ window.WebrtcRos = (function() {
 
 	this.lastConfigureActionPromise = this.lastConfigureActionPromise.then(function(actions) {
 	    actions.push({"type":"add_stream", "id": stream_id});
-	    if(config["video"]) {
+	    if(config.video) {
 		actions.push({
 		    "type":"add_video_track",
 		    "stream_id": stream_id,
-		    "id": stream_id + config["video"]["id"],
-		    "src": config["video"]["src"]
+		    "id": stream_id + config.video.id,
+		    "src": config.video.src
 		});
 	    }
-	    if(config["audio"]) {
+	    if(config.audio) {
 		actions.push({
 		    "type":"add_audio_track",
 		    "stream_id": stream_id,
-		    "id": stream_id + config["audio"]["id"],
-		    "src": config["audio"]["src"]
+		    "id": stream_id + config.audio.id,
+		    "src": config.audio.src
 		});
 	    }
 	    return actions;
@@ -167,12 +167,12 @@ window.WebrtcRos = (function() {
 		function(actions){
 		    return navigator.mediaDevices.getUserMedia(user_media_config).then(function(stream){
 			actions.push({"type":"expect_stream", "id": stream.id});
-			if(local_stream_config["video"]) {
+			if(local_stream_config.video) {
 			    actions.push({
 				"type":"expect_video_track",
 				"stream_id": stream.id,
 				"id": stream.getVideoTracks()[0].id,
-				"dest":local_stream_config["video"]["dest"]
+				"dest":local_stream_config.video.dest
 			    });
 			}
 			self.peerConnection.addStream(stream);

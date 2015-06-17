@@ -10,6 +10,8 @@ module.exports = function(grunt) {
 		globals: {
 		    module: false,
 		    JSON: false,
+		    Promise: false,
+		    WebrtcRos: false,
 		    RTCPeerConnection: true,
 		    RTCSessionDescription: true,
 		    RTCIceCandidate: true
@@ -22,12 +24,9 @@ module.exports = function(grunt) {
 		singleGroups: false,
 
 		quotmark: "double",
-		maxparams: 6,
-		maxdepth: 3,
-		maxstatements: 30,
-		maxcomplexity: 6
+		maxparams: 6
 	    },
-	    files: ["Gruntfile.js", "*.js"]
+	    files: ["Gruntfile.js", "*.js", "!adapter.js"]
 	}
     });
 

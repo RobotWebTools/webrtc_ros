@@ -284,12 +284,41 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
             rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
               peer_connection_factory_->CreateVideoTrack(
                 track_id,
-                peer_connection_factory_->CreateVideoSource(capturer,
-                    NULL)));
+                peer_connection_factory_->CreateVideoSource(capturer, NULL)));
             stream->AddTrack(video_track);
 	  }
 	  else {
 	    ROS_WARN_STREAM("Unknwon video source type: " << video_type);
+	  }
+
+	}
+	else if(action.type == ConfigureAction::kAddAudioTrackActionName) {
+	  FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
+	  FIND_PROPERTY_OR_CONTINUE("id", track_id);
+	  FIND_PROPERTY_OR_CONTINUE("src", src);
+
+	  std::string audio_type;
+	  std::string audio_path;
+	  if(!parseUri(src, &audio_type, &audio_path)) {
+	    ROS_WARN_STREAM("Invalid URI: " << src);
+	    continue;
+	  }
+
+          webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
+	  if(!stream) {
+	    ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+	    continue;
+	  }
+
+	  if(audio_type == "local") {
+	    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+	      peer_connection_factory_->CreateAudioTrack(
+	        track_id,
+		peer_connection_factory_->CreateAudioSource(NULL)));
+            stream->AddTrack(audio_track);
+	  }
+	  else {
+	    ROS_WARN_STREAM("Unknwon video source type: " << audio_type);
 	  }
 
 	}
@@ -321,8 +350,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 	}
       }
 
-      if(message.actions.size() > 0)
-	peer_connection_->CreateOffer(webrtc_observer_proxy_.get(), &media_constraints_);
+      peer_connection_->CreateOffer(webrtc_observer_proxy_.get(), &media_constraints_);
     }
     else if (SdpMessage::isSdpAnswer(message_json))
     {
@@ -456,6 +484,8 @@ void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream)
 	ROS_WARN_STREAM("Unexpected video track: " << track->id());
       }
     }
+    // Currently audio tracks play to system default output without any action taken
+    // It does not appear to be simple to change this
   }
   else {
     ROS_WARN_STREAM("Unexpected stream: " << stream_id);

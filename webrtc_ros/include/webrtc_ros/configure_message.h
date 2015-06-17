@@ -19,10 +19,11 @@ struct ConfigureAction
   static std::string kTypeFieldName;
 
   static std::string kAddStreamActionName;
+  static std::string kRemoveStreamActionName;
   static std::string kAddVideoTrackActionName;
+  static std::string kAddAudioTrackActionName;
   static std::string kExpectStreamActionName;
   static std::string kExpectVideoTrackActionName;
-  static std::string kRemoveStreamActionName;
 };
 
 class ConfigureMessage

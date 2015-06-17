@@ -1,4 +1,7 @@
 window.WebrtcRos = (function() {
+    var guid = function() {
+	return "TESTUUID";
+    };
     var WebrtcRosConnection = function(signalingServerPath) {
 	this.signalingServerPath = signalingServerPath || "ws://"+window.location.host+"/webrtc";
 	this.onConfigurationNeeded = undefined;
@@ -9,22 +12,16 @@ window.WebrtcRos = (function() {
 		{DtlsSrtpKeyAgreement: true}
 	    ]
 	};
+
+	this.lastConfigureActionPromise = Promise.resolve([]);
+
+	this.addStreamCallbacks = {};
+	this.removeStreamCallbacks = {};
     };
 
-
-    Object.defineProperty(WebrtcRosConnection.prototype, "onRemoteStreamAdded", {
-	enumerable: true,
-	get: function() { return this.peerConnection.onaddstream; },
-	set: function(callback) { this.peerConnection.onaddstream = callback; }
-    });
-    Object.defineProperty(WebrtcRosConnection.prototype, "onRemoteStreamRemoved", {
-	enumerable: true,
-	get: function() { return this.peerConnection.onremovestream; },
-	set: function(callback) { this.peerConnection.onremovestream = callback; }
-    });
     WebrtcRosConnection.prototype.connect = function(){
 	var self = this;
-	close();
+	this.close();
 	this.signalingChannel = new WebSocket(this.signalingServerPath);
 	this.signalingChannel.onmessage = function(e){ self.onSignalingMessage(e); };
 	this.signalingChannel.onopen = function() {
@@ -51,24 +48,40 @@ window.WebrtcRos = (function() {
                 self.signalingChannel.send(JSON.stringify(candidate));
             }
         };
+	this.peerConnection.onaddstream = function(event) {
+	    var stream = event.stream;
+	    var callbackData = self.addStreamCallbacks[stream.id];
+	    if(callbackData) {
+		callbackData.resolve({
+		    "stream": stream,
+		    "remove": new Promise(function(resolve, reject) {
+			self.removeStreamCallbacks[stream.id] = {
+			    "resolve": resolve,
+			    "reject": reject
+			};
+		    })
+		});
+	    }
+	};
+	this.peerConnection.onremovestream = function(event) {
+	    var stream = event.stream;
+	    var callbackData = self.removeStreamCallbacks[stream.id];
+	    if(callbackData) {
+		callbackData.resolve({
+		    "stream": stream
+		});
+	    }
+	};
     };
     WebrtcRosConnection.prototype.close = function(){
-	if(!this.peerConnection) {
+	if(this.peerConnection) {
 	    this.peerConnection.close();
 	    this.peerConnection = null;
 	}
-	if(!this.signalingChannel) {
+	if(this.signalingChannel) {
 	    this.signalingChannel.close();
 	    this.signalingChannel = null;
 	}
-    };
-    WebrtcRosConnection.prototype.configureBuilder = function(){
-	return new WebrtcRosConfigureBuilder(this);
-    };
-    WebrtcRosConnection.prototype.sendConfigure = function(actions){
-	var configMessage = {"type": "configure", "actions": actions};
-	this.signalingChannel.send(JSON.stringify(configMessage));
-	console.log("WebRTC ROS Configure: ", actions);
     };
     WebrtcRosConnection.prototype.onSignalingMessage = function(e){
 	var self = this;
@@ -107,52 +120,102 @@ window.WebrtcRos = (function() {
 	}, mediaConstraints);
     };
 
-    var WebrtcRosConfigureBuilder = function(connection) {
-	this.connection = connection;
-	this.actions = [];
-	this.lastActionPromise = Promise.resolve();
-    };
-    WebrtcRosConfigureBuilder.prototype.addRemoteStream = function(stream_id, video_id, video_src) {
+    WebrtcRosConnection.prototype.addRemoteStream = function(config) {
+	var stream_id = guid();
 	var self = this;
-	this.lastActionPromise = this.lastActionPromise.then(function() {
-	    self.actions.push({"type":"add_stream", "id": stream_id});
-	    if(video_id && video_src) {
-		self.actions.push({
+
+	this.lastConfigureActionPromise = this.lastConfigureActionPromise.then(function(actions) {
+	    actions.push({"type":"add_stream", "id": stream_id});
+	    if(config["video"]) {
+		actions.push({
 		    "type":"add_video_track",
 		    "stream_id": stream_id,
-		    "id": video_id,
-		    "src": video_src
+		    "id": stream_id + config["video"]["id"],
+		    "src": config["video"]["src"]
 		});
 	    }
-	});
-	return this;
-    };
-    WebrtcRosConfigureBuilder.prototype.addRemoteVideoTrack = function(stream_id, id, src) {
-	var self = this;
-	this.lastActionPromise = this.lastActionPromise.then(function() {
-	});
-	return this;
-    };
-    WebrtcRosConfigureBuilder.prototype.addLocalStream = function(configuration, videoDest) {
-	var self = this;
-	this.lastActionPromise = this.lastActionPromise.then(function(){return navigator.mediaDevices.getUserMedia(configuration).then(function(stream){
-            self.actions.push({"type":"expect_stream", "id": stream.id});
-	    if(videoDest) {
-		self.actions.push({
-		    "type":"expect_video_track",
-		    "stream_id": stream.id,
-		    "id": stream.getVideoTracks()[0].id,
-		    "dest":videoDest
+	    if(config["audio"]) {
+		actions.push({
+		    "type":"add_audio_track",
+		    "stream_id": stream_id,
+		    "id": stream_id + config["audio"]["id"],
+		    "src": config["audio"]["src"]
 		});
 	    }
-            connection.peerConnection.addStream(stream);
-	});});
-	return this;
+	    return actions;
+	});
+
+	return new Promise(function(resolve, reject) {
+	    self.addStreamCallbacks[stream_id] = {
+		"resolve": resolve,
+		"reject": reject
+	    };
+	});
     };
-    WebrtcRosConfigureBuilder.prototype.send = function() {
+    WebrtcRosConnection.prototype.removeRemoteStream = function(stream) {
 	var self = this;
-	this.lastActionPromise.then(function() {
-	    self.connection.sendConfigure(self.actions);
+	this.lastConfigureActionPromise = this.lastConfigureActionPromise.then(function(actions) {
+	    actions.push({"type":"remove_stream", "id": stream.id});
+	    return actions;
+	});
+    };
+    WebrtcRosConnection.prototype.addLocalStream = function(user_media_config, local_stream_config) {
+	var self = this;
+	return new Promise(function(resolve, reject) {
+	    self.lastConfigureActionPromise = self.lastConfigureActionPromise.then(
+		function(actions){
+		    return navigator.mediaDevices.getUserMedia(user_media_config).then(function(stream){
+			actions.push({"type":"expect_stream", "id": stream.id});
+			if(local_stream_config["video"]) {
+			    actions.push({
+				"type":"expect_video_track",
+				"stream_id": stream.id,
+				"id": stream.getVideoTracks()[0].id,
+				"dest":local_stream_config["video"]["dest"]
+			    });
+			}
+			self.peerConnection.addStream(stream);
+			resolve({
+			    "stream": stream,
+			    "remove": new Promise(function(resolve, reject) {
+				self.removeStreamCallbacks[stream.id] = {
+				    "resolve": resolve,
+				    "reject": reject
+				};
+			    })
+			});
+			return actions;
+		    });
+		}
+	    );
+
+	});
+    };
+    WebrtcRosConnection.prototype.removeLocalStream = function(stream) {
+	var self = this;
+	this.lastConfigureActionPromise = this.lastConfigureActionPromise.then(function(actions) {
+	    console.log("Removing stream");
+	    self.peerConnection.removeStream(stream);
+
+	    var callbackData = self.removeStreamCallbacks[stream.id];
+	    if(callbackData) {
+		callbackData.resolve({
+		    "stream": stream
+		});
+	    }
+	    return actions;
+	});
+    };
+    WebrtcRosConnection.prototype.sendConfigure = function() {
+	var self = this;
+
+	var currentLastConfigureActionPromise = this.lastConfigureActionPromise;
+	this.lastConfigureActionPromise = Promise.resolve([]);
+
+	currentLastConfigureActionPromise.then(function(actions) {
+	    var configMessage = {"type": "configure", "actions": actions};
+	    self.signalingChannel.send(JSON.stringify(configMessage));
+	    console.log("WebRTC ROS Configure: ", actions);
 	});
     };
 

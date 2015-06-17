@@ -156,7 +156,7 @@ bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
       {
         if (boost::starts_with(*image_topic_itr, base_topic))
         {
-          connection->write("<li><a href=\"/viewer?subscribed_video_topic=");
+          connection->write("<li><a href=\"/viewer?subscribe_video=ros_image:");
           connection->write(*image_topic_itr);
           connection->write("\">");
           connection->write(image_topic_itr->substr(base_topic.size()));
@@ -176,8 +176,8 @@ bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
   }
   connection->write("</ul>");
   connection->write("<form action=\"/viewer\">"
-                    "Subscribe Video: <input name=\"subscribed_video_topic\" type=\"text\"><br>"
-                    "Publish Video: <input name=\"published_video_topic\" type=\"text\"><br>"
+                    "Subscribe Video: <input name=\"subscribe_video\" type=\"text\"><br>"
+                    "Publish Video: <input name=\"publish_video\" type=\"text\"><br>"
                     "<input type=\"submit\" value=\"Go\">"
                     "</form>");
 

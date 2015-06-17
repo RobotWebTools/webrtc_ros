@@ -27,6 +27,7 @@ std::string ConfigureAction::kTypeFieldName = "type";
 std::string ConfigureAction::kAddStreamActionName = "add_stream";
 std::string ConfigureAction::kRemoveStreamActionName = "remove_stream";
 std::string ConfigureAction::kAddVideoTrackActionName = "add_video_track";
+std::string ConfigureAction::kAddAudioTrackActionName = "add_audio_track";
 std::string ConfigureAction::kExpectStreamActionName = "expect_stream";
 std::string ConfigureAction::kExpectVideoTrackActionName = "expect_video_track";
 

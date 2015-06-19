@@ -26,6 +26,8 @@ public:
 
   rtc::Thread signaling_thread_;
 private:
+  RosLogContextRef log_context_;
+
   std::condition_variable shutdown_cv_;
   std::mutex clients_mutex_;
   std::map<WebrtcClient*, WebrtcClientWeakPtr> clients_;
@@ -34,7 +36,6 @@ private:
   ros::NodeHandle pnh_;
 
   boost::shared_ptr<webrtc_ros::WebrtcWebServer> server_;
-  RosLogContext log_context_;
 };
 
 }

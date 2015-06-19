@@ -4,13 +4,20 @@
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/stream.h"
+#include <mutex>
 
 namespace webrtc_ros
 {
 
+/**
+ * Contains callbacks for the webrtc logging mechenisms that forward messages
+ * to the ROS logging infrastructure. Webrtc logging is done globaly so only
+ * one instance of this class ever exists at a time. Use RosLogContextRef to
+ * indicate that the logging context should be kept alive. Logging hooks are
+ * installed on construction and removed on destruction.
+ */
 class RosLogContext : public webrtc::TraceCallback, public rtc::StreamInterface {
  public:
-  RosLogContext(bool disable_log_to_debug);
   virtual ~RosLogContext();
 
   // webrtc::TraceCallback
@@ -25,8 +32,28 @@ class RosLogContext : public webrtc::TraceCallback, public rtc::StreamInterface 
   virtual void Close();
 
 private:
+  RosLogContext();
+
   int old_log_to_debug_;
-  bool disabled_debug_;
+
+  friend class RosLogContextRef;
+};
+
+/**
+ * Represents a reference indicating that the webrtc ROS logging context should
+ * be kept alive. When the first one is constructed the ROS log context will be
+ * installed and when the last one is destroyed the ROS log context will be
+ * uninstalled.
+ * This construction/destruction is thread safe
+ */
+class RosLogContextRef {
+public:
+  RosLogContextRef();
+  ~RosLogContextRef();
+private:
+  static unsigned int usage_count;
+  static std::mutex mutex;
+  static RosLogContext *context;
 };
 
 }

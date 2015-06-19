@@ -180,6 +180,7 @@ def main():
         dep_destination = os.path.join(CHROMIUM_SRC_DIR, name)
 
         if not os.path.isdir(dep_destination):
+            print name + " does not exist, cloning: " + dep_repo
             subprocess.check_call(["git", "clone", "-q", dep_repo, dep_destination])
             subprocess.check_call(["git", "config", "remote.origin.fetch",
                                    "+refs/branch-heads/*:refs/remotes/branch-heads/*",
@@ -191,7 +192,7 @@ def main():
 
         current_revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=dep_destination).strip()
         if current_revision != dep_revision:
-            if subprocess.call(["git", "rev-parse", dep_revision], cwd=dep_destination, stdout=dev_null, stderr=dev_null) != 0:
+            if subprocess.call(["git", "show", dep_revision], cwd=dep_destination, stdout=dev_null, stderr=dev_null) != 0: # will fail if commit does not exist
                 print "Could not find requested commit: "+dep_revision+", fetching"
                 subprocess.check_call(["git", "fetch", "-q", "--all"], cwd=dep_destination)
             print "Checking out: " + dep_revision + ' for ' + name

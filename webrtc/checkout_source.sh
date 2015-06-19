@@ -2,7 +2,7 @@
 set -e
 
 # get depot_tools if we don't have it, it should auto update itself
-if [ ! -d depot_tools ]; then git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git; fi
+if [ ! -d depot_tools ]; then git clone -q https://chromium.googlesource.com/chromium/tools/depot_tools.git; fi
 
 (
     # load depot_tools into the enviornment

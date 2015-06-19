@@ -180,20 +180,20 @@ def main():
         dep_destination = os.path.join(CHROMIUM_SRC_DIR, name)
 
         if not os.path.isdir(dep_destination):
-            subprocess.check_call(["git", "clone", dep_repo, dep_destination])
-            subprocess.check_call(['git', 'config', 'remote.origin.fetch',
-                                   '+refs/branch-heads/*:refs/remotes/branch-heads/*',
-                                   '^\\+refs/branch-heads/\\*:.*$'], cwd=dep_destination)
-            subprocess.check_call(['git', 'config', 'remote.origin.fetch',
-                                   '+refs/tags/*:refs/tags/*',
-                                   '^\\+refs/tags/\\*:.*$'], cwd=dep_destination)
-            subprocess.check_call(["git", "fetch", "--all"], cwd=dep_destination)
+            subprocess.check_call(["git", "clone", "-q", dep_repo, dep_destination])
+            subprocess.check_call(["git", "config", "remote.origin.fetch",
+                                   "+refs/branch-heads/*:refs/remotes/branch-heads/*",
+                                   "^\\+refs/branch-heads/\\*:.*$"], cwd=dep_destination)
+            subprocess.check_call(["git", "config", "remote.origin.fetch",
+                                   "+refs/tags/*:refs/tags/*",
+                                   "^\\+refs/tags/\\*:.*$"], cwd=dep_destination)
+            subprocess.check_call(["git", "fetch", "-q", "--all"], cwd=dep_destination)
 
         current_revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=dep_destination).strip()
         if current_revision != dep_revision:
             if subprocess.call(["git", "rev-parse", dep_revision], cwd=dep_destination, stdout=dev_null, stderr=dev_null) != 0:
                 print "Could not find requested commit: "+dep_revision+", fetching"
-                subprocess.check_call(["git", "fetch", "--all"], cwd=dep_destination)
+                subprocess.check_call(["git", "fetch", "-q", "--all"], cwd=dep_destination)
             print "Checking out: " + dep_revision + ' for ' + name
             subprocess.check_call(["git", "checkout", dep_revision], cwd=dep_destination)
         else:

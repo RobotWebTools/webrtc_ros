@@ -2,7 +2,7 @@
 <package format="2">
   <name>webrtc_ros</name>
   <version>0.0.0</version>
-  <description>A package with ROS utilities for talking to WebRTC</description>
+  <description>A collection of ROS utilities for using WebRTC with ROS</description>
 
   <maintainer email="mwills@wpi.edu">Mitchell Wills</maintainer>
 

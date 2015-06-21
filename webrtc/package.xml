@@ -8,6 +8,10 @@
 
   <license>BSD</license>
 
+  <url type="website">http://ros.org/wiki/webrtc</url>
+  <url type="bugtracker">https://github.com/RobotWebTools/webrtc_ros/issues</url>
+  <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
+
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>git</buildtool_depend><!-- Needed to clone webrtc source -->
   <buildtool_depend>java</buildtool_depend><!-- Needed for talk/build/common.gypi -->

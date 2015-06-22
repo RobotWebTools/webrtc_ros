@@ -2,15 +2,19 @@
 <package format="2">
   <name>webrtc_ros</name>
   <version>0.0.0</version>
-  <description>A package with ROS utilities for talking to WebRTC</description>
+  <description>A collection of ROS utilities for using WebRTC with ROS</description>
 
   <maintainer email="mwills@wpi.edu">Mitchell Wills</maintainer>
+  <author email="mwills@wpi.edu">Mitchell Wills</author>
 
   <license>BSD</license>
 
-  <author email="mwills@wpi.edu">Mitchell Wills</author>
+  <url type="website">http://ros.org/wiki/webrtc_ros</url>
+  <url type="bugtracker">https://github.com/RobotWebTools/webrtc_ros/issues</url>
+  <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+
   <depend>cv_bridge</depend>
   <depend>roscpp</depend>
   <depend>webrtc</depend>

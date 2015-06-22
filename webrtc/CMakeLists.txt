@@ -6,9 +6,9 @@ find_package(catkin REQUIRED)
 set(webrtc_src_root ${PROJECT_SOURCE_DIR}/src)
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Debug)
-else(CMAKE_BUILD_TYPE MATCHES Debug)
+else()
   set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Release)
-endif(CMAKE_BUILD_TYPE MATCHES Debug)
+endif()
 
 # checkout source to build and generate ninja build files
 execute_process(
@@ -18,7 +18,7 @@ execute_process(
 )
 if(NOT ${CHECKOUT_SOURCE_RESULT} EQUAL 0)
   message(FATAL_ERROR "WebRTC source checkout failed")
-endif(NOT ${CHECKOUT_SOURCE_RESULT} EQUAL 0)
+endif()
 
 
 # generate package cfg extras to be inherited
@@ -30,7 +30,7 @@ execute_process(
 )
 if(NOT ${CMAKE_EXTRAS_RESULT} EQUAL 0)
   message(FATAL_ERROR "WebRTC cmake extras generation failed")
-endif(NOT ${CMAKE_EXTRAS_RESULT} EQUAL 0)
+endif()
 
 
 catkin_package(
@@ -62,7 +62,7 @@ execute_process(
 )
 if(NOT ${LIST_BUILT_LIBS_RESULT} EQUAL 0)
   message(FATAL_ERROR "Listing built WebRTC libs failed")
-endif(NOT ${LIST_BUILT_LIBS_RESULT} EQUAL 0)
+endif()
 
 # Install libraries
 install(FILES ${BUILT_LIBRARIES}

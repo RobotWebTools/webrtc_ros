@@ -3,16 +3,17 @@ window.WebrtcRos = (function() {
 	// Just need unique identifiers for streams
 	return "webrtc_ros_stream-"+Math.floor(Math.random()*1000000000).toString();
     };
-    var WebrtcRosConnection = function(signalingServerPath) {
+    var WebrtcRosConnection = function(signalingServerPath, configuration) {
 	this.signalingServerPath = signalingServerPath || "ws://"+window.location.host+"/webrtc";
 	this.onConfigurationNeeded = undefined;
 	this.signalingChannel = null;
 	this.peerConnection = null;
-	this.peerConnectionOptions = {
+	this.peerConnectionMediaConstraints = {
 	    optional: [
 		{DtlsSrtpKeyAgreement: true}
 	    ]
 	};
+	this.peerConnectionConfiguration = configuration;
 
 	this.lastConfigureActionPromise = Promise.resolve([]);
 
@@ -37,7 +38,7 @@ window.WebrtcRos = (function() {
 	this.signalingChannel.onclose = function() {
 	    console.log("WebRTC signaling close");
 	};
-	this.peerConnection = new RTCPeerConnection(null, this.peerConnectionOptions);
+	this.peerConnection = new RTCPeerConnection(this.peerConnectionConfiguration, this.peerConnectionMediaConstraints);
 	this.peerConnection.onicecandidate = function(event) {
             if (event.candidate) {
                 var candidate = {
@@ -221,8 +222,8 @@ window.WebrtcRos = (function() {
     };
 
     var WebrtcRos = {
-	createConnection: function(signalingServerPath) {
-	    return new WebrtcRosConnection(signalingServerPath);
+	createConnection: function(signalingServerPath, configuration) {
+	    return new WebrtcRosConnection(signalingServerPath, configuration);
 	}
     };
     return WebrtcRos;

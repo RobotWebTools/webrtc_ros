@@ -6,41 +6,43 @@
 
 namespace webrtc_ros {
 
-RosLogContext::RosLogContext(bool disable_log_to_debug) {
+RosLogContext::RosLogContext() {
   webrtc::Trace::CreateTrace();
   if (webrtc::Trace::SetTraceCallback(this) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to enable webrtc ROS trace context");
   rtc::LogMessage::LogContext(rtc::LS_INFO);
   rtc::LogMessage::AddLogToStream(this, rtc::LS_INFO);
-  disabled_debug_ = disable_log_to_debug;
-  if(disable_log_to_debug) {
-    old_log_to_debug_ = rtc::LogMessage::GetLogToDebug();
-    rtc::LogMessage::LogToDebug(rtc::LogMessage::NO_LOGGING);
-  }
+
+  // this disables logging to stderr (which is done by default)
+  old_log_to_debug_ = rtc::LogMessage::GetLogToDebug();
+  rtc::LogMessage::LogToDebug(rtc::LogMessage::NO_LOGGING);
 }
 
 RosLogContext::~RosLogContext() {
-  if(disabled_debug_) {
-    rtc::LogMessage::LogToDebug(old_log_to_debug_);
-  }
+  rtc::LogMessage::LogToDebug(old_log_to_debug_);
   rtc::LogMessage::RemoveLogToStream(this);
   if (webrtc::Trace::SetTraceCallback(NULL) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to disable webrtc ROS trace context");
   webrtc::Trace::ReturnTrace();
 }
 
+/**
+ * Function for simplifying creating raw log messages.
+ * As of jade it is not possible to use the public APIs to do this, so we have
+ * to do some hacks to make it work.
+ */
 static void CustomRosLog(ros::console::levels::Level level, const std::string& message, const std::string& file, int line, const std::string& function) {
   std::stringstream ss;
   ss << message;
 
   ROSCONSOLE_DEFINE_LOCATION(true, level, std::string(ROSCONSOLE_NAME_PREFIX) + ".webrtc");
 #if ROS_VERSION_MINIMUM(1, 11, 0) // Indigo & Jade
-  if (ROS_UNLIKELY(__rosconsole_define_location__enabled)) {
+  if (__rosconsole_define_location__enabled) {
     ros::console::print(0, __rosconsole_define_location__loc.logger_,
 			level, ss, file.c_str(), line, function.c_str());
   }
 #elif ROS_VERSION_MINIMUM(1, 10, 0) // Hydro
-  if (ROS_UNLIKELY(enabled)) {
+  if (enabled) {
     ros::console::print(0, loc.logger_,
 			level, ss, file.c_str(), line, function.c_str());
   }
@@ -114,7 +116,7 @@ static ::ros::console::levels::Level RosLogLevelFromRtcLoggingSeverity(rtc::Logg
   switch (severity) {
   case rtc::LS_SENSITIVE: return ::ros::console::levels::Debug;
   case rtc::LS_VERBOSE:   return ::ros::console::levels::Debug;
-  case rtc::LS_INFO:      return ::ros::console::levels::Info;
+  case rtc::LS_INFO:      return ::ros::console::levels::Debug; // This is too verbose to be info
   case rtc::LS_WARNING:   return ::ros::console::levels::Warn;
   case rtc::LS_ERROR:     return ::ros::console::levels::Error;
   default:
@@ -151,5 +153,28 @@ rtc::StreamResult RosLogContext::Write(const void* data, size_t data_len,
 }
 void RosLogContext::Close() {
 }
+
+
+
+unsigned int RosLogContextRef::usage_count = 0;
+std::mutex RosLogContextRef::mutex;
+RosLogContext *RosLogContextRef::context = nullptr;
+
+RosLogContextRef::RosLogContextRef() {
+  std::lock_guard<std::mutex> lock (mutex);
+  if(context == nullptr) {
+    context = new RosLogContext();
+  }
+  ++usage_count;
+}
+RosLogContextRef::~RosLogContextRef() {
+  std::lock_guard<std::mutex> lock (mutex);
+  --usage_count;
+  if(usage_count == 0) {
+    delete context;
+    context = nullptr;
+  }
+}
+
 
 }

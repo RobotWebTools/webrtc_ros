@@ -1,7 +1,6 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_ros_server.h>
 #include "webrtc/base/ssladapter.h"
-#include <boost/foreach.hpp>
 #include "webrtc/base/bind.h"
 
 namespace webrtc_ros
@@ -48,20 +47,18 @@ MessageHandler* WebrtcRosServer::handle_new_signaling_channel(SignalingChannel *
 
 WebrtcRosServer::~WebrtcRosServer()
 {
-  // TODO: should call stop here, but right now it will fail if stop has already been called
-  // This is a bug in async_web_server_cpp
-  //stop();
+  stop();
 
   // Send all clients messages to shutdown, cannot call dispose of share ptr while holding clients_mutex_
   // It will deadlock if it is the last shared_ptr because it will try to remove it from the client list
   std::vector<WebrtcClientWeakPtr> to_invalidate;
   {
     std::unique_lock<std::mutex> lock(clients_mutex_);
-    BOOST_FOREACH(decltype(clients_)::value_type& client_entry, clients_) {
+    for(auto& client_entry : clients_) {
       to_invalidate.push_back(client_entry.second);
     }
   }
-  BOOST_FOREACH(WebrtcClientWeakPtr client_weak, to_invalidate) {
+  for(WebrtcClientWeakPtr& client_weak : to_invalidate) {
     boost::shared_ptr<WebrtcClient> client = client_weak.lock();
     if (client)
       client->invalidate();
@@ -72,7 +69,6 @@ WebrtcRosServer::~WebrtcRosServer()
     std::unique_lock<std::mutex> lock(clients_mutex_);
     shutdown_cv_.wait(lock, [this]{ return this->clients_.size() == 0; });
   }
-
 
   rtc::CleanupSSL();
 }

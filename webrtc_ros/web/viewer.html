@@ -1,61 +1,16 @@
 <html>
-<head>
-<title>WebRTC ROS</title>
-<script type="text/javascript" src="/webrtc_ros.js"></script>
-<script>
-  var connection = WebrtcRos.createConnection();
-  function configure() {
-    var config = {};
-    if(window.location.search.length > 1) {
-      var query_string = decodeURIComponent(window.location.search.substring(1));
-      var parameter_key_values = query_string.split("&");
-      for(i in parameter_key_values) {
-        var key_value = parameter_key_values[i];
-        if(key_value.length > 0) {
-          var key_value_arr = key_value.split("=", 2);
-          if(key_value_arr.length == 2) {
-            config[key_value_arr[0]] = key_value_arr[1];
-          }
-          else {
-            config[key_value_arr[0]] = "";
-          }
-        }
-      }
-    }
-    connection.configure(config);
-    var config_box = document.getElementById("config-box");
-    config_box.innerHTML = "<h1>Configuration</h1>";
-    if(config["subscribed_video_topic"] && config["subscribed_video_topic"].length > 0)
-      config_box.innerHTML += "Subscribed Video Topic: <b>" + config["subscribed_video_topic"] + "</b>";
-    else
-      config_box.innerHTML += "Not Subscribed to Video"
-    config_box.innerHTML += "<br>"
-    if(config["published_video_topic"] && config["published_video_topic"].length > 0)
-      config_box.innerHTML += "Published Video Topic: <b>" + config["published_video_topic"] + "</b>";
-    else
-      config_box.innerHTML += "Not Publishing Video"
-  };
-  connection.onSignalingOpen = function(){
-    console.log("Signaling open");
-    configure();
-  };
-  connection.onSignalingError = function(error){
-    console.error("Error opening signaling channel", error);
-  };
-  connection.onRemoteStreamAdded = function(event) {
-    console.log("Remote stream added:", URL.createObjectURL(event.stream));
-    var remoteVideoElement = document.getElementById("remote-video");
-    remoteVideoElement.src = URL.createObjectURL(event.stream);
-    remoteVideoElement.play();
-  }
-  connection.onRemoteStreamRemoved = function(event) {
-    console.log("Remote stream removed");
-  }
-</script>
-</head>
-<body>
-  <video id="remote-video" autoplay="true"></video>
-  <div id="config-box">
-  </div>
-</body>
+  <head>
+    <title>WebRTC ROS</title>
+    <script type="text/javascript" src="/adapter.js"></script>
+    <script type="text/javascript" src="/webrtc_ros.js"></script>
+    <script type="text/javascript" src="/viewer.js"></script>
+  </head>
+  <body>
+    <h1>Subscribed</h1>
+    <video id="remote-video" autoplay="true"></video>
+    <h1>Published</h1>
+    <video id="local-video" autoplay="true" muted="true"></video>
+    <h1>Configuration</h1>
+    <div id="config-box"></div>
+  </body>
 </html>

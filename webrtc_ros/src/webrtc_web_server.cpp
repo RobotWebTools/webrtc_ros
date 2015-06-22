@@ -12,7 +12,6 @@
 #include <async_web_server_cpp/http_server.hpp>
 #include <async_web_server_cpp/websocket_connection.hpp>
 
-
 namespace webrtc_ros
 {
 
@@ -46,21 +45,22 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
 {
   std::vector<async_web_server_cpp::HttpHeader> any_origin_headers;
   any_origin_headers.push_back(async_web_server_cpp::HttpHeader("Access-Control-Allow-Origin", "*"));
-  handler_group_.addHandlerForPath("/", boost::bind(&WebrtcWebServerImpl::handle_list_streams, this, _1, _2, _3, _4));
+  handler_group_.addHandlerForPath("/", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/html",
+				   ros::package::getPath("webrtc_ros") + "/web/index.html", any_origin_headers));
+  handler_group_.addHandlerForPath("/list_streams.json", boost::bind(&WebrtcWebServerImpl::handle_list_streams, this, _1, _2, _3, _4));
   handler_group_.addHandlerForPath("/viewer", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/html",
 				   ros::package::getPath("webrtc_ros") + "/web/viewer.html", any_origin_headers));
-  handler_group_.addHandlerForPath("/webrtc_ros.js", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/javascript",
-				   ros::package::getPath("webrtc_ros") + "/web/webrtc_ros.js", any_origin_headers));
   handler_group_.addHandlerForPath("/webrtc", async_web_server_cpp::WebsocketHttpRequestHandler(boost::bind(&WebrtcWebServerImpl::handle_webrtc_websocket, this, _1, _2)));
+  handler_group_.addHandlerForPath("/.+", async_web_server_cpp::HttpReply::from_filesystem(async_web_server_cpp::HttpReply::ok,
+											   "/", ros::package::getPath("webrtc_ros") + "/web",
+											   false, any_origin_headers));
   server_.reset(new async_web_server_cpp::HttpServer("0.0.0.0", boost::lexical_cast<std::string>(port),
                 boost::bind(ros_connection_logger, handler_group_, _1, _2, _3, _4), 1));
 }
 
 ~WebrtcWebServerImpl()
 {
-  // TODO: should call stop here, but right now it will fail if stop has already been called
-  // This is a bug in async_web_server_cpp
-  //stop();
+  stop();
 }
 
 
@@ -108,7 +108,7 @@ async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocke
   return WebsocketMessageHandlerWrapper(callback_(data_, new SignalingChannelImpl(websocket)));
 }
 
-void handle_list_streams(const async_web_server_cpp::HttpRequest &request,
+bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
     async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end)
 {
   std::string image_message_type = ros::message_traits::datatype<sensor_msgs::Image>();
@@ -134,35 +134,39 @@ void handle_list_streams(const async_web_server_cpp::HttpRequest &request,
 
   async_web_server_cpp::HttpReply::builder(async_web_server_cpp::HttpReply::ok)
   .header("Connection", "close")
-  .header("Server", "web_video_server")
+  .header("Server", "webrtc_ros_server")
   .header("Cache-Control", "no-cache, no-store, must-revalidate, pre-check=0, post-check=0, max-age=0")
   .header("Pragma", "no-cache")
-  .header("Content-type", "text/html;")
+  .header("Content-type", "text/json")
   .write(connection);
 
-  connection->write("<html>"
-                    "<head><title>ROS Image Topic List</title></head>"
-                    "<body><h1>Available ROS Image Topics:</h1>");
-  connection->write("<ul>");
+  // Don't use jsoncpp cause we link against c++11 library (many not actually be an issue)
+  connection->write("{\n");
+  connection->write("\t\"camera_topics\": {\n");
   BOOST_FOREACH(std::string & camera_info_topic, camera_info_topics)
   {
     if (boost::algorithm::ends_with(camera_info_topic, "/camera_info"))
     {
       std::string base_topic = camera_info_topic.substr(0, camera_info_topic.size() - strlen("camera_info"));
-      connection->write("<li>");
+      connection->write("\t\t\"");
       connection->write(base_topic);
-      connection->write("<ul>");
+      connection->write("\": {\n");
+      bool first = true;
       std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
       for (; image_topic_itr != image_topics.end();)
       {
         if (boost::starts_with(*image_topic_itr, base_topic))
         {
-          connection->write("<li><a href=\"/viewer?subscribed_video_topic=");
-          connection->write(*image_topic_itr);
-          connection->write("\">");
-          connection->write(image_topic_itr->substr(base_topic.size()));
-          connection->write("</a>");
-          connection->write("</li>");
+	  if(!first)
+	    connection->write(",\n");
+	  first = false;
+	  connection->write("\t\t\t\"");
+	  connection->write(image_topic_itr->substr(base_topic.size()));
+	  connection->write("\": ");
+
+	  connection->write("\"");
+	  connection->write(*image_topic_itr);
+	  connection->write("\"");
 
           image_topic_itr = image_topics.erase(image_topic_itr);
         }
@@ -171,21 +175,31 @@ void handle_list_streams(const async_web_server_cpp::HttpRequest &request,
           ++image_topic_itr;
         }
       }
-      connection->write("</ul>");
+      connection->write("\n");
+      connection->write("\t\t}\n");
     }
-    connection->write("</li>");
-  }
-  connection->write("</ul>");
-  connection->write("<form action=\"/viewer\">"
-                    "Subscribe Video: <input name=\"subscribed_video_topic\" type=\"text\"><br>"
-                    "Publish Video: <input name=\"published_video_topic\" type=\"text\"><br>"
-                    "<input type=\"submit\" value=\"Go\">"
-                    "</form>");
+    connection->write("\t},\n");
+    connection->write("\t\"image_topics\": [\n");
+    std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
+    for (; image_topic_itr != image_topics.end();)
+    {
+      connection->write("\t\t\"");
+      connection->write(*image_topic_itr);
+      connection->write("\"");
 
-  connection->write("</body></html>");
+      ++image_topic_itr;
+      if(image_topic_itr != image_topics.end()) {
+	connection->write(",");
+      }
+      connection->write("\n");
+    }
+    connection->write("\t]\n");
+  }
+  connection->write("}\n");
+  return true;
 }
 
-static void ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler forward,
+static bool ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler forward,
                                   const async_web_server_cpp::HttpRequest &request,
                                   async_web_server_cpp::HttpConnectionPtr connection,
                                   const char* begin, const char* end)

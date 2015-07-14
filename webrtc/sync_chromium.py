@@ -178,6 +178,12 @@ def main():
 
         dep_destination = os.path.join(CHROMIUM_SRC_DIR, name)
 
+        if os.path.isdir(dep_destination):
+            current_remote = subprocess.check_output(["git", "config", "--get", "remote.origin.url"], cwd=dep_destination).strip()
+            if current_remote != dep_repo:
+                print name + " remote repository does not match (was " + current_remote + "), removing current repo"
+                shutil.rmtree(dep_destination)
+
         if not os.path.isdir(dep_destination):
             print name + " does not exist, cloning: " + dep_repo
             subprocess.check_call(["git", "clone", "-q", dep_repo, dep_destination])

@@ -41,7 +41,7 @@ class WebrtcWebServerImpl : public WebrtcWebServer
 public:
 WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
   : handler_group_(async_web_server_cpp::HttpReply::stock_reply(async_web_server_cpp::HttpReply::not_found)),
-    data_(data), callback_(callback)
+    callback_(callback), data_(data)
 {
   std::vector<async_web_server_cpp::HttpHeader> any_origin_headers;
   any_origin_headers.push_back(async_web_server_cpp::HttpHeader("Access-Control-Allow-Origin", "*"));
@@ -207,12 +207,13 @@ static bool ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler
   ROS_INFO_STREAM("Handling Request: " << request.uri);
   try
   {
-    forward(request, connection, begin, end);
+    return forward(request, connection, begin, end);
   }
   catch (std::exception &e)
   {
     ROS_WARN_STREAM("Error Handling Request: " << e.what());
   }
+  return false;
 }
 
 

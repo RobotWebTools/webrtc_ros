@@ -1,13 +1,13 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_client.h>
-#include "webrtc_ros/webrtc_ros_message.h"
-#include "webrtc_ros/sdp_message.h"
-#include "webrtc_ros/ice_candidate_message.h"
-#include "webrtc/base/json.h"
-#include "talk/media/devices/devicemanager.h"
-#include "talk/app/webrtc/videosourceinterface.h"
-#include "webrtc/base/bind.h"
-#include "webrtc_ros/ros_video_capturer.h"
+#include <webrtc_ros/webrtc_ros_message.h>
+#include <webrtc_ros/sdp_message.h>
+#include <webrtc_ros/ice_candidate_message.h>
+#include <webrtc/base/json.h>
+//#include "talk/media/devices/devicemanager.h"
+#include <webrtc/media/base/videosourceinterface.h>
+#include <webrtc/base/bind.h>
+#include <webrtc_ros/ros_video_capturer.h>
 
 namespace webrtc_ros
 {
@@ -27,19 +27,19 @@ void WebrtcClientObserverProxy::OnFailure(const std::string& error)
   if (client)
     client->OnSessionDescriptionFailure(error);
 }
-void WebrtcClientObserverProxy::OnAddStream(webrtc::MediaStreamInterface* media_stream)
+void WebrtcClientObserverProxy::OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream)
 {
   WebrtcClientPtr client = client_weak_.lock();
   if (client)
     client->OnAddRemoteStream(media_stream);
 }
-void WebrtcClientObserverProxy::OnRemoveStream(webrtc::MediaStreamInterface* media_stream)
+void WebrtcClientObserverProxy::OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream)
 {
   WebrtcClientPtr client = client_weak_.lock();
   if (client)
     client->OnRemoveRemoteStream(media_stream);
 }
-void WebrtcClientObserverProxy::OnDataChannel(webrtc::DataChannelInterface*)
+void WebrtcClientObserverProxy::OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface>)
 {
 }
 void WebrtcClientObserverProxy::OnRenegotiationNeeded()
@@ -50,6 +50,18 @@ void WebrtcClientObserverProxy::OnIceCandidate(const webrtc::IceCandidateInterfa
   WebrtcClientPtr client = client_weak_.lock();
   if (client)
     client->OnIceCandidate(candidate);
+}
+void WebrtcClientObserverProxy::OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState)
+{
+}
+void WebrtcClientObserverProxy::OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState)
+{
+}
+void WebrtcClientObserverProxy::OnIceCandidatesRemoved(const std::vector<cricket::Candidate>&)
+{
+}
+void WebrtcClientObserverProxy::OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState)
+{
 }
 
 
@@ -103,11 +115,12 @@ bool WebrtcClient::initPeerConnection()
     webrtc::PeerConnectionInterface::IceServers servers;
     WebrtcClientWeakPtr weak_this(keep_alive_this_);
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);
-    peer_connection_ = peer_connection_factory_->CreatePeerConnection(servers,
-                       &peer_connection_constraints_,
-                       NULL,
-                       NULL,
-                       webrtc_observer_proxy_.get());
+    peer_connection_ = peer_connection_factory_->CreatePeerConnection(
+            webrtc::PeerConnectionInterface::RTCConfiguration(),
+            nullptr,
+            nullptr,
+            webrtc_observer_proxy_.get()
+    );
     if (!peer_connection_.get())
     {
       ROS_WARN("Could not create peer connection");
@@ -129,7 +142,7 @@ public:
   {
     WebrtcClientPtr _this = weak_this_.lock();
     if (_this)
-      _this->signaling_thread_->Invoke<void>(rtc::Bind(&WebrtcClient::handle_message,
+      _this->signaling_thread_->Invoke<void>(RTC_FROM_HERE, rtc::Bind(&WebrtcClient::handle_message,
 						       _this.get(), type, raw));
   }
 private:
@@ -384,7 +397,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
         return;
       }
 
-      rtc::scoped_ptr<webrtc::IceCandidateInterface> candidate(message.createIceCandidate());
+      std::unique_ptr<webrtc::IceCandidateInterface> candidate(message.createIceCandidate());
       if (!candidate.get())
       {
         ROS_WARN("Can't parse received candidate message.");
@@ -455,7 +468,7 @@ void WebrtcClient::OnIceCandidate(const webrtc::IceCandidateInterface* candidate
   }
 }
 
-void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream)
+void WebrtcClient::OnAddRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream)
 {
   std::string stream_id = media_stream->label();
   if(expected_streams_.find(stream_id) != expected_streams_.end()) {
@@ -472,11 +485,11 @@ void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream)
 
 	if(video_type == "ros_image") {
 	  boost::shared_ptr<RosVideoRenderer> renderer(new RosVideoRenderer(it_, video_path));
-	  track->AddRenderer(renderer.get());
+	  track->AddOrUpdateSink(renderer.get(), rtc::VideoSinkWants());
 	  video_renderers_[stream_id].push_back(renderer);
 	}
 	else {
-	  ROS_WARN_STREAM("Unknwon video destination type: " << video_type);
+	  ROS_WARN_STREAM("Unknown video destination type: " << video_type);
 	}
 
       }
@@ -491,7 +504,7 @@ void WebrtcClient::OnAddRemoteStream(webrtc::MediaStreamInterface* media_stream)
     ROS_WARN_STREAM("Unexpected stream: " << stream_id);
   }
 }
-void WebrtcClient::OnRemoveRemoteStream(webrtc::MediaStreamInterface* media_stream)
+void WebrtcClient::OnRemoveRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream)
 {
   std::string stream_id = media_stream->label();
   video_renderers_.erase(stream_id);

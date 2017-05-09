@@ -10,12 +10,11 @@ RosLogContext::RosLogContext() {
   webrtc::Trace::CreateTrace();
   if (webrtc::Trace::SetTraceCallback(this) != 0)
     ROS_FATAL_NAMED("webrtc", "Failed to enable webrtc ROS trace context");
-  rtc::LogMessage::LogContext(rtc::LS_INFO);
   rtc::LogMessage::AddLogToStream(this, rtc::LS_INFO);
 
   // this disables logging to stderr (which is done by default)
   old_log_to_debug_ = rtc::LogMessage::GetLogToDebug();
-  rtc::LogMessage::LogToDebug(rtc::LogMessage::NO_LOGGING);
+  rtc::LogMessage::LogToDebug(rtc::LS_NONE);
 }
 
 RosLogContext::~RosLogContext() {
@@ -79,14 +78,16 @@ void RosLogContext::Print(webrtc::TraceLevel level, const char* message, int len
 
 
 // rtc::StreamInterface
-static boost::regex log_context_regex("^(\\w+)\\(([^:]+):(\\d+)\\): (.*)", boost::regex_constants::ECMAScript|boost::regex_constants::icase|boost::regex_constants::optimize);
+static boost::regex log_context_regex("^(\\w*)\\(([^:]+):(\\d+)\\): (.*)", boost::regex_constants::ECMAScript|boost::regex_constants::icase|boost::regex_constants::optimize);
 static bool ParseLogMessageContext(const std::string message, rtc::LoggingSeverity* severity, std::string* file, int* line, std::string* actual_message) {
   boost::smatch match;
   if (boost::regex_match(message, match, log_context_regex)) {
     if(match.size() != 5)
       return false;
     std::string severity_str = match[1].str();
-    if(severity_str == "Sensitive")
+    if(severity_str.empty())
+      *severity = rtc::LS_INFO;  // sensible default
+    else if(severity_str == "Sensitive")
       *severity = rtc::LS_SENSITIVE;
     else if(severity_str == "Verbose")
       *severity = rtc::LS_VERBOSE;
@@ -124,36 +125,23 @@ static ::ros::console::levels::Level RosLogLevelFromRtcLoggingSeverity(rtc::Logg
     return ::ros::console::levels::Error;
   }
 }
-rtc::StreamState RosLogContext::GetState() const {
-  return rtc::SS_OPEN;
-}
-rtc::StreamResult RosLogContext::Read(void* buffer, size_t buffer_len,
-				      size_t* read, int* error) {
-  return rtc::SR_EOS;
-}
-rtc::StreamResult RosLogContext::Write(const void* data, size_t data_len,
-				       size_t* written, int* error) {
-  std::string message((const char*)data, data_len);
-  boost::algorithm::trim(message);
+
+
+void RosLogContext::OnLogMessage(const std::string& message)
+{
+  std::string trimmed_message = boost::algorithm::trim_copy(message);
 
   rtc::LoggingSeverity severity;
   std::string file;
   int line;
   std::string actual_message;
-  if(ParseLogMessageContext(message, &severity, &file, &line, &actual_message)) {
+  if(ParseLogMessageContext(trimmed_message, &severity, &file, &line, &actual_message)) {
     CustomRosLog(RosLogLevelFromRtcLoggingSeverity(severity), actual_message, file, line, "");
   }
   else {
     ROS_WARN_STREAM_THROTTLE(10.0, "Failed to parse webrtc log message: " << message );
-    CustomRosLog(::ros::console::levels::Info, actual_message, "", -1, "");
   }
-
-  *written = data_len;
-  return rtc::SR_SUCCESS;
 }
-void RosLogContext::Close() {
-}
-
 
 
 unsigned int RosLogContextRef::usage_count = 0;

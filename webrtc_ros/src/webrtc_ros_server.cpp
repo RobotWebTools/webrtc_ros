@@ -6,9 +6,10 @@
 namespace webrtc_ros
 {
 
-MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, SignalingChannel *channel) {
-  return ((WebrtcRosServer*)_this)->signaling_thread_.Invoke<MessageHandler*>(rtc::Bind(&WebrtcRosServer::handle_new_signaling_channel,
-											(WebrtcRosServer*)_this, channel));
+MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, SignalingChannel *channel)
+{
+    return ((WebrtcRosServer*) _this)->signaling_thread_.Invoke<MessageHandler*>(RTC_FROM_HERE, rtc::Bind(&WebrtcRosServer::handle_new_signaling_channel,
+            (WebrtcRosServer*)_this, channel));
 }
 
 WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)

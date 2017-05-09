@@ -12,7 +12,7 @@ namespace webrtc_ros
 {
 
 
-RosVideoCapturer::RosVideoCapturer(const image_transport::ImageTransport& it, const std::string& topic, const std::string& transport)
+RosVideoCapturer::RosVideoCapturer(const ImageTransportFactory& it, const std::string& topic, const std::string& transport)
   : start_thread_(nullptr), handler_(this), impl_(new RosVideoCapturerImpl(it, topic, transport))
 {
 
@@ -118,16 +118,14 @@ bool RosVideoCapturer::IsScreencast() const
 
 
 
-RosVideoCapturerImpl::RosVideoCapturerImpl(const image_transport::ImageTransport& it, const std::string& topic, const std::string& transport)
+RosVideoCapturerImpl::RosVideoCapturerImpl(const ImageTransportFactory& it, const std::string& topic, const std::string& transport)
   : it_(it), topic_(topic), transport_(transport), capturer_(nullptr) {}
 
 void RosVideoCapturerImpl::Start(RosVideoCapturer *capturer)
 {
   std::unique_lock<std::mutex> lock(state_mutex_);
 
-  ROS_INFO("Subscribing topic %s with transport %s", topic_.c_str(), transport_.c_str());
-
-  sub_ = it_.subscribe(topic_, 1, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1), ros::VoidPtr(), image_transport::TransportHints(transport_));
+  sub_ = it_.subscribe(topic_, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1), transport_);
   capturer_ = capturer;
 }
 
@@ -136,14 +134,11 @@ void RosVideoCapturerImpl::Stop()
 {
   // Make sure to do this before aquiring lock so we don't deadlock with callback
   // This needs to aquire a lock that is heald which callbacks are dispatched
-  if(sub_)
-    sub_.shutdown();
+  sub_.shutdown();
 
   std::unique_lock<std::mutex> lock(state_mutex_);
   if(capturer_ == nullptr)
     return;
-
-  ROS_INFO("Stopping ROS subscriber on topic %s", topic_.c_str());
 
   capturer_ = nullptr;
 }

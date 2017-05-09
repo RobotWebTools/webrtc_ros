@@ -13,6 +13,7 @@
 #include <webrtc/api/test/fakeconstraints.h>
 #include <webrtc_ros/configure_message.h>
 #include <webrtc_ros/webrtc_web_server.h>
+#include <webrtc_ros/image_transport_factory.h>
 #include <webrtc/base/thread.h>
 
 
@@ -50,7 +51,7 @@ class MessageHandlerImpl;
 class WebrtcClient : private boost::noncopyable
 {
 public:
-  WebrtcClient(ros::NodeHandle& nh, const std::string& transport, SignalingChannel *signaling_channel);
+  WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel *signaling_channel);
   ~WebrtcClient();
   MessageHandler* createMessageHandler();
 
@@ -76,6 +77,7 @@ private:
 
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
+  ImageTransportFactory itf_;
   std::string transport_;
   boost::scoped_ptr<SignalingChannel> signaling_channel_;
 

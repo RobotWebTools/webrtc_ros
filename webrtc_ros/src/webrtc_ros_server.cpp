@@ -13,7 +13,7 @@ MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, Signal
 }
 
 WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
-  : nh_(nh), pnh_(pnh)
+  : nh_(nh), pnh_(pnh), itf_(image_transport::ImageTransport(nh_))
 {
   rtc::InitializeSSL();
 
@@ -36,7 +36,7 @@ void WebrtcRosServer::cleanupWebrtcClient(WebrtcClient *client) {
 
 MessageHandler* WebrtcRosServer::handle_new_signaling_channel(SignalingChannel *channel)
 {
-  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, image_transport_, channel),
+  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, itf_, image_transport_, channel),
 					 boost::bind(&WebrtcRosServer::cleanupWebrtcClient, this, _1));
   // hold a shared ptr until the object is initialized (holds a ptr to itself)
   client->init(client);

@@ -28,7 +28,7 @@ class RosVideoCapturer :
   public cricket::VideoCapturer
 {
 public:
-  RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic);
+  RosVideoCapturer(const image_transport::ImageTransport& it, const std::string& topic, const std::string& transport);
   virtual ~RosVideoCapturer();
 
   void imageCallback(const std::shared_ptr<webrtc::VideoFrame>& frame);
@@ -60,8 +60,7 @@ private:
 class RosVideoCapturerImpl : public boost::enable_shared_from_this<RosVideoCapturerImpl>
 {
 public:
-  RosVideoCapturerImpl(image_transport::ImageTransport it, const std::string& topic);
-  virtual ~RosVideoCapturerImpl();
+  RosVideoCapturerImpl(const image_transport::ImageTransport& it, const std::string& topic, const std::string& transport);
 
   void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
@@ -72,7 +71,7 @@ private:
   RTC_DISALLOW_COPY_AND_ASSIGN(RosVideoCapturerImpl);
 
   image_transport::ImageTransport it_;
-  const std::string topic_;
+  const std::string topic_, transport_;
   image_transport::Subscriber sub_;
   std::mutex state_mutex_;
   RosVideoCapturer *capturer_;

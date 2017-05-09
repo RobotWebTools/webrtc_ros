@@ -12,8 +12,8 @@ namespace webrtc_ros
 {
 
 
-RosVideoCapturer::RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic)
-  : start_thread_(nullptr), handler_(this), impl_(new RosVideoCapturerImpl(it, topic))
+RosVideoCapturer::RosVideoCapturer(const image_transport::ImageTransport& it, const std::string& topic, const std::string& transport)
+  : start_thread_(nullptr), handler_(this), impl_(new RosVideoCapturerImpl(it, topic, transport))
 {
 
   // Default supported formats. Use ResetSupportedFormats to over write.
@@ -118,19 +118,16 @@ bool RosVideoCapturer::IsScreencast() const
 
 
 
-RosVideoCapturerImpl::RosVideoCapturerImpl(image_transport::ImageTransport it, const std::string& topic)
-  : it_(it), topic_(topic), capturer_(nullptr) {}
-
-RosVideoCapturerImpl::~RosVideoCapturerImpl() {}
-
+RosVideoCapturerImpl::RosVideoCapturerImpl(const image_transport::ImageTransport& it, const std::string& topic, const std::string& transport)
+  : it_(it), topic_(topic), transport_(transport), capturer_(nullptr) {}
 
 void RosVideoCapturerImpl::Start(RosVideoCapturer *capturer)
 {
   std::unique_lock<std::mutex> lock(state_mutex_);
 
-  ROS_INFO("Starting ROS subscriber");
+  ROS_INFO("Subscribing topic %s with transport %s", topic_.c_str(), transport_.c_str());
 
-  sub_ = it_.subscribe(topic_, 1, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1));
+  sub_ = it_.subscribe(topic_, 1, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1), ros::VoidPtr(), image_transport::TransportHints(transport_));
   capturer_ = capturer;
 }
 
@@ -146,7 +143,7 @@ void RosVideoCapturerImpl::Stop()
   if(capturer_ == nullptr)
     return;
 
-  ROS_INFO("Stopping ROS subscriber");
+  ROS_INFO("Stopping ROS subscriber on topic %s", topic_.c_str());
 
   capturer_ = nullptr;
 }

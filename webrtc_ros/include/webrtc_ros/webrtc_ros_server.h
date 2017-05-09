@@ -34,6 +34,7 @@ private:
 
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
+  std::string image_transport_;
 
   boost::shared_ptr<webrtc_ros::WebrtcWebServer> server_;
 };

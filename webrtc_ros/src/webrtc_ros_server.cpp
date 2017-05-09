@@ -19,6 +19,7 @@ WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
 
   int port;
   pnh_.param("port", port, 8080);
+  pnh_.param("image_transport", image_transport_, std::string("raw"));
 
   signaling_thread_.Start();
   server_.reset(WebrtcWebServer::create(port, &WebrtcRosServer_handle_new_signaling_channel, this));
@@ -35,7 +36,7 @@ void WebrtcRosServer::cleanupWebrtcClient(WebrtcClient *client) {
 
 MessageHandler* WebrtcRosServer::handle_new_signaling_channel(SignalingChannel *channel)
 {
-  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, channel),
+  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, image_transport_, channel),
 					 boost::bind(&WebrtcRosServer::cleanupWebrtcClient, this, _1));
   // hold a shared ptr until the object is initialized (holds a ptr to itself)
   client->init(client);

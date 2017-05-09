@@ -65,8 +65,8 @@ void WebrtcClientObserverProxy::OnSignalingChange(webrtc::PeerConnectionInterfac
 }
 
 
-WebrtcClient::WebrtcClient(ros::NodeHandle& nh, SignalingChannel* signaling_channel)
-  : nh_(nh), it_(nh_), signaling_channel_(signaling_channel),
+WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const std::string& transport, SignalingChannel* signaling_channel)
+  : nh_(nh), it_(nh_), transport_(transport), signaling_channel_(signaling_channel),
     signaling_thread_(rtc::Thread::Current())
 {
   ROS_INFO("Creating WebrtcClient");
@@ -292,7 +292,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 
 	  if(video_type == "ros_image") {
             ROS_DEBUG_STREAM("Subscribing to ROS topic: " << video_path);
-            cricket::VideoCapturer* capturer = new RosVideoCapturer(it_, video_path);
+            cricket::VideoCapturer* capturer = new RosVideoCapturer(it_, video_path, transport_);
 
             rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
               peer_connection_factory_->CreateVideoTrack(

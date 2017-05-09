@@ -50,7 +50,7 @@ class MessageHandlerImpl;
 class WebrtcClient : private boost::noncopyable
 {
 public:
-  WebrtcClient(ros::NodeHandle& nh, SignalingChannel *signaling_channel);
+  WebrtcClient(ros::NodeHandle& nh, const std::string& transport, SignalingChannel *signaling_channel);
   ~WebrtcClient();
   MessageHandler* createMessageHandler();
 
@@ -76,6 +76,7 @@ private:
 
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
+  std::string transport_;
   boost::scoped_ptr<SignalingChannel> signaling_channel_;
 
   rtc::Thread *signaling_thread_;

@@ -204,7 +204,7 @@ static bool ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler
                                   async_web_server_cpp::HttpConnectionPtr connection,
                                   const char* begin, const char* end)
 {
-  ROS_INFO_STREAM("Handling Request: " << request.uri);
+  ROS_INFO_STREAM(connection->socket().remote_endpoint() << ": " << request.method << " " << request.uri);
   try
   {
     return forward(request, connection, begin, end);

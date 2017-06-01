@@ -141,33 +141,23 @@ bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
   .write(connection);
 
   // Don't use jsoncpp cause we link against c++11 library (many not actually be an issue)
-  connection->write("{\n");
-  connection->write("\t\"camera_topics\": {\n");
-  BOOST_FOREACH(std::string & camera_info_topic, camera_info_topics)
+  std::stringstream json;
+  json << "{\n\t\"camera_topics\": {\n";
+  BOOST_FOREACH(const std::string& camera_info_topic, camera_info_topics)
   {
     if (boost::algorithm::ends_with(camera_info_topic, "/camera_info"))
     {
       std::string base_topic = camera_info_topic.substr(0, camera_info_topic.size() - strlen("camera_info"));
-      connection->write("\t\t\"");
-      connection->write(base_topic);
-      connection->write("\": {\n");
+      json << "\t\t\"" << base_topic << "\": {\n";
       bool first = true;
       std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
       for (; image_topic_itr != image_topics.end();)
       {
         if (boost::starts_with(*image_topic_itr, base_topic))
         {
-	  if(!first)
-	    connection->write(",\n");
-	  first = false;
-	  connection->write("\t\t\t\"");
-	  connection->write(image_topic_itr->substr(base_topic.size()));
-	  connection->write("\": ");
-
-	  connection->write("\"");
-	  connection->write(*image_topic_itr);
-	  connection->write("\"");
-
+          if (!first) json << ",\n";
+          first = false;
+          json << "\t\t\t\"" << image_topic_itr->substr(base_topic.size()) << "\": \"" << *image_topic_itr << "\"";
           image_topic_itr = image_topics.erase(image_topic_itr);
         }
         else
@@ -175,27 +165,20 @@ bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
           ++image_topic_itr;
         }
       }
-      connection->write("\n");
-      connection->write("\t\t}\n");
+      json << "\n\t\t}\n";
     }
-    connection->write("\t},\n");
-    connection->write("\t\"image_topics\": [\n");
-    std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
-    for (; image_topic_itr != image_topics.end();)
-    {
-      connection->write("\t\t\"");
-      connection->write(*image_topic_itr);
-      connection->write("\"");
-
-      ++image_topic_itr;
-      if(image_topic_itr != image_topics.end()) {
-	connection->write(",");
-      }
-      connection->write("\n");
-    }
-    connection->write("\t]\n");
   }
-  connection->write("}\n");
+  json << "\t},\n\t\"image_topics\": [\n";
+  std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
+  for (; image_topic_itr != image_topics.end();)
+  {
+    json << "\t\t\"" << *image_topic_itr << "\"";
+    ++image_topic_itr;
+    if(image_topic_itr != image_topics.end()) json << ",";
+    json << "\n";
+  }
+  json << "\t]\n}\n";
+  connection->write(json.str());
   return true;
 }
 

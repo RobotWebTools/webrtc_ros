@@ -1,25 +1,23 @@
 <html>
-<head>
-  <title>WebRTC ROS Stream List</title>
-  <script type="text/javascript" src="/index.js"></script>
-</head>
-<body onload="onload()">
-
-<h1>ROS Image Topics:</h1>
-<form id="custom_topic_form">
-  Subscribe Image Topic: <input name="subscribe_video_topic" type="text"><br>
-  Publish Image Topic: <input name="publish_video_topic" type="text"><br>
-  Subscribe Local Audio: <input type="checkbox" name="subscribe_local_audio"><br>
-  Publish To Local Audio: <input type="checkbox" name="publish_local_audio"><br>
-  <input type="submit" value="Go">
-</form>
-
-<h1>Available ROS Image Topics:</h1>
-<ul id="camera_topics_list">
-</ul>
-<ul id="image_topics_list">
-</ul>
-
-
-</body>
+    <head>
+        <title>WebRTC ROS Stream List</title>
+        <script type="text/javascript" src="/index.js"></script>
+    </head>
+    <body onload="onload()">
+        <h1>ROS Image Topics:</h1>
+        <form id="custom_topic_form">
+            Subscribe Image Topic: <input name="subscribe_video_topic" type="text"><br>
+            Publish Image Topic: <input name="publish_video_topic" type="text"><br>
+            Subscribe Local Audio: <input type="checkbox" name="subscribe_local_audio"><br>
+            Publish To Local Audio: <input type="checkbox" name="publish_local_audio"><br>
+            <input type="submit" value="Go">
+        </form>
+        <h1>Available ROS Image Topics:</h1>
+        <ul id="camera_topics_list">
+        </ul>
+        <ul id="image_topics_list">
+        </ul>
+        <p id="status">
+        </p>
+    </body>
 </html>

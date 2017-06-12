@@ -13,7 +13,7 @@ namespace webrtc_ros
 
 
 RosVideoCapturer::RosVideoCapturer(const ImageTransportFactory& it, const std::string& topic, const std::string& transport)
-  : start_thread_(nullptr), handler_(this), impl_(new RosVideoCapturerImpl(it, topic, transport))
+  : impl_(new RosVideoCapturerImpl(it, topic, transport))
 {
 
   // Default supported formats. Use ResetSupportedFormats to over write.
@@ -37,7 +37,6 @@ RosVideoCapturer::~RosVideoCapturer()
 
 cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& capture_format)
 {
-  start_thread_ = rtc::Thread::Current();
   if (capture_state() == cricket::CS_RUNNING) {
     ROS_WARN("Start called when it's already started.");
     return capture_state();
@@ -53,32 +52,17 @@ cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& captur
 void RosVideoCapturer::Stop()
 {
   impl_->Stop();
-  start_thread_ = nullptr;
   SetCaptureFormat(NULL);
   SetCaptureState(cricket::CS_STOPPED);
 }
 
 void RosVideoCapturer::imageCallback(const std::shared_ptr<webrtc::VideoFrame>& frame)
 {
-  // This must be invoked on the worker thread, which should be the thread start was called on
-  // This code is based on talk/media/webrtc/webrtcvideocapturer.cc, WebRtcVideoCapturer::OnIncomingCapturedFrame
-  if (start_thread_->IsCurrent()) {
-    SignalFrameCapturedOnStartThread(frame);
-  } else {
-    // Cannot use invoke here because it can sometimes deadlock if the start thread is quit
-    // before we reach this point
-    start_thread_->Send(RTC_FROM_HERE, &handler_, 0, rtc::WrapMessageData<std::shared_ptr<webrtc::VideoFrame>>(frame));
-  }
-}
-
-ImageMessageHandler::ImageMessageHandler(RosVideoCapturer *capturer) : capturer_(capturer) {}
-void ImageMessageHandler::OnMessage(rtc::Message* msg)
-{
-  capturer_->SignalFrameCapturedOnStartThread(rtc::UseMessageData<std::shared_ptr<webrtc::VideoFrame>>(msg->pdata));
-  delete msg->pdata; msg->pdata = nullptr;
-}
-
-void RosVideoCapturer::SignalFrameCapturedOnStartThread(const std::shared_ptr<webrtc::VideoFrame>& frame) {
+  // Apparently, the OnFrame() method could not be called from arbitrary threads in ancient times, and there
+  // used to be all kinds of shenanigans here to make sure it is called from the original thread, causing
+  // a subtle deadlock bug on object destruction.
+  //
+  // So I decided to be blunt and just call it like it is:
   OnFrame(*frame, frame->width(), frame->height());
 }
 

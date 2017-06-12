@@ -13,16 +13,7 @@
 namespace webrtc_ros
 {
 
-class RosVideoCapturer;
 class RosVideoCapturerImpl;
-
-class ImageMessageHandler : public rtc::MessageHandler {
-public:
-  ImageMessageHandler(RosVideoCapturer *capturer);
-  virtual void OnMessage(rtc::Message* msg);
-private:
-  RosVideoCapturer *capturer_;
-};
 
 class RosVideoCapturer :
   public cricket::VideoCapturer
@@ -43,14 +34,7 @@ public:
 
 private:
   RTC_DISALLOW_COPY_AND_ASSIGN(RosVideoCapturer);
-
-  void SignalFrameCapturedOnStartThread(const std::shared_ptr<webrtc::VideoFrame>& frame);
-
-  rtc::Thread* volatile start_thread_;
-  ImageMessageHandler handler_;
   boost::shared_ptr<RosVideoCapturerImpl> impl_;
-
-  friend ImageMessageHandler;
 };
 
 

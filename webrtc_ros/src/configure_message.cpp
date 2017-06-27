@@ -45,7 +45,7 @@ bool ConfigureMessage::fromJson(const Json::Value& message_json)
       return false;
 
     actions.resize(action_array_json.size());
-    for(int i = 0; i < action_array_json.size(); ++i) {
+    for(unsigned i = 0; i < action_array_json.size(); ++i) {
       actions[i].fromJson(action_array_json[i]);
     }
     return true;

@@ -41,7 +41,7 @@ function onload() {
                     var topic_li = document.createElement("li");
                     var topic_a = document.createElement("a");
                     topic_a.appendChild(document.createTextNode(topic));
-                    topic_a.href = "/viewer?subscribe_video=ros_image:" + stream_data.camera_topics[base_topic][topic_name];
+                    topic_a.href = "/viewer?subscribe_video=ros_image:" + topic;
                     topic_li.appendChild(topic_a);
                     image_topic_list.appendChild(topic_li);
                 }

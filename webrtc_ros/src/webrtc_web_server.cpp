@@ -142,13 +142,16 @@ bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
 
   // Don't use jsoncpp cause we link against c++11 library (many not actually be an issue)
   std::stringstream json;
-  json << "{\n\t\"camera_topics\": {\n";
+  json << "{\n\t\"camera_topics\": {";
+  bool first_cam = true;
   BOOST_FOREACH(const std::string& camera_info_topic, camera_info_topics)
   {
     if (boost::algorithm::ends_with(camera_info_topic, "/camera_info"))
     {
       std::string base_topic = camera_info_topic.substr(0, camera_info_topic.size() - strlen("camera_info"));
-      json << "\t\t\"" << base_topic << "\": {\n";
+      if (!first_cam) json << ",";
+      first_cam = false;
+      json << "\n\t\t\"" << base_topic << "\": {\n";
       bool first = true;
       std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
       for (; image_topic_itr != image_topics.end();)
@@ -165,10 +168,10 @@ bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
           ++image_topic_itr;
         }
       }
-      json << "\n\t\t}\n";
+      json << "\n\t\t}";
     }
   }
-  json << "\t},\n\t\"image_topics\": [\n";
+  json << "\n\t},\n\t\"image_topics\": [\n";
   std::vector<std::string>::iterator image_topic_itr = image_topics.begin();
   for (; image_topic_itr != image_topics.end();)
   {

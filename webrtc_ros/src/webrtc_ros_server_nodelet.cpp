@@ -30,5 +30,5 @@ private:
 
 }
 
-PLUGINLIB_DECLARE_CLASS(webrtc_ros, WebrtcRosServerNodelet, webrtc_ros::WebrtcRosServerNodelet, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(webrtc_ros::WebrtcRosServerNodelet, nodelet::Nodelet);
 

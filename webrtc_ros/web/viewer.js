@@ -79,11 +79,10 @@ connection.onConfigurationNeeded = function() {
 	connection.addRemoteStream(remote_stream_config).then(function(event) {
 	    console.log("Remote stream added", event, event.stream.getVideoTracks(), event.stream.getAudioTracks());
 	    var remoteVideoElement = document.getElementById("remote-video");
-	    remoteVideoElement.src = URL.createObjectURL(event.stream);
-	    remoteVideoElement.play();
+	    remoteVideoElement.srcObject = event.stream;
 	    event.remove.then(function(event){
 		console.log("Remote stream removed", event);
-		remoteVideoElement.src = "";
+		remoteVideoElement.srcObject = null;
 	    });
 	    window.remotestream = event.stream;
 	});
@@ -105,11 +104,10 @@ connection.onConfigurationNeeded = function() {
 	connection.addLocalStream(user_media_config, local_stream_config).then(function(event) {
 	    console.log("Local stream added", event, event.stream.getVideoTracks(), event.stream.getAudioTracks());
 	    var localVideoElement = document.getElementById("local-video");
-	    localVideoElement.src = URL.createObjectURL(event.stream);
-	    localVideoElement.play();
+	    localVideoElement.srcObject = event.stream;
 	    event.remove.then(function(event){
 		console.log("Local stream removed", event);
-		localVideoElement.src = "";
+		localVideoElement.srcObject = null;
 	    });
 	    window.localstream = event.stream;
 	});

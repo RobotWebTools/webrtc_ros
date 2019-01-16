@@ -7,7 +7,7 @@ addons:
   apt:
     sources:
       - sourceline: 'deb http://packages.ros.org/ros/ubuntu xenial main'
-      - key_url: http://packages.ros.org/ros.key
+        key_url: http://packages.ros.org/ros.key
     packages:
       - python-catkin-pkg
       - python-rosdep

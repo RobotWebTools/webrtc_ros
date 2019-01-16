@@ -19,8 +19,6 @@ install:
   - rosdep update
   - mkdir -p /tmp/ws/src
   - ln -s `pwd` /tmp/ws/src/webrtc
-  - cd /tmp/ws/src
-  - git clone --depth=1 https://github.com/WPI-RAIL/async_web-server_cpp.git
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro kinetic -y
 

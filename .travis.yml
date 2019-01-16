@@ -6,11 +6,11 @@ compiler:
 addons:
   apt:
     sources:
-      - sourceline: 'deb http://packages.ros.org/ubuntu xenial main'
+      - sourceline: 'deb http://packages.ros.org/ros/ubuntu xenial main'
       - key_url: http://packages.ros.org/ros.key
     packages:
       - python-catkin-pkg
-      - python-rosdepo
+      - python-rosdep
       - python-catkin-tools
       - python-catkin-lint
       - ros-kinetic-catkin

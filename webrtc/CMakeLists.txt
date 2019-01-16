@@ -15,8 +15,6 @@ message(STATUS "Fetching latest depot_tools from chromium")
 execute_process(
     COMMAND "build/get_depot_tools"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/get_depot_tools.stdout"
-    ERROR_FILE "${CMAKE_CURRENT_BINARY_DIR}/get_depot_tools.stderr"
     RESULT_VARIABLE get_depot_tools_result
 )
 if(NOT ${get_depot_tools_result} EQUAL 0)
@@ -27,8 +25,6 @@ message(STATUS "Fetching latest WebRTC source code")
 execute_process(
     COMMAND "build/get_webrtc_source"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/get_webrtc_source.stdout"
-    ERROR_FILE "${CMAKE_CURRENT_BINARY_DIR}/get_webrtc_source.stderr"
     RESULT_VARIABLE get_webrtc_source_result
 )
 if(NOT ${get_webrtc_source_result} EQUAL 0)
@@ -39,7 +35,6 @@ message(STATUS "Configuring WebRTC build system")
 execute_process(
     COMMAND "build/prepare_webrtc_build" "${CMAKE_CURRENT_BINARY_DIR}/ninja"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/prepare_webrtc_build.stdout"
     RESULT_VARIABLE prepare_webrtc_build_result
 )
 if(NOT ${prepare_webrtc_build_result} EQUAL 0)

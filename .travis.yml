@@ -9,10 +9,11 @@ addons:
       - sourceline: 'deb http://packages.ros.org/ros/ubuntu xenial main'
         key_url: http://packages.ros.org/ros.key
     packages:
-      - python-catkin-pkg
-      - python-rosdep
-      - python-catkin-tools
+      - ninja-build
       - python-catkin-lint
+      - python-catkin-pkg
+      - python-catkin-tools
+      - python-rosdep
       - ros-kinetic-catkin
 install:
   - sudo rosdep init
@@ -27,7 +28,7 @@ script:
   - source /opt/ros/kinetic/setup.bash
   - catkin init
   - catkin config --install
-  - catkin build -p1 -j4 --no-status
+  - catkin build -p1 --no-status -i
   - source install/setup.bash
   - catkin_lint src/webrtc
 

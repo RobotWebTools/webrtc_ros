@@ -37,7 +37,7 @@ bool IceCandidateMessage::fromIceCandidate(const webrtc::IceCandidateInterface& 
 
 webrtc::IceCandidateInterface* IceCandidateMessage::createIceCandidate()
 {
-  return webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate);
+  return webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate, 0);
 }
 
 std::string IceCandidateMessage::toJson()

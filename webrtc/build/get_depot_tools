@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+run_updates=0
+rootdir="$(cd "$(dirname "$0")"; pwd)"
+if [ ! -d "$rootdir/depot_tools" ]
+then
+	cd "$rootdir"
+	git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+elif [ "$run_updates" -eq 1 ]
+then
+	git -C "$rootdir/depot_tools" pull
+fi
+

@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+rootdir="$(cd "$(dirname "$0")"; pwd)"
+export PATH="$rootdir/depot_tools:$PATH"
+
+cd "$rootdir/webrtc/src"
+gn gen "$1" --args='is_debug=false is_clang=false is_desktop_linux=false treat_warnings_as_errors=false use_gconf=false use_gio=false use_rtti=true'
+

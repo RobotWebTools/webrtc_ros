@@ -1,112 +1,72 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0.0)
 project(webrtc)
 
-find_package(catkin REQUIRED)
-
-set(webrtc_src_root ${PROJECT_SOURCE_DIR}/src)
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-  set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Debug)
-else()
-  set(webrtc_build_root ${CMAKE_BINARY_DIR}/out/Release)
+if(NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/depot_tools" OR
+   NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc")
+    message(STATUS "*********************************************************")
+    message(STATUS "*                                                       *")
+    message(STATUS "*  On the first run, a lot of stuff will be downloaded  *")
+    message(STATUS "*  This may take a while...                             *")
+    message(STATUS "*                                                       *")
+    message(STATUS "*********************************************************")
 endif()
 
-# checkout source to build and generate ninja build files
+message(STATUS "Fetching latest depot_tools from chromium")
 execute_process(
-  COMMAND ./checkout_source.sh ${CMAKE_BINARY_DIR}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
-  RESULT_VARIABLE CHECKOUT_SOURCE_RESULT
+    COMMAND "build/get_depot_tools"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE get_depot_tools_result
 )
-if(NOT ${CHECKOUT_SOURCE_RESULT} EQUAL 0)
-  message(FATAL_ERROR "WebRTC source checkout failed")
+if(NOT ${get_depot_tools_result} EQUAL 0)
+    message(FATAL_ERROR "cannot update depot_tools")
 endif()
 
-
-# generate package cfg extras to be inherited
-set(CMAKE_EXTRAS_FILE ${CMAKE_BINARY_DIR}/webrtc-extras.cmake)
+message(STATUS "Fetching latest WebRTC source code")
 execute_process(
-  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} generate-cmake-extras ${CMAKE_EXTRAS_FILE} ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_LIB_DESTINATION} # this must come before catkin_packate, which sets up CATKIN_PACKAGE_* macros so use global instead of package
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
-  RESULT_VARIABLE CMAKE_EXTRAS_RESULT
+    COMMAND "build/get_webrtc_source"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE get_webrtc_source_result
 )
-if(NOT ${CMAKE_EXTRAS_RESULT} EQUAL 0)
-  message(FATAL_ERROR "WebRTC cmake extras generation failed")
+if(NOT ${get_webrtc_source_result} EQUAL 0)
+    message(FATAL_ERROR "cannot update WebRTC source code")
 endif()
 
-
-catkin_package(
-  CFG_EXTRAS ${CMAKE_EXTRAS_FILE}
+message(STATUS "Configuring WebRTC build system")
+execute_process(
+    COMMAND "build/prepare_webrtc_build" "${CMAKE_CURRENT_BINARY_DIR}/ninja"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE prepare_webrtc_build_result
 )
-
-#############
-##  Build  ##
-#############
+if(NOT ${prepare_webrtc_build_result} EQUAL 0)
+    message(FATAL_ERROR "cannot prepare WebRTC build system")
+endif()
 
 add_custom_target(webrtc ALL
-  COMMAND ./build_webrtc.sh ${webrtc_build_root}
-  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} copy-libs ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_LIB_DESTINATION}
-  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} copy-tools ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
+    COMMAND ninja -C "${CMAKE_CURRENT_BINARY_DIR}/ninja" webrtc stunserver turnserver relayserver
+    COMMAND "build/update_cmake_config" "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src" "${CMAKE_CURRENT_BINARY_DIR}/ninja" "${CMAKE_CURRENT_BINARY_DIR}/output" "${CMAKE_INSTALL_PREFIX}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-#############
-## Install ##
-#############
+install(FILES "package.xml" DESTINATION "share/webrtc")
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/output/webrtcConfig.cmake"
+    DESTINATION "share/webrtc/cmake"
+)
+install(
+    DIRECTORY "build/webrtc/src/webrtc"
+    DESTINATION "include"
+    FILES_MATCHING PATTERN "*.h"
+)
+install(
+    DIRECTORY "build/webrtc/src/third_party/jsoncpp/source/include/"
+    DESTINATION "include/webrtc/3rdparty"
+    FILES_MATCHING PATTERN "*.h"
+)
+install(
+    DIRECTORY "build/webrtc/src/third_party/libyuv/include/"
+    DESTINATION "include/webrtc/3rdparty"
+    FILES_MATCHING PATTERN "*.h"
+)
+install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/output/make_install.cmake")
 
-# Generate list of built libraries
-execute_process(
-  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} list-built-libs ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_LIB_DESTINATION}
-  OUTPUT_VARIABLE BUILT_LIBRARIES
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
-  RESULT_VARIABLE LIST_BUILT_LIBS_RESULT
-)
-if(NOT ${LIST_BUILT_LIBS_RESULT} EQUAL 0)
-  message(FATAL_ERROR "Listing built WebRTC libs failed")
-endif()
-
-# Install libraries
-install(FILES ${BUILT_LIBRARIES}
-  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-)
-
-# Install tools
-install(PROGRAMS
-  ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/stunserver
-  ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/turnserver
-  ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/relayserver
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-
-# Install license files
-install(FILES
-  ../LICENSE
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-install(FILES
-  src/webrtc/LICENSE
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  RENAME LICENSE_webrtc
-)
-install(FILES
-  src/webrtc/LICENSE_THIRD_PARTY
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  RENAME LICENSE_THIRD_PARTY_webrtc
-)
-install(FILES
-  src/talk/LICENSE_THIRD_PARTY
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  RENAME LICENSE_THIRD_PARTY_talk
-)
-
-# Install includes
-install(CODE "
-execute_process(
-  COMMAND ./ninja_to_cmake.py ${webrtc_build_root} install-includes ${CMAKE_INSTALL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/
-  RESULT_VARIABLE INSTALL_INCLUDES_RESULT
-)
-if(NOT ${INSTALL_INCLUDES_RESULT} EQUAL 0)
-  message(FATAL_ERROR \"Installing WebRTC includes failed\")
-endif(NOT ${INSTALL_INCLUDES_RESULT} EQUAL 0)
-")

@@ -36,7 +36,7 @@ bool SdpMessage::fromSessionDescription(const webrtc::SessionDescriptionInterfac
 
 webrtc::SessionDescriptionInterface* SdpMessage::createSessionDescription()
 {
-  return webrtc::CreateSessionDescription(type, sdp);
+  return webrtc::CreateSessionDescription(type, sdp, 0);
 }
 
 std::string SdpMessage::toJson()

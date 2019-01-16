@@ -1,9 +1,10 @@
 #ifndef WEBRTC_ROS_CONFIGURE_MESSAGE_H_
 #define WEBRTC_ROS_CONFIGURE_MESSAGE_H_
 
-#include "webrtc_ros/webrtc_ros_message.h"
-#include "webrtc/base/json.h"
-#include "talk/app/webrtc/jsep.h"
+#include <webrtc_ros/webrtc_ros_message.h>
+#include <webrtc/base/json.h>
+#include <webrtc/api/jsep.h>
+
 
 namespace webrtc_ros
 {

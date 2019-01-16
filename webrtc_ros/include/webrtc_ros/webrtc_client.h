@@ -7,13 +7,15 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include "webrtc_ros/ros_video_renderer.h"
-#include "talk/app/webrtc/mediastreaminterface.h"
-#include "talk/app/webrtc/peerconnectioninterface.h"
-#include "talk/app/webrtc/test/fakeconstraints.h"
-#include "webrtc_ros/configure_message.h"
-#include "webrtc_ros/webrtc_web_server.h"
-#include "webrtc/base/thread.h"
+#include <webrtc_ros/ros_video_renderer.h>
+#include <webrtc/api/mediastreaminterface.h>
+#include <webrtc/api/peerconnectioninterface.h>
+#include <webrtc/api/test/fakeconstraints.h>
+#include <webrtc_ros/configure_message.h>
+#include <webrtc_ros/webrtc_web_server.h>
+#include <webrtc_ros/image_transport_factory.h>
+#include <webrtc/base/thread.h>
+
 
 namespace webrtc_ros
 {
@@ -28,13 +30,17 @@ class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
 public:
   WebrtcClientObserverProxy(WebrtcClientWeakPtr client_weak);
 
-  void OnSuccess(webrtc::SessionDescriptionInterface*);
-  void OnFailure(const std::string&);
-  void OnAddStream(webrtc::MediaStreamInterface*);
-  void OnRemoveStream(webrtc::MediaStreamInterface*);
-  void OnDataChannel(webrtc::DataChannelInterface*);
-  void OnRenegotiationNeeded();
-  void OnIceCandidate(const webrtc::IceCandidateInterface*);
+  void OnSuccess(webrtc::SessionDescriptionInterface*) override;
+  void OnFailure(const std::string&) override;
+  void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>) override;
+  void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>) override;
+  void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface>) override;
+  void OnRenegotiationNeeded() override;
+  void OnIceCandidate(const webrtc::IceCandidateInterface*) override;
+  void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState) override;
+  void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState) override;
+  void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState) override;
+  void OnIceCandidatesRemoved(const std::vector<cricket::Candidate>& candidates) override;
 
 private:
   WebrtcClientWeakPtr client_weak_;
@@ -45,7 +51,7 @@ class MessageHandlerImpl;
 class WebrtcClient : private boost::noncopyable
 {
 public:
-  WebrtcClient(ros::NodeHandle& nh, SignalingChannel *signaling_channel);
+  WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel *signaling_channel);
   ~WebrtcClient();
   MessageHandler* createMessageHandler();
 
@@ -65,12 +71,14 @@ private:
 
   void OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterface*);
   void OnSessionDescriptionFailure(const std::string&);
-  void OnAddRemoteStream(webrtc::MediaStreamInterface*);
-  void OnRemoveRemoteStream(webrtc::MediaStreamInterface*);
+  void OnAddRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>);
+  void OnRemoveRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>);
   void OnIceCandidate(const webrtc::IceCandidateInterface*);
 
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
+  ImageTransportFactory itf_;
+  std::string transport_;
   boost::scoped_ptr<SignalingChannel> signaling_channel_;
 
   rtc::Thread *signaling_thread_;

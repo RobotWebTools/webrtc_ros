@@ -4,14 +4,16 @@ project(webrtc_ros)
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   roscpp
-  webrtc
   image_transport
   nodelet
   async_web_server_cpp
 )
+find_package(webrtc REQUIRED)
+find_package(X11 REQUIRED)
 
 catkin_package(
-  CATKIN_DEPENDS cv_bridge roscpp webrtc image_transport nodelet async_web_server_cpp
+  CATKIN_DEPENDS cv_bridge roscpp image_transport nodelet async_web_server_cpp
+  DEPENDS webrtc
 )
 
 ###########
@@ -21,7 +23,9 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${webrtc_INCLUDE_DIRS}
 )
+add_definitions(${webrtc_DEFINITIONS})
 
 # This library contains code that cannot be compiled with c++11 enabled
 # This is due to ABI incompatibilities between the two
@@ -48,17 +52,14 @@ add_library(webrtc_ros_server
   src/webrtc_client.cpp
   src/ros_video_capturer.cpp
   src/ros_video_renderer.cpp
+  src/image_transport_factory.cpp
 )
 target_link_libraries(webrtc_ros_server
   ${catkin_LIBRARIES}
-  ${WEBRTC_LIBRARIES}
+  ${webrtc_LIBRARIES}
+  ${X11_LIBRARIES}
   webrtc_ros_server_noncpp11
 )
-target_compile_definitions(webrtc_ros_server PUBLIC ${WEBRTC_COMPILE_DEFINITIONS})
-target_compile_options(webrtc_ros_server PUBLIC ${WEBRTC_COMPILE_OPTIONS})
-target_include_directories(webrtc_ros_server PUBLIC ${WEBRTC_INCLUDE_DIRS})
-set_target_properties(webrtc_ros_server PROPERTIES LINK_FLAGS "${WEBRTC_LINK_FLAGS}")
-
 add_executable(webrtc_ros_server_node
   src/webrtc_ros_server_node.cpp
 )
@@ -74,7 +75,7 @@ target_link_libraries(webrtc_ros_server_nodelet
   ${catkin_LIBRARIES}
   webrtc_ros_server
 )
-
+set_target_properties(webrtc_ros_server webrtc_ros_server_node webrtc_ros_server_nodelet PROPERTIES COMPILE_OPTIONS "-std=c++11")
 
 #############
 ## Install ##

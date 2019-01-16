@@ -1,4 +1,3 @@
-.gclient_entries
-src/
-depot_tools/
-_gclient_*
+/build/depot_tools
+/build/webrtc
+

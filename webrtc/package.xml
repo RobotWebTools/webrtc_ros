@@ -12,14 +12,8 @@
   <url type="bugtracker">https://github.com/RobotWebTools/webrtc_ros/issues</url>
   <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>git</buildtool_depend><!-- Needed to clone webrtc source -->
-  <buildtool_depend>java</buildtool_depend><!-- Needed for talk/build/common.gypi -->
-
-  <depend>libicu-dev</depend>
-  <depend>libnss3-dev</depend>
-  <depend>libasound2-dev</depend>
-  <depend>libpulse-dev</depend>
-  <depend>libudev-dev</depend>
-  <depend>libxtst-dev</depend>
+  <export>
+     <build_type>cmake</build_type>
+  </export>
 </package>

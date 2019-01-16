@@ -1,12 +1,19 @@
 #include "webrtc_ros/ros_video_capturer.h"
 #include "webrtc/base/bind.h"
 
+#include <ros/ros.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <cv_bridge/cv_bridge.h>
+#include <boost/enable_shared_from_this.hpp>
+
 namespace webrtc_ros
 {
 
 
-RosVideoCapturer::RosVideoCapturer(image_transport::ImageTransport it, const std::string& topic)
-  : start_thread_(nullptr), handler_(this), impl_(new RosVideoCapturerImpl(it, topic))
+RosVideoCapturer::RosVideoCapturer(const ImageTransportFactory& it, const std::string& topic, const std::string& transport)
+  : start_thread_(nullptr), handler_(this), impl_(new RosVideoCapturerImpl(it, topic, transport))
 {
 
   // Default supported formats. Use ResetSupportedFormats to over write.
@@ -51,30 +58,28 @@ void RosVideoCapturer::Stop()
   SetCaptureState(cricket::CS_STOPPED);
 }
 
-void RosVideoCapturer::imageCallback(cricket::CapturedFrame *frame)
+void RosVideoCapturer::imageCallback(const std::shared_ptr<webrtc::VideoFrame>& frame)
 {
   // This must be invoked on the worker thread, which should be the thread start was called on
   // This code is based on talk/media/webrtc/webrtcvideocapturer.cc, WebRtcVideoCapturer::OnIncomingCapturedFrame
   if (start_thread_->IsCurrent()) {
     SignalFrameCapturedOnStartThread(frame);
-    delete frame;
   } else {
     // Cannot use invoke here because it can sometimes deadlock if the start thread is quit
     // before we reach this point
-    start_thread_->Post(&handler_, 0, rtc::WrapMessageData(frame), true);
+    start_thread_->Send(RTC_FROM_HERE, &handler_, 0, rtc::WrapMessageData<std::shared_ptr<webrtc::VideoFrame>>(frame));
   }
 }
 
 ImageMessageHandler::ImageMessageHandler(RosVideoCapturer *capturer) : capturer_(capturer) {}
 void ImageMessageHandler::OnMessage(rtc::Message* msg)
 {
-  capturer_->SignalFrameCapturedOnStartThread(rtc::UseMessageData<cricket::CapturedFrame*>(msg->pdata));
-  delete rtc::UseMessageData<cricket::CapturedFrame*>(msg->pdata);
-  delete msg->pdata;
+  capturer_->SignalFrameCapturedOnStartThread(rtc::UseMessageData<std::shared_ptr<webrtc::VideoFrame>>(msg->pdata));
+  delete msg->pdata; msg->pdata = nullptr;
 }
 
-void RosVideoCapturer::SignalFrameCapturedOnStartThread(cricket::CapturedFrame *frame) {
-  SignalFrameCaptured(this, frame);
+void RosVideoCapturer::SignalFrameCapturedOnStartThread(const std::shared_ptr<webrtc::VideoFrame>& frame) {
+  OnFrame(*frame, frame->width(), frame->height());
 }
 
 bool RosVideoCapturer::IsRunning()
@@ -83,7 +88,7 @@ bool RosVideoCapturer::IsRunning()
 }
 
 
-bool RosVideoCapturer::GetPreferredFourccs(std::vector<uint32>* fourccs)
+bool RosVideoCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs)
 {
   if (!fourccs)
     return false;
@@ -113,19 +118,14 @@ bool RosVideoCapturer::IsScreencast() const
 
 
 
-RosVideoCapturerImpl::RosVideoCapturerImpl(image_transport::ImageTransport it, const std::string& topic)
-  : it_(it), topic_(topic), capturer_(nullptr) {}
-
-RosVideoCapturerImpl::~RosVideoCapturerImpl() {}
-
+RosVideoCapturerImpl::RosVideoCapturerImpl(const ImageTransportFactory& it, const std::string& topic, const std::string& transport)
+  : it_(it), topic_(topic), transport_(transport), capturer_(nullptr) {}
 
 void RosVideoCapturerImpl::Start(RosVideoCapturer *capturer)
 {
   std::unique_lock<std::mutex> lock(state_mutex_);
 
-  ROS_INFO("Starting ROS subscriber");
-
-  sub_ = it_.subscribe(topic_, 1, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1));
+  sub_ = it_.subscribe(topic_, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1), transport_);
   capturer_ = capturer;
 }
 
@@ -134,14 +134,11 @@ void RosVideoCapturerImpl::Stop()
 {
   // Make sure to do this before aquiring lock so we don't deadlock with callback
   // This needs to aquire a lock that is heald which callbacks are dispatched
-  if(sub_)
-    sub_.shutdown();
+  sub_.shutdown();
 
   std::unique_lock<std::mutex> lock(state_mutex_);
   if(capturer_ == nullptr)
     return;
-
-  ROS_INFO("Stopping ROS subscriber");
 
   capturer_ = nullptr;
 }
@@ -167,7 +164,6 @@ void RosVideoCapturerImpl::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     }
     cv::Mat orig;
     float_image.convertTo(orig, CV_8U);
-    bgr = cv::Mat(bgr.rows, bgr.cols, CV_8UC3);
     cv::cvtColor(orig, bgr, CV_GRAY2BGR);
   }
   else
@@ -175,17 +171,21 @@ void RosVideoCapturerImpl::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     bgr = cv_bridge::toCvCopy(msg, "bgr8")->image;
   }
 
-  cv::Mat yuv(bgr.rows, bgr.cols, CV_8UC4);
+  cv::Mat yuv;
   cv::cvtColor(bgr, yuv, CV_BGR2YUV_I420);
 
-  cricket::CapturedFrame *frame = new cricket::CapturedFrame;
-  frame->width = bgr.cols;
-  frame->height = bgr.rows;
-  frame->fourcc = cricket::FOURCC_I420;
-  frame->data_size = yuv.rows * yuv.step;
-  frame->data = yuv.data;
+  uint8_t* y = yuv.data;
+  uint8_t* u = y + (bgr.cols * bgr.rows);
+  uint8_t* v = u + (bgr.cols * bgr.rows) / 4;
 
+  std::shared_ptr<webrtc::VideoFrame> frame = std::make_shared<webrtc::VideoFrame>(
+      webrtc::I420Buffer::Copy(bgr.cols, bgr.rows, y, bgr.cols, u, bgr.cols / 2, v, bgr.cols / 2),
+      msg->header.stamp.toNSec() / 1000000,
+      msg->header.stamp.toNSec() / 1000000,
+      webrtc::kVideoRotation_0
+  );
   capturer_->imageCallback(frame);
 }
 
 }
+

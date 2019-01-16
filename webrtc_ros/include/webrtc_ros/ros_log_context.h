@@ -1,9 +1,9 @@
 #ifndef WEBRTC_ROS_ROS_LOG_CONTEXT_H_
 #define WEBRTC_ROS_ROS_LOG_CONTEXT_H_
 
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/base/logging.h"
-#include "webrtc/base/stream.h"
+#include <webrtc/system_wrappers/include/trace.h>
+#include <webrtc/base/logging.h>
+#include <webrtc/base/stream.h>
 #include <mutex>
 
 namespace webrtc_ros
@@ -16,25 +16,19 @@ namespace webrtc_ros
  * indicate that the logging context should be kept alive. Logging hooks are
  * installed on construction and removed on destruction.
  */
-class RosLogContext : public webrtc::TraceCallback, public rtc::StreamInterface {
+class RosLogContext : public webrtc::TraceCallback, public rtc::LogSink {
  public:
   virtual ~RosLogContext();
 
   // webrtc::TraceCallback
-  virtual void Print(webrtc::TraceLevel level, const char* message, int length);
-
-  // rtc::StreamInterface
-  virtual rtc::StreamState GetState() const;
-  virtual rtc::StreamResult Read(void* buffer, size_t buffer_len,
-				 size_t* read, int* error);
-  virtual rtc::StreamResult Write(const void* data, size_t data_len,
-				  size_t* written, int* error);
-  virtual void Close();
+  virtual void Print(webrtc::TraceLevel level, const char* message, int length) override;
+  // rtc::LogSink
+  virtual void OnLogMessage (const std::string& message) override;
 
 private:
   RosLogContext();
 
-  int old_log_to_debug_;
+  rtc::LoggingSeverity old_log_to_debug_;
 
   friend class RosLogContextRef;
 };

@@ -21,7 +21,7 @@ install:
   - mkdir -p /tmp/ws/src
   - ln -s `pwd` /tmp/ws/src/webrtc
   - cd /tmp/ws
-  - rosdep install --from-paths src --ignore-src --rosdistro kinetic -y
+  - rosdep install --skip-keys ninja-build --from-paths src --ignore-src --rosdistro kinetic -y
 
 before_script:
   - cd /tmp/ws

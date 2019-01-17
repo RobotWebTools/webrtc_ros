@@ -42,7 +42,7 @@ if(NOT ${prepare_webrtc_build_result} EQUAL 0)
 endif()
 
 add_custom_target(webrtc ALL
-    COMMAND ninja -v -C "${CMAKE_CURRENT_BINARY_DIR}/ninja" webrtc stunserver turnserver relayserver
+    COMMAND ninja -C "${CMAKE_CURRENT_BINARY_DIR}/ninja" webrtc stunserver turnserver relayserver
     COMMAND "build/update_cmake_config" "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src" "${CMAKE_CURRENT_BINARY_DIR}/ninja" "${CMAKE_CURRENT_BINARY_DIR}/output" "${CMAKE_INSTALL_PREFIX}"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )

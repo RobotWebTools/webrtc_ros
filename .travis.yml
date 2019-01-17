@@ -23,12 +23,12 @@ install:
   - cd /tmp/ws
   - rosdep install --from-paths src --ignore-src --rosdistro kinetic -y
 
-script:
+before_script:
   - cd /tmp/ws
   - source /opt/ros/kinetic/setup.bash
-  - catkin init
   - catkin config --install
-  - catkin build -p1 --no-status -i
-  - source install/setup.bash
+
+script:
   - catkin_lint src/webrtc
+  - catkin build -p1 --no-status -i
 

@@ -1,31 +1,31 @@
-dist: xenial
-language:
-  - cpp
-compiler:
-  - gcc
-addons:
-  apt:
-    sources:
-      - sourceline: 'deb http://packages.ros.org/ros/ubuntu xenial main'
-        key_url: http://packages.ros.org/ros.key
-    packages:
-      - ninja-build
-      - python-catkin-lint
-      - python-catkin-pkg
-      - python-catkin-tools
-      - python-rosdep
-      - ros-kinetic-catkin
+language: generic
+compiler: gcc
+matrix:
+  include:
+    - name: 'ROS Indigo'
+      dist: trusty
+      env: UBUNTU=trusty ROS_DISTRO=indigo
+    - name: 'ROS Kinetic'
+      dist: xenial
+      env: UBUNTU=xenial ROS_DISTRO=kinetic
+
+before_install:
+  - echo "deb http://packages.ros.org/ros/ubuntu $UBUNTU main" | sudo tee -a /etc/apt/sources.list
+  - curl http://packages.ros.org/ros.key | sudo apt-key add -
+  - sudo apt-get update -qq
+  - sudo apt-get install -y ninja-build python-catkin-lint python-catkin-pkg python-catkin-tools python-rosdep
+
 install:
   - sudo rosdep init
   - rosdep update
   - mkdir -p /tmp/ws/src
   - ln -s `pwd` /tmp/ws/src/webrtc
   - cd /tmp/ws
-  - rosdep install --skip-keys ninja-build --from-paths src --ignore-src --rosdistro kinetic -y
+  - rosdep install --skip-keys ninja-build --from-paths src --ignore-src --rosdistro ${ROS_DISTRO} -y
 
 before_script:
   - cd /tmp/ws
-  - source /opt/ros/kinetic/setup.bash
+  - source /opt/ros/${ROS_DISTRO}/setup.bash
   - catkin config --install
 
 script:

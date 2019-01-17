@@ -15,8 +15,10 @@
 
   <buildtool_depend>git</buildtool_depend>
   <depend>gtk3</depend>
+  <depend>libasound2-dev</depend>
   <depend>libglib-dev</depend>
+  <depend>libpulse-dev</depend>
   <export>
-     <build_type>cmake</build_type>
+    <build_type>cmake</build_type>
   </export>
 </package>

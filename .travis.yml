@@ -1,0 +1,32 @@
+language: generic
+compiler: gcc
+matrix:
+  include:
+    - name: 'ROS Indigo'
+      dist: trusty
+      env: UBUNTU=trusty ROS_DISTRO=indigo
+    - name: 'ROS Kinetic'
+      dist: xenial
+      env: UBUNTU=xenial ROS_DISTRO=kinetic
+
+before_install:
+  - echo "deb http://packages.ros.org/ros/ubuntu $UBUNTU main" | sudo tee -a /etc/apt/sources.list
+  - curl http://packages.ros.org/ros.key | sudo apt-key add -
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq dpkg python-catkin-lint python-catkin-tools python-rosdep
+
+install:
+  - sudo rosdep init
+  - rosdep update
+  - mkdir -p /tmp/ws/src
+  - ln -s `pwd` /tmp/ws/src/webrtc
+  - rosdep install -q --from-paths /tmp/ws/src --ignore-src --rosdistro ${ROS_DISTRO} -y
+
+before_script:
+  - source /opt/ros/${ROS_DISTRO}/setup.bash
+  - catkin config -w /tmp/ws --install
+
+script:
+  - catkin_lint /tmp/ws/src/webrtc
+  - catkin build -w /tmp/ws -p1 -j2 --no-status -i
+

@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+run_updates=0
+rootdir="$(cd "$(dirname "$0")"; pwd)"
+revision="src@02ba69db6e2cc96b4c677425a2c0e070261207b7" # Chrome 59
+export PATH="$rootdir/depot_tools:$PATH"
+if [ ! -d "$rootdir/webrtc" ]
+then
+	mkdir -p "$rootdir/webrtc"
+	cd "$rootdir/webrtc"
+	fetch --nohooks webrtc
+	gclient sync --nohooks --revision "$revision"
+	download_from_google_storage --no_resume --platform='linux*' --no_auth --bucket chromium-gn -s src/buildtools/linux64/gn.sha1
+elif [ "$run_updates" -eq 1 ]
+then
+	cd "$rootdir/webrtc"
+	gclient sync --nohooks --revision "$revision"
+	download_from_google_storage --no_resume --platform='linux*' --no_auth --bucket chromium-gn -s src/buildtools/linux64/gn.sha1
+fi
+

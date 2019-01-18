@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>webrtc</name>
+  <version>59.0.0</version>
+  <description>WebRTC Native API</description>
+
+  <author email="mwills@wpi.edu">Mitchell Wills</author>
+  <maintainer email="timo.roehling@fkie.fraunhofer.de">Timo Röhling</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://wiki.ros.org/webrtc</url>
+  <url type="bugtracker">https://github.com/RobotWebTools/webrtc_ros/issues</url>
+  <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
+
+  <buildtool_depend>git</buildtool_depend>
+  <buildtool_depend>ninja-build</buildtool_depend>
+  <depend>gtk3</depend>
+  <depend>libasound2-dev</depend>
+  <depend>libglib-dev</depend>
+  <depend>libpulse-dev</depend>
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>

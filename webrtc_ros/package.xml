@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>webrtc_ros</name>
+  <version>59.0.0</version>
+  <description>A collection of ROS utilities for using WebRTC with ROS</description>
+
+  <author email="mwills@wpi.edu">Mitchell Wills</author>
+  <maintainer email="timo.roehling@fkie.fraunhofer.de">Timo Röhling</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://wiki.ros.org/webrtc_ros</url>
+  <url type="bugtracker">https://github.com/RobotWebTools/webrtc_ros/issues</url>
+  <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>cv_bridge</depend>
+  <depend>roscpp</depend>
+  <depend version_gte="59.0.0">webrtc</depend>
+  <depend>image_transport</depend>
+  <depend>nodelet</depend>
+  <depend>async_web_server_cpp</depend>
+
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+  </export>
+</package>

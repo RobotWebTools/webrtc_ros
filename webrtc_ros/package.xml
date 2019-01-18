@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>webrtc_ros</name>
-  <version>1.0.0</version>
+  <version>59.0.0</version>
   <description>A collection of ROS utilities for using WebRTC with ROS</description>
 
   <author email="mwills@wpi.edu">Mitchell Wills</author>
@@ -17,7 +17,7 @@
 
   <depend>cv_bridge</depend>
   <depend>roscpp</depend>
-  <depend>webrtc</depend>
+  <depend version_gte="59.0.0">webrtc</depend>
   <depend>image_transport</depend>
   <depend>nodelet</depend>
   <depend>async_web_server_cpp</depend>

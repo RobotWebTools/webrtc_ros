@@ -15,6 +15,7 @@
 
   <buildtool_depend>git</buildtool_depend>
   <buildtool_depend>ninja-build</buildtool_depend>
+  <buildtool_depend>cmake</buildtool_depend>
   <depend>gtk3</depend>
   <depend>libasound2-dev</depend>
   <depend>libglib-dev</depend>

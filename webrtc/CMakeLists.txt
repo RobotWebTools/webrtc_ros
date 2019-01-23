@@ -31,6 +31,16 @@ if(NOT ${get_webrtc_source_result} EQUAL 0)
     message(FATAL_ERROR "cannot update WebRTC source code")
 endif()
 
+message(STATUS "Fetching latest GN build tool from Google")
+execute_process(
+    COMMAND "build/get_gn"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE get_gn_result
+)
+if(NOT ${get_gn_result} EQUAL 0)
+    message(FATAL_ERROR "cannot update GN build tool")
+endif()
+
 message(STATUS "Configuring WebRTC build system")
 execute_process(
     COMMAND "build/prepare_webrtc_build" "${CMAKE_CURRENT_BINARY_DIR}/ninja"

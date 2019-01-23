@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+rootdir="$(cd "$(dirname "$0")"; pwd)"
+cd "$rootdir"
+
+if ! webrtc/src/buildtools/linux64/gn --help &>/dev/null
+then
+	# cd "$rootdir/webrtc"
+	# download_from_google_storage --no_resume --platform='linux*' --no_auth --bucket chromium-gn -s src/buildtools/linux64/gn.sha1
+	if [ ! -d gn ]
+	then
+		git clone https://gn.googlesource.com/gn
+	fi
+	cd gn
+	CC=gcc CXX=g++ LDFLAGS=-fuse-ld=gold python build/gen.py
+	ninja -C out
+	cp out/gn ../webrtc/src/buildtools/linux64
+fi
+

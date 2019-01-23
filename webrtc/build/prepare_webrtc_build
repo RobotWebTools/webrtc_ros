@@ -3,6 +3,20 @@ set -e
 rootdir="$(cd "$(dirname "$0")"; pwd)"
 export PATH="$rootdir/depot_tools:$PATH"
 
+THIS_ARCH="$(dpkg-architecture -qDEB_TARGET_ARCH || uname -m)"
+case "$THIS_ARCH" in
+	i?86)
+		THIS_ARCH=x86
+		;;
+	x86_64|amd64)
+		THIS_ARCH=x64
+		;;
+	*)
+		echo>&2 "Unknown target platform: $THIS_ARCH"
+		exit 1
+		;;
+esac
+
 cd "$rootdir/webrtc/src"
-gn gen "$1" --args='is_debug=false is_clang=false is_desktop_linux=false treat_warnings_as_errors=false fatal_linker_warnings=false use_gconf=false use_gio=false use_rtti=true linux_use_bundled_binutils=false use_sysroot=false'
+gn gen "$1" --args='is_debug=false is_clang=false is_desktop_linux=false is_android=false treat_warnings_as_errors=false fatal_linker_warnings=false use_gconf=false use_gio=false use_rtti=true linux_use_bundled_binutils=false rtc_enable_protobuf=false rtc_include_tests=false use_sysroot=false current_cpu="'$THIS_ARCH'" target_cpu="'$THIS_ARCH'"'
 

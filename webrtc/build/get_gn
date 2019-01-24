@@ -12,7 +12,9 @@ then
 		git clone https://gn.googlesource.com/gn
 	fi
 	cd gn
-	CC=gcc CXX=g++ LDFLAGS=-fuse-ld=gold python build/gen.py
+	# Older versions do not support this
+	sed -i -e "s/ldflags.append('-Wl,--icf=all')/pass/" build/gen.py
+	CC=gcc CXX=g++ python build/gen.py
 	"$rootdir/depot_tools/ninja" -C out
 	cp out/gn ../webrtc/src/buildtools/linux64
 fi

@@ -2,6 +2,10 @@
 Changelog for package webrtc_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* No changes
+
 59.0.0 (2019-01-18)
 -------------------
 * Upgrade server implementation to support the new API 59

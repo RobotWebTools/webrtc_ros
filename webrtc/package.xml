@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>webrtc</name>
-  <version>59.0.0</version>
+  <version>59.0.1</version>
   <description>WebRTC Native API</description>
 
   <author email="mwills@wpi.edu">Mitchell Wills</author>
@@ -14,7 +14,9 @@
   <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
 
   <buildtool_depend>git</buildtool_depend>
-  <buildtool_depend>ninja-build</buildtool_depend>
+  <buildtool_depend>cmake</buildtool_depend>
+  <buildtool_depend>wget</buildtool_depend>
+  <depend>gtk2</depend>
   <depend>gtk3</depend>
   <depend>libasound2-dev</depend>
   <depend>libglib-dev</depend>

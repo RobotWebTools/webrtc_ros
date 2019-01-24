@@ -14,8 +14,8 @@
   <url type="repository">https://github.com/RobotWebTools/webrtc_ros</url>
 
   <buildtool_depend>git</buildtool_depend>
-  <buildtool_depend>ninja-build</buildtool_depend>
   <buildtool_depend>cmake</buildtool_depend>
+  <buildtool_depend>wget</buildtool_depend>
   <depend>gtk2</depend>
   <depend>gtk3</depend>
   <depend>libasound2-dev</depend>

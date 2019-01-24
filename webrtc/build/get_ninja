@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+rootdir="$(cd "$(dirname "$0")"; pwd)"
+cd "$rootdir"
+
+if ! "$rootdir/ninja/ninja" --version &>/dev/null
+then
+	if [ ! -d ninja ]
+	then
+		git clone -b release https://github.com/ninja-build/ninja.git
+	fi
+	cd ninja
+	python configure.py --bootstrap
+	cp "$rootdir/ninja/ninja" "$rootdir/depot_tools/ninja"
+fi
+

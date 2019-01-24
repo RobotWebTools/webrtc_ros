@@ -18,5 +18,5 @@ case "$THIS_ARCH" in
 esac
 
 cd "$rootdir/webrtc/src"
-gn gen "$1" --args='is_debug=false is_clang=false is_desktop_linux=false is_android=false treat_warnings_as_errors=false fatal_linker_warnings=false use_gconf=false use_gio=false use_rtti=true linux_use_bundled_binutils=false rtc_enable_protobuf=false rtc_include_tests=false use_sysroot=false current_cpu="'$THIS_ARCH'" target_cpu="'$THIS_ARCH'"'
+gn gen "$1" --args='is_debug=false is_clang=false is_desktop_linux=false treat_warnings_as_errors=false fatal_linker_warnings=false use_gconf=false use_gio=false use_rtti=true linux_use_bundled_binutils=false rtc_enable_protobuf=false rtc_include_tests=false use_sysroot=false host_cpu="'$THIS_ARCH'" current_cpu="'$THIS_ARCH'" target_cpu="'$THIS_ARCH'"'
 

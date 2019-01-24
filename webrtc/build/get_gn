@@ -13,7 +13,7 @@ then
 	fi
 	cd gn
 	CC=gcc CXX=g++ LDFLAGS=-fuse-ld=gold python build/gen.py
-	ninja -C out
+	"$rootdir/depot_tools/ninja" -C out
 	cp out/gn ../webrtc/src/buildtools/linux64
 fi
 

@@ -119,7 +119,7 @@ install(DIRECTORY web
 
 # Install license files
 install(FILES
-  ../LICENSE
+  LICENSE
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 install(FILES

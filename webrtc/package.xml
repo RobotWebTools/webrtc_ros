@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>webrtc</name>
-  <version>59.0.0</version>
+  <version>59.0.1</version>
   <description>WebRTC Native API</description>
 
   <author email="mwills@wpi.edu">Mitchell Wills</author>

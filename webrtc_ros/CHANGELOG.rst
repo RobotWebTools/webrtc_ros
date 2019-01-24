@@ -2,6 +2,12 @@
 Changelog for package webrtc_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Do not install files outside the package source folder
+  I of all people should have caught that.
+* Contributors: Timo Röhling
+
 59.0.1 (2019-01-24)
 -------------------
 * No changes

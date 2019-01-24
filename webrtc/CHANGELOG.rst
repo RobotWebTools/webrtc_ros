@@ -2,6 +2,11 @@
 Changelog for package webrtc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Only require CMake 2.8.12 for Indigo compatibility
+* Contributors: Timo Röhling
+
 59.0.1 (2019-01-24)
 -------------------
 * Add support for i386 builds

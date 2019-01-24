@@ -2,8 +2,8 @@
 Changelog for package webrtc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+59.0.1 (2019-01-24)
+-------------------
 * Add support for i386 builds
 * Forgot dependency on CMake
 * Contributors: Timo Röhling

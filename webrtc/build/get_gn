@@ -8,7 +8,7 @@ if ! gn --help &>/dev/null
 then
 	echo "Trying prebuilt GN"
 	mkdir -p third_party/gn
-	THIS_ARCH="$(dpkg-architecture -qDEB_TARGET_ARCH || uname -m)"
+	THIS_ARCH="$(dpkg-architecture -qDEB_HOST_ARCH || uname -m)"
 	case "$THIS_ARCH" in
 		i?86)
 			cp "$rootdir/prebuilt/gn-linux32" third_party/gn/gn

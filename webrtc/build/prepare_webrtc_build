@@ -3,7 +3,7 @@ set -e
 rootdir="$(cd "$(dirname "$0")"; pwd)"
 export PATH="$rootdir/depot_tools:$PATH"
 
-THIS_ARCH="$(dpkg-architecture -qDEB_TARGET_ARCH || uname -m)"
+THIS_ARCH="$(dpkg-architecture -qDEB_BUILD_ARCH || uname -m)"
 case "$THIS_ARCH" in
 	i?86)
 		THIS_ARCH=x86

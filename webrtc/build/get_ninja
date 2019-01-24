@@ -3,7 +3,7 @@ set -e
 rootdir="$(cd "$(dirname "$0")"; pwd)"
 cd "$rootdir"
 
-if ! "$rootdir/ninja/ninja" --version &>/dev/null
+if ! "$rootdir/depot_tools/ninja" --version &>/dev/null
 then
 	if [ ! -d ninja ]
 	then

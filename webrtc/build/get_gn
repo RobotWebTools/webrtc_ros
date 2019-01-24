@@ -1,21 +1,36 @@
 #!/bin/bash
 set -e
 rootdir="$(cd "$(dirname "$0")"; pwd)"
-cd "$rootdir"
+export PATH="${rootdir}/depot_tools:$PATH"
+cd "$rootdir/webrtc/src"
 
-if ! webrtc/src/buildtools/linux64/gn --help &>/dev/null
+if ! gn --help &>/dev/null
 then
-	# cd "$rootdir/webrtc"
-	# download_from_google_storage --no_resume --platform='linux*' --no_auth --bucket chromium-gn -s src/buildtools/linux64/gn.sha1
-	if [ ! -d gn ]
+	echo "Trying prebuilt GN"
+	mkdir -p third_party/gn
+	THIS_ARCH="$(dpkg-architecture -qDEB_TARGET_ARCH || uname -m)"
+	case "$THIS_ARCH" in
+		i?86)
+			cp "$rootdir/prebuilt/gn-linux32" third_party/gn/gn
+		;;
+		x86_64|amd64)
+			cp "$rootdir/prebuilt/gn-linux64" third_party/gn/gn
+		;;
+		*)
+			echo "Unknown target platform: $THIS_ARCH"
+		;;
+	esac
+	if ! gn --help &>/dev/null
 	then
-		git clone https://gn.googlesource.com/gn
+		rm -rf third_party/gn
+		echo "Falling back to compiling GN myself"
+		git clone https://gn.googlesource.com/gn third_party/gn
+		cd third_party/gn
+		# Older versions do not support this
+		sed -i -e "s/ldflags.append('-Wl,--icf=all')/pass/" build/gen.py
+		CC=gcc CXX=g++ python build/gen.py
+		"$rootdir/depot_tools/ninja" -C out
+		cp out/gn .
 	fi
-	cd gn
-	# Older versions do not support this
-	sed -i -e "s/ldflags.append('-Wl,--icf=all')/pass/" build/gen.py
-	CC=gcc CXX=g++ python build/gen.py
-	"$rootdir/depot_tools/ninja" -C out
-	cp out/gn ../webrtc/src/buildtools/linux64
 fi
 

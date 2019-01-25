@@ -9,6 +9,10 @@ matrix:
       dist: xenial
       env: CI_UBUNTU=xenial CI_ROS_DISTRO=kinetic
 
+branches:
+  only:
+    - develop
+
 before_install:
   - echo "deb http://packages.ros.org/ros/ubuntu ${CI_UBUNTU} main" | sudo tee -a /etc/apt/sources.list
   - curl http://packages.ros.org/ros.key | sudo apt-key add -

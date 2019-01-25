@@ -2,6 +2,11 @@
 Changelog for package webrtc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add support for ARM architecture
+* Contributors: Timo Röhling
+
 59.0.2 (2019-01-24)
 -------------------
 * Only require CMake 2.8.12 for Indigo compatibility

@@ -5,6 +5,7 @@ cd "$rootdir"
 
 if ! "$rootdir/depot_tools/ninja" --version &>/dev/null
 then
+	echo "Prebuilt Ninja build tool is not working, building from source"
 	if [ ! -d ninja ]
 	then
 		git clone -b release https://github.com/ninja-build/ninja.git

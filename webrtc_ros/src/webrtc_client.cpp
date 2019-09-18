@@ -80,7 +80,7 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf
   peer_connection_constraints_.SetAllowDtlsSctpDataChannels();
   media_constraints_.AddOptional(webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, true);
   media_constraints_.AddOptional(webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, true);
-  ping_timer_ = nh_.createTimer(ros::Duration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
+  ping_timer_ = nh_.createWallTimer(ros::WallDuration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
 }
 WebrtcClient::~WebrtcClient()
 {
@@ -154,7 +154,7 @@ MessageHandler* WebrtcClient::createMessageHandler()
   return new MessageHandlerImpl(keep_alive_this_);
 }
 
-void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event)
+void WebrtcClient::ping_timer_callback(const ros::WallTimerEvent& event)
 {
   try
   {
@@ -213,6 +213,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
   {
     Json::Reader reader;
     Json::Value message_json;
+    ROS_INFO("JSON: %s", raw.c_str());
     if (!reader.parse(raw, message_json))
     {
       ROS_WARN_STREAM("Could not parse message: " << raw);
@@ -300,7 +301,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
             stream->AddTrack(video_track);
 	  }
 	  else {
-	    ROS_WARN_STREAM("Unknwon video source type: " << video_type);
+	    ROS_WARN_STREAM("Unknown video source type: " << video_type);
 	  }
 
 	}
@@ -330,7 +331,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
             stream->AddTrack(audio_track);
 	  }
 	  else {
-	    ROS_WARN_STREAM("Unknwon video source type: " << audio_type);
+	    ROS_WARN_STREAM("Unknown video source type: " << audio_type);
 	  }
 
 	}

@@ -65,7 +65,7 @@ private:
 
   bool initPeerConnection();
 
-  void ping_timer_callback(const ros::TimerEvent&);
+  void ping_timer_callback(const ros::WallTimerEvent&);
 
   void handle_message(MessageHandler::Type type, const std::string& message);
 
@@ -92,7 +92,7 @@ private:
 
   std::map<std::string, std::map<std::string, std::string>> expected_streams_;
 
-  ros::Timer ping_timer_;
+  ros::WallTimer ping_timer_;
 
   friend WebrtcClientObserverProxy;
   friend MessageHandlerImpl;

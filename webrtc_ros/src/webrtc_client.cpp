@@ -226,7 +226,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!message.fromJson(message_json))
       {
         ROS_WARN("Can't parse received configure message.");
-        invalidate();
         return;
       }
 
@@ -372,7 +371,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!message.fromJson(message_json))
       {
         ROS_WARN("Can't parse received session description message.");
-        invalidate();
         return;
       }
 
@@ -380,7 +378,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!session_description)
       {
         ROS_WARN("Can't create session description");
-        invalidate();
         return;
       }
 
@@ -393,7 +390,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!message.fromJson(message_json))
       {
         ROS_WARN("Can't parse received ice candidate message.");
-        invalidate();
         return;
       }
 
@@ -401,13 +397,11 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!candidate.get())
       {
         ROS_WARN("Can't parse received candidate message.");
-        invalidate();
         return;
       }
       if (!peer_connection_->AddIceCandidate(candidate.get()))
       {
         ROS_WARN("Failed to apply the received candidate");
-        invalidate();
         return;
       }
       ROS_DEBUG_STREAM("Received remote candidate :" << message.toJson());

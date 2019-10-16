@@ -2,12 +2,12 @@ language: generic
 compiler: gcc
 matrix:
   include:
-    - name: 'ros kinetic'
+    - name: 'ROS Kinetic'
       dist: xenial
-      env: ci_ubuntu=xenial ci_ros_distro=kinetic
-    - name: 'ros melodic'
+      env: CI_UBUNTU=xenial CI_ROS_DISTRO=kinetic
+    - name: 'ROS Melodic'
       dist: bionic
-      env: ci_ubuntu=bionic ci_ros_distro=melodic
+      env: CI_UBUNTU=bionic CI_ROS_DISTRO=melodic
 
 branches:
   only:

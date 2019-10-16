@@ -1,7 +1,15 @@
-$(document).ready(function() {
-	var Q = {};
-	var pv = window.location.search.substring(1).split("&");
-	for (var i in pv)
+function on_ready(callback)
+{
+	if (document.readyState !== "loading")
+		callback.call(document);
+	else
+		document.addEventListener("DOMContentLoaded", callback.bind(document));
+}
+
+on_ready(function() {
+	let Q = {};
+	let pv = window.location.search.substring(1).split("&");
+	for (let i in pv)
 	{
 		if (pv.hasOwnProperty(i))
 		{
@@ -14,20 +22,20 @@ $(document).ready(function() {
 	}
 	if (Q.subscribe_video)
 	{
-		$("#topic").text(Q.subscribe_video);
+		document.getElementById("topic").textContent = Q.subscribe_video;
 		console.log("Establishing WebRTC connection");
-		var conn = WebrtcRos.createConnection();
+		let conn = WebrtcRos.createConnection();
 		conn.onConfigurationNeeded = function()
 		{
 			console.log("Requesting WebRTC video subscription");
-			var config = {};
+			let config = {};
 			config.video = {"id": "subscribed_video", "src": Q.subscribe_video};
 			conn.addRemoteStream(config).then(function(event) {
 				console.log("Connecting WebRTC stream to <video> element");
-				$("#remote-video").prop("srcObject", event.stream);
+				document.getElementById("remote-video").srcObject = event.stream;
 				event.remove.then(function(event) {
 					console.log("Disconnecting WebRTC stream from <video> element");
-					$("#remote-video").prop("srcObject", null);
+					document.getElementById("remote-video").srcObject = null;
 				});
 			});
 			conn.sendConfigure();
@@ -36,8 +44,7 @@ $(document).ready(function() {
 	}
 	else
 	{
-		$("#topic").append("not connected");
+		document.getElementById("topic").textContent = "not connected";
 		console.log("No subscribe_video parameter, not connecting to WebRTC video stream");
 	}
 });
-

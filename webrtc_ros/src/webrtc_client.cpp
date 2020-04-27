@@ -8,6 +8,7 @@
 #include <webrtc/media/base/videosourceinterface.h>
 #include <webrtc/base/bind.h>
 #include <webrtc_ros/ros_video_capturer.h>
+#include <webrtc_ros/GetIceServers.h>
 
 namespace webrtc_ros
 {
@@ -112,13 +113,21 @@ bool WebrtcClient::initPeerConnection()
   }
   if (!peer_connection_)
   {
-    webrtc::PeerConnectionInterface::IceServer server1;
-    server1.uri = "stun:stun1.l.google.com:19302";
-    webrtc::PeerConnectionInterface::IceServer server2;
-    server2.uri = "stun:stun2.l.google.com:19302";
     webrtc::PeerConnectionInterface::RTCConfiguration config;
-    config.servers.push_back(server1);
-    config.servers.push_back(server2);
+    if(ros::service::exists("get_ice_servers", false)){
+      GetIceServers serv;
+      if(ros::service::call("get_ice_servers", serv)){
+        for(int i=0; i<serv.response.servers.size(); i++){
+          webrtc::PeerConnectionInterface::IceServer server;
+          server.uri = serv.response.servers[i].uri;
+          if(!serv.response.servers[i].username.empty() && !serv.response.servers[i].password.empty()){
+            server.username = serv.response.servers[i].username;
+            server.password = serv.response.servers[i].password;
+          }
+          config.servers.push_back(server);
+        }
+      }
+    }
 
     WebrtcClientWeakPtr weak_this(keep_alive_this_);
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);

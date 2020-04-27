@@ -112,11 +112,18 @@ bool WebrtcClient::initPeerConnection()
   }
   if (!peer_connection_)
   {
-    webrtc::PeerConnectionInterface::IceServers servers;
+    webrtc::PeerConnectionInterface::IceServer server1;
+    server1.uri = "stun:stun1.l.google.com:19302";
+    webrtc::PeerConnectionInterface::IceServer server2;
+    server2.uri = "stun:stun2.l.google.com:19302";
+    webrtc::PeerConnectionInterface::RTCConfiguration config;
+    config.servers.push_back(server1);
+    config.servers.push_back(server2);
+
     WebrtcClientWeakPtr weak_this(keep_alive_this_);
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(
-            webrtc::PeerConnectionInterface::RTCConfiguration(),
+            config,
             nullptr,
             nullptr,
             webrtc_observer_proxy_.get()

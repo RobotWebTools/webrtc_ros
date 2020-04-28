@@ -35,7 +35,14 @@ catkin_package(
     image_transport
     nodelet
     roscpp
+    message_runtime
+    std_msgs
   DEPENDS webrtc
+)
+
+catkin_install_python(
+    PROGRAMS src/ice_server_service.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ###########

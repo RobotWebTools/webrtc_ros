@@ -41,7 +41,7 @@ catkin_package(
 )
 
 catkin_install_python(
-    PROGRAMS src/ice_server_service.py
+    PROGRAMS scripts/ice_server_service.py
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
@@ -142,9 +142,6 @@ install(DIRECTORY web
   PATTERN "package.json" EXCLUDE
   PATTERN ".gitignore" EXCLUDE
 )
-
-# Install ICE credential service
-install(PROGRAMS scripts/ice_server_service.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # Install license files
 install(FILES

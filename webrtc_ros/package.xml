@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>webrtc_ros</name>
-  <version>59.0.3</version>
+  <version>59.0.4</version>
   <description>A collection of ROS utilities for using WebRTC with ROS</description>
 
   <author email="mwills@wpi.edu">Mitchell Wills</author>
@@ -20,7 +20,12 @@
   <depend version_gte="59.0.0">webrtc</depend>
   <depend>image_transport</depend>
   <depend>nodelet</depend>
+  <depend>std_msgs</depend>
   <depend>async_web_server_cpp</depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_export_depend>message_runtime</build_export_depend>
+  <exec_depend>message_runtime</exec_depend>
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

@@ -8,6 +8,7 @@
 #include <webrtc/media/base/videosourceinterface.h>
 #include <webrtc/base/bind.h>
 #include <webrtc_ros/ros_video_capturer.h>
+#include <webrtc_ros/GetIceServers.h>
 
 namespace webrtc_ros
 {
@@ -80,7 +81,7 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf
   peer_connection_constraints_.SetAllowDtlsSctpDataChannels();
   media_constraints_.AddOptional(webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, true);
   media_constraints_.AddOptional(webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, true);
-  ping_timer_ = nh_.createTimer(ros::Duration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
+  ping_timer_ = nh_.createWallTimer(ros::WallDuration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
 }
 WebrtcClient::~WebrtcClient()
 {
@@ -112,11 +113,26 @@ bool WebrtcClient::initPeerConnection()
   }
   if (!peer_connection_)
   {
-    webrtc::PeerConnectionInterface::IceServers servers;
+    webrtc::PeerConnectionInterface::RTCConfiguration config;
+    if(ros::service::exists("get_ice_servers", false)){
+      GetIceServers serv;
+      if(ros::service::call("get_ice_servers", serv)){
+        for(int i=0; i<serv.response.servers.size(); i++){
+          webrtc::PeerConnectionInterface::IceServer server;
+          server.uri = serv.response.servers[i].uri;
+          if(!serv.response.servers[i].username.empty() && !serv.response.servers[i].password.empty()){
+            server.username = serv.response.servers[i].username;
+            server.password = serv.response.servers[i].password;
+          }
+          config.servers.push_back(server);
+        }
+      }
+    }
+
     WebrtcClientWeakPtr weak_this(keep_alive_this_);
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(
-            webrtc::PeerConnectionInterface::RTCConfiguration(),
+            config,
             nullptr,
             nullptr,
             webrtc_observer_proxy_.get()
@@ -154,7 +170,7 @@ MessageHandler* WebrtcClient::createMessageHandler()
   return new MessageHandlerImpl(keep_alive_this_);
 }
 
-void WebrtcClient::ping_timer_callback(const ros::TimerEvent& event)
+void WebrtcClient::ping_timer_callback(const ros::WallTimerEvent& event)
 {
   try
   {
@@ -213,6 +229,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
   {
     Json::Reader reader;
     Json::Value message_json;
+    ROS_INFO("JSON: %s", raw.c_str());
     if (!reader.parse(raw, message_json))
     {
       ROS_WARN_STREAM("Could not parse message: " << raw);
@@ -226,7 +243,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!message.fromJson(message_json))
       {
         ROS_WARN("Can't parse received configure message.");
-        invalidate();
         return;
       }
 
@@ -301,7 +317,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
             stream->AddTrack(video_track);
 	  }
 	  else {
-	    ROS_WARN_STREAM("Unknwon video source type: " << video_type);
+	    ROS_WARN_STREAM("Unknown video source type: " << video_type);
 	  }
 
 	}
@@ -331,7 +347,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
             stream->AddTrack(audio_track);
 	  }
 	  else {
-	    ROS_WARN_STREAM("Unknwon video source type: " << audio_type);
+	    ROS_WARN_STREAM("Unknown video source type: " << audio_type);
 	  }
 
 	}
@@ -372,7 +388,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!message.fromJson(message_json))
       {
         ROS_WARN("Can't parse received session description message.");
-        invalidate();
         return;
       }
 
@@ -380,7 +395,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!session_description)
       {
         ROS_WARN("Can't create session description");
-        invalidate();
         return;
       }
 
@@ -393,7 +407,6 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!message.fromJson(message_json))
       {
         ROS_WARN("Can't parse received ice candidate message.");
-        invalidate();
         return;
       }
 
@@ -401,13 +414,11 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       if (!candidate.get())
       {
         ROS_WARN("Can't parse received candidate message.");
-        invalidate();
         return;
       }
       if (!peer_connection_->AddIceCandidate(candidate.get()))
       {
         ROS_WARN("Failed to apply the received candidate");
-        invalidate();
         return;
       }
       ROS_DEBUG_STREAM("Received remote candidate :" << message.toJson());

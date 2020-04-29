@@ -22,7 +22,7 @@ public:
   RosVideoCapturer(const ImageTransportFactory& it, const std::string& topic, const std::string& transport);
   virtual ~RosVideoCapturer();
 
-  void imageCallback(const std::shared_ptr<webrtc::VideoFrame>& frame);
+  void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
   virtual cricket::CaptureState Start(const cricket::VideoFormat& capture_format) override;
   virtual void Stop() override;

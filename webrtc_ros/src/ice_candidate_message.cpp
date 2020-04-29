@@ -1,4 +1,5 @@
 #include "webrtc_ros/ice_candidate_message.h"
+#include <ros/console.h>
 
 namespace webrtc_ros
 {
@@ -37,7 +38,10 @@ bool IceCandidateMessage::fromIceCandidate(const webrtc::IceCandidateInterface& 
 
 webrtc::IceCandidateInterface* IceCandidateMessage::createIceCandidate()
 {
-  return webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate, 0);
+  webrtc::SdpParseError err;
+  webrtc::IceCandidateInterface* result = webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate, &err);
+  if (!result) ROS_WARN("SDP Parse Error: %s", err.description.c_str());
+  return result;
 }
 
 std::string IceCandidateMessage::toJson()

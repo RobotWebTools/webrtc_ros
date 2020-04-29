@@ -5,10 +5,10 @@ find_package(catkin REQUIRED COMPONENTS
   async_web_server_cpp
   cv_bridge
   image_transport
+  message_generation
   nodelet
   roscpp
   std_msgs
-  message_generation
 )
 find_package(webrtc REQUIRED)
 find_package(X11 REQUIRED)
@@ -33,9 +33,9 @@ catkin_package(
     async_web_server_cpp
     cv_bridge
     image_transport
+    message_runtime
     nodelet
     roscpp
-    message_runtime
     std_msgs
   DEPENDS webrtc
 )

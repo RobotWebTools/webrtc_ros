@@ -64,6 +64,7 @@ add_definitions(${webrtc_DEFINITIONS})
 add_library(${PROJECT_NAME}_server_noncpp11
   src/webrtc_web_server.cpp
 )
+add_dependencies(${PROJECT_NAME}_server_noncpp11 ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_server_noncpp11
   ${catkin_LIBRARIES}
 )
@@ -81,6 +82,7 @@ add_library(${PROJECT_NAME}_server
   src/webrtc_ros_message.cpp
   src/webrtc_ros_server.cpp
 )
+add_dependencies(${PROJECT_NAME}_server ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_server
   ${catkin_LIBRARIES}
   ${webrtc_LIBRARIES}

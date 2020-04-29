@@ -2,6 +2,10 @@
 Changelog for package webrtc
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* No changes
+
 59.0.3 (2019-01-25)
 -------------------
 * Add support for ARM architecture

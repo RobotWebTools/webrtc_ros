@@ -2,6 +2,16 @@
 Changelog for package webrtc_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add ICE to server (`#44 <https://github.com/RobotWebTools/webrtc_ros/issues/44>`_)
+* Implement logic to resize or drop frames on demand
+* Get rid of jQuery
+* Ignore invalid ICE candidates
+  This resolves an issue with Firefox.
+* Update JavaScript client code for latest browser compatibility
+* Contributors: Michael Sobrepera, Timo Röhling
+
 59.0.3 (2019-01-25)
 -------------------
 * No changes

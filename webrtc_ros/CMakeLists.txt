@@ -7,9 +7,26 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   nodelet
   roscpp
+  std_msgs
+  message_generation
 )
 find_package(webrtc REQUIRED)
 find_package(X11 REQUIRED)
+
+add_message_files(
+    FILES
+    IceServer.msg
+)
+
+add_service_files(
+    FILES
+    GetIceServers.srv
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -18,7 +35,14 @@ catkin_package(
     image_transport
     nodelet
     roscpp
+    message_runtime
+    std_msgs
   DEPENDS webrtc
+)
+
+catkin_install_python(
+    PROGRAMS src/ice_server_service.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ###########

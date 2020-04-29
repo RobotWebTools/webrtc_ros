@@ -8,6 +8,7 @@
 #include <webrtc/media/base/videosourceinterface.h>
 #include <webrtc/base/bind.h>
 #include <webrtc_ros/ros_video_capturer.h>
+#include <webrtc_ros/GetIceServers.h>
 
 namespace webrtc_ros
 {
@@ -112,11 +113,26 @@ bool WebrtcClient::initPeerConnection()
   }
   if (!peer_connection_)
   {
-    webrtc::PeerConnectionInterface::IceServers servers;
+    webrtc::PeerConnectionInterface::RTCConfiguration config;
+    if(ros::service::exists("get_ice_servers", false)){
+      GetIceServers serv;
+      if(ros::service::call("get_ice_servers", serv)){
+        for(int i=0; i<serv.response.servers.size(); i++){
+          webrtc::PeerConnectionInterface::IceServer server;
+          server.uri = serv.response.servers[i].uri;
+          if(!serv.response.servers[i].username.empty() && !serv.response.servers[i].password.empty()){
+            server.username = serv.response.servers[i].username;
+            server.password = serv.response.servers[i].password;
+          }
+          config.servers.push_back(server);
+        }
+      }
+    }
+
     WebrtcClientWeakPtr weak_this(keep_alive_this_);
     webrtc_observer_proxy_ = new rtc::RefCountedObject<WebrtcClientObserverProxy>(weak_this);
     peer_connection_ = peer_connection_factory_->CreatePeerConnection(
-            webrtc::PeerConnectionInterface::RTCConfiguration(),
+            config,
             nullptr,
             nullptr,
             webrtc_observer_proxy_.get()

@@ -141,6 +141,9 @@ install(DIRECTORY web
   PATTERN ".gitignore" EXCLUDE
 )
 
+# Install ICE credential service
+install(PROGRAMS scripts/ice_server_service.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 # Install license files
 install(FILES
   LICENSE

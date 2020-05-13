@@ -13,14 +13,14 @@ class IceServerManager(object):
     def __init__(self):
         rospy.init_node('ice_server_provider')
 
-        self.stun_servers = rospy.get_param('stun_servers', [
+        self.stun_servers = rospy.get_param('~stun_servers', [
             'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'])
-        self.turn_server_uris = rospy.get_param('turn_server_uris', '')
-        self.turn_creds_uri = rospy.get_param('turn_server_creds_uri', '')
+        self.turn_server_uris = rospy.get_param('~turn_server_uris', '')
+        self.turn_creds_uri = rospy.get_param('~turn_server_creds_uri', '')
         self.turn_creds_username = rospy.get_param(
-            'turn_server_creds_username', '')
+            '~turn_server_creds_username', '')
         self.turn_creds_password = rospy.get_param(
-            'turn_server_creds_password', '')
+            '~turn_server_creds_password', '')
 
         self.get_ice_servers_service = rospy.Service(
             'get_ice_servers', GetIceServers, self.get_ice_servers)

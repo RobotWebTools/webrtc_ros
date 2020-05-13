@@ -45,6 +45,7 @@ class IceServerManager(object):
         if turn_creds:
             for uri in self.turn_server_uris:
                 serv = IceServer()
+                serv.uri = uri
                 serv.username = turn_creds['username']
                 serv.password = turn_creds['password']
                 resp.servers.append(serv)

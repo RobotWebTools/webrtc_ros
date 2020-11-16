@@ -2,7 +2,7 @@
 #define WEBRTC_ROS_ICE_CANDIDATE_MESSAGE_H_
 
 #include <webrtc_ros/webrtc_ros_message.h>
-#include <webrtc/base/json.h>
+#include <webrtc/rtc_base/strings/json.h>
 #include <webrtc/api/jsep.h>
 
 

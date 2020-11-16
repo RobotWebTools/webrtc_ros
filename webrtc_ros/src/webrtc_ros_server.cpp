@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_ros_server.h>
-#include "webrtc/base/ssladapter.h"
-#include "webrtc/base/bind.h"
+#include "webrtc/rtc_base/ssl_adapter.h"
+#include "webrtc/rtc_base/bind.h"
 
 namespace webrtc_ros
 {

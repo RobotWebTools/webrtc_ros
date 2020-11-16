@@ -8,13 +8,12 @@
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <webrtc_ros/ros_video_renderer.h>
-#include <webrtc/api/mediastreaminterface.h>
-#include <webrtc/api/peerconnectioninterface.h>
-#include <webrtc/api/test/fakeconstraints.h>
+#include <webrtc/api/media_stream_interface.h>
+#include <webrtc/api/peer_connection_interface.h>
 #include <webrtc_ros/configure_message.h>
 #include <webrtc_ros/webrtc_web_server.h>
 #include <webrtc_ros/image_transport_factory.h>
-#include <webrtc/base/thread.h>
+#include <webrtc/rtc_base/thread.h>
 
 
 namespace webrtc_ros
@@ -86,8 +85,6 @@ private:
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   std::map<std::string, std::vector<boost::shared_ptr<RosVideoRenderer>>> video_renderers_;
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;
-  webrtc::FakeConstraints peer_connection_constraints_;
-  webrtc::FakeConstraints media_constraints_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
 
   std::map<std::string, std::map<std::string, std::string>> expected_streams_;

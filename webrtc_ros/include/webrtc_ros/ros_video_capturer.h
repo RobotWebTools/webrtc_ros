@@ -1,10 +1,11 @@
 #ifndef WEBRTC_ROS_ROS_VIDEO_CAPTURER_H_
 #define WEBRTC_ROS_ROS_VIDEO_CAPTURER_H_
 
-#include <webrtc/media/base/videocapturer.h>
-#include <webrtc/media/base/videocapturerfactory.h>
-#include <webrtc/base/event.h>
-#include <webrtc/base/thread.h>
+#include <webrtc/modules/video_capture/video_capture.h>
+#include <webrtc/modules/video_capture/video_capture_factory.h>
+#include <webrtc/api/video/video_source_interface.h>
+#include <webrtc/rtc_base/event.h>
+#include <webrtc/rtc_base/thread.h>
 #include <webrtc_ros/image_transport_factory.h>
 #include <mutex>
 #include <boost/enable_shared_from_this.hpp>
@@ -16,7 +17,7 @@ namespace webrtc_ros
 class RosVideoCapturerImpl;
 
 class RosVideoCapturer :
-  public cricket::VideoCapturer
+  public rtc::VideoSourceInterface
 {
 public:
   RosVideoCapturer(const ImageTransportFactory& it, const std::string& topic, const std::string& transport);

@@ -1,7 +1,7 @@
 #ifndef WEBRTC_ROS_WEBRTC_ROS_MESSAGE_H_
 #define WEBRTC_ROS_WEBRTC_ROS_MESSAGE_H_
 
-#include <webrtc/base/json.h>
+#include <webrtc/rtc_base/strings/json.h>
 
 namespace webrtc_ros
 {

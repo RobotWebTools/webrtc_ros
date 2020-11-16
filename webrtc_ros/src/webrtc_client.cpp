@@ -3,10 +3,10 @@
 #include <webrtc_ros/webrtc_ros_message.h>
 #include <webrtc_ros/sdp_message.h>
 #include <webrtc_ros/ice_candidate_message.h>
-#include <webrtc/base/json.h>
+#include <webrtc/rtc_base/strings/json.h>
 //#include "talk/media/devices/devicemanager.h"
-#include <webrtc/media/base/videosourceinterface.h>
-#include <webrtc/base/bind.h>
+#include <webrtc/api/video/video_source_interface.h>
+#include <webrtc/rtc_base/bind.h>
 #include <webrtc_ros/ros_video_capturer.h>
 #include <webrtc_ros/GetIceServers.h>
 
@@ -79,8 +79,6 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf
     return;
   }
   peer_connection_constraints_.SetAllowDtlsSctpDataChannels();
-  media_constraints_.AddOptional(webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, true);
-  media_constraints_.AddOptional(webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, true);
   ping_timer_ = nh_.createWallTimer(ros::WallDuration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
 }
 WebrtcClient::~WebrtcClient()
@@ -379,7 +377,9 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 	}
       }
 
-      peer_connection_->CreateOffer(webrtc_observer_proxy_.get(), &media_constraints_);
+      peer_connection_->CreateOffer(webrtc_observer_proxy_.get());
+
+      // TODO check media constraints
     }
     else if (SdpMessage::isSdpAnswer(message_json))
     {

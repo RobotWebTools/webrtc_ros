@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(webrtc_ros)
 
+set(CMAKE_CXX_STANDARD 14)
+
 find_package(catkin REQUIRED COMPONENTS
   async_web_server_cpp
   cv_bridge
@@ -51,6 +53,7 @@ catkin_install_python(
 
 include_directories(
   include
+  /home/jakub/3rdparty/new_webrtc_ws/devel_isolated/webrtc/include/webrtc/
   ${catkin_INCLUDE_DIRS}
   ${webrtc_INCLUDE_DIRS}
 )
@@ -74,7 +77,6 @@ add_library(${PROJECT_NAME}_server
   src/configure_message.cpp
   src/ice_candidate_message.cpp
   src/image_transport_factory.cpp
-  src/ros_log_context.cpp
   src/ros_video_capturer.cpp
   src/ros_video_renderer.cpp
   src/sdp_message.cpp

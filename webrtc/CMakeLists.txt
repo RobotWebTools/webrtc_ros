@@ -79,13 +79,18 @@ install(
     FILES_MATCHING PATTERN "*.h"
 )
 install(
-    DIRECTORY "build/webrtc/src/third_party/jsoncpp/source/include/"
-    DESTINATION "include/webrtc/3rdparty"
+    DIRECTORY "build/webrtc/src/third_party/jsoncpp/generated/"
+    DESTINATION "include/webrtc/3rdparty/json"
     FILES_MATCHING PATTERN "*.h"
 )
 install(
     DIRECTORY "build/webrtc/src/third_party/libyuv/include/"
     DESTINATION "include/webrtc/3rdparty"
+    FILES_MATCHING PATTERN "*.h"
+)
+install(
+    DIRECTORY "build/webrtc/src/third_party/abseil-cpp/"
+    DESTINATION "include/webrtc"
     FILES_MATCHING PATTERN "*.h"
 )
 install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/output/make_install.cmake")

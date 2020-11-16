@@ -18,7 +18,7 @@ except OSError:
     pass
 
 vars = {}
-with open(os.path.join(args.build_dir, "obj", "webrtc", "webrtc.ninja"), "r") as f:
+with open(os.path.join(args.build_dir, "obj", "webrtc.ninja"), "r") as f:
     for line in iter(f):
         mo = re.match("(\w+) = (.*)\n", line)
         if mo:

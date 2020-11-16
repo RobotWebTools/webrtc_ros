@@ -27,5 +27,5 @@ case "$a" in
 esac
 
 cd "$rootdir/webrtc/src"
-gn gen "$1" --args="is_debug=false is_clang=false is_desktop_linux=false is_android=false treat_warnings_as_errors=false fatal_linker_warnings=false use_gconf=false use_gio=false use_rtti=true linux_use_bundled_binutils=false rtc_enable_protobuf=false rtc_include_tests=false use_sysroot=false symbol_level=0 host_cpu=\"$a\" current_cpu=\"$a\" target_cpu=\"$a\"$extras"
+gn gen "$1" --args="is_debug=false is_clang=false is_desktop_linux=false is_android=false treat_warnings_as_errors=false fatal_linker_warnings=false use_gio=false use_rtti=true rtc_enable_protobuf=false rtc_include_tests=false use_sysroot=false symbol_level=0 host_cpu=\"$a\" current_cpu=\"$a\" target_cpu=\"$a\"$extras"
 

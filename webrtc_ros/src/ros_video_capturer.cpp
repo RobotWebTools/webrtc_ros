@@ -62,7 +62,7 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   cv::Rect roi;
   int out_width, out_height;
   int64_t translated_camera_time_us;
-  if (AdaptFrame(bgr.cols, bgr.rows, camera_time_us, &out_width, &out_height, &roi.width, &roi.height, &roi.x, &roi.y))
+  if (AdaptFrame(bgr.cols, bgr.rows, system_time_us, &out_width, &out_height, &roi.width, &roi.height, &roi.x, &roi.y))
   {
     cv::Mat yuv;
     if (out_width == roi.width && out_height == roi.height)
@@ -82,7 +82,7 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     std::shared_ptr<webrtc::VideoFrame> frame = std::make_shared<webrtc::VideoFrame>(
         webrtc::I420Buffer::Copy(out_width, out_height, y, out_width, u, out_width / 2, v, out_width / 2),
         webrtc::kVideoRotation_0,
-        translated_camera_time_us
+        system_time_us
     );
     // Apparently, the OnFrame() method could not be called from arbitrary threads in ancient times, and there
     // used to be all kinds of shenanigans here to make sure it is called from the original thread, causing

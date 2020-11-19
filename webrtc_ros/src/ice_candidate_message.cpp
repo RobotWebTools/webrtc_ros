@@ -13,11 +13,11 @@ bool IceCandidateMessage::fromJson(const Json::Value& message_json)
 {
   if (isIceCandidate(message_json))
   {
-    if (!rtc::GetStringFromJsonObject(message_json, kSdpMidFieldName, &sdp_mid))
+    if (!WebrtcRosJsonParser::GetStringFromJsonObject(message_json, kSdpMidFieldName, &sdp_mid))
       return false;
-    if (!rtc::GetIntFromJsonObject(message_json, kSdpMlineIndexFieldName, &sdp_mline_index))
+    if (!WebrtcRosJsonParser::GetIntFromJsonObject(message_json, kSdpMlineIndexFieldName, &sdp_mline_index))
       return false;
-    if (!rtc::GetStringFromJsonObject(message_json, kCandidateFieldName, &candidate))
+    if (!WebrtcRosJsonParser::GetStringFromJsonObject(message_json, kCandidateFieldName, &candidate))
       return false;
     return true;
   }

@@ -5,7 +5,7 @@ namespace webrtc_ros
 
 bool ConfigureAction::fromJson(const Json::Value& action_json)
 {
-  if (!rtc::GetStringFromJsonObject(action_json, kTypeFieldName, &type))
+  if (!WebrtcRosJsonParser::GetStringFromJsonObject(action_json, kTypeFieldName, &type))
     return false;
   properties.clear();
   for(auto itr = action_json.begin(); itr != action_json.end(); itr++)

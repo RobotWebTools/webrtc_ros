@@ -67,9 +67,10 @@ void WebrtcClientObserverProxy::OnSignalingChange(webrtc::PeerConnectionInterfac
 
 WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel* signaling_channel)
   : nh_(nh), it_(nh_), itf_(itf), transport_(transport), signaling_channel_(signaling_channel),
-    signaling_thread_(rtc::Thread::Current()), worker_thread_(rtc::Thread::Create())
+    signaling_thread_(rtc::Thread::Current()), worker_thread_(rtc::Thread::CreateWithSocketServer())
 {
   ROS_INFO("Creating WebrtcClient");
+  worker_thread_->Start();
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory(
         worker_thread_.get(), worker_thread_.get(), worker_thread_.get(),
         nullptr, webrtc::CreateBuiltinAudioEncoderFactory(),
@@ -257,131 +258,131 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 
       for(const ConfigureAction& action: message.actions)
       {
-	// Macro that simply checks if a key is specified and will ignore the action
-	// is not specified
-#define FIND_PROPERTY_OR_CONTINUE(key, name)				\
-	if(action.properties.find(key) == action.properties.end()) {	\
-	  ROS_WARN_STREAM("No " << #name << " specified");		\
-	  continue;							\
-	}								\
-	std::string name = action.properties.at(key)
-	// END OF MACRO
+            // Macro that simply checks if a key is specified and will ignore the action
+            // is not specified
+          #define FIND_PROPERTY_OR_CONTINUE(key, name)				\
+            if(action.properties.find(key) == action.properties.end()) {	\
+              ROS_WARN_STREAM("No " << #name << " specified");		\
+              continue;							\
+            }								\
+            std::string name = action.properties.at(key)
+            // END OF MACRO
 
-	if(action.type == ConfigureAction::kAddStreamActionName) {
-	  FIND_PROPERTY_OR_CONTINUE("id", stream_id);
+            if(action.type == ConfigureAction::kAddStreamActionName) {
+              FIND_PROPERTY_OR_CONTINUE("id", stream_id);
 
-          rtc::scoped_refptr<webrtc::MediaStreamInterface> stream = peer_connection_factory_->CreateLocalMediaStream(stream_id);
+                    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream = peer_connection_factory_->CreateLocalMediaStream(stream_id);
 
-          if (!peer_connection_->AddStream(stream))
-          {
-            ROS_WARN("Adding stream to PeerConnection failed");
-	    continue;
-          }
+                    if (!peer_connection_->AddStream(stream))
+                    {
+                      ROS_WARN("Adding stream to PeerConnection failed");
+                continue;
+                    }
+            }
+            else if(action.type == ConfigureAction::kRemoveStreamActionName) {
+              FIND_PROPERTY_OR_CONTINUE("id", stream_id);
+
+                    rtc::scoped_refptr<webrtc::MediaStreamInterface> stream = peer_connection_factory_->CreateLocalMediaStream(stream_id);
+
+              if(!stream) {
+                ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+                continue;
+              }
+                    peer_connection_->RemoveStream(stream);
+            }
+            else if(action.type == ConfigureAction::kAddVideoTrackActionName) {
+              FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
+              FIND_PROPERTY_OR_CONTINUE("id", track_id);
+              FIND_PROPERTY_OR_CONTINUE("src", src);
+
+              std::string video_type;
+              std::string video_path;
+              if(!parseUri(src, &video_type, &video_path)) {
+                ROS_WARN_STREAM("Invalid URI: " << src);
+                continue;
+              }
+
+                    webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
+              if(!stream) {
+                ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+                continue;
+              }
+
+              if(video_type == "ros_image") {
+                      ROS_DEBUG_STREAM("Subscribing to ROS topic: " << video_path);
+                      rtc::scoped_refptr<RosVideoCapturer> capturer(new rtc::RefCountedObject<RosVideoCapturer>(itf_, video_path, transport_));
+                      rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
+                        peer_connection_factory_->CreateVideoTrack(
+                          track_id,
+                          capturer));
+                      stream->AddTrack(video_track);
+                      capturer->Start();
+              }
+              else {
+                ROS_WARN_STREAM("Unknown video source type: " << video_type);
+              }
+
+            }
+            else if(action.type == ConfigureAction::kAddAudioTrackActionName) {
+              FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
+              FIND_PROPERTY_OR_CONTINUE("id", track_id);
+              FIND_PROPERTY_OR_CONTINUE("src", src);
+
+              std::string audio_type;
+              std::string audio_path;
+              if(!parseUri(src, &audio_type, &audio_path)) {
+                ROS_WARN_STREAM("Invalid URI: " << src);
+                continue;
+              }
+
+                    webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
+              if(!stream) {
+                ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+                continue;
+              }
+
+              if(audio_type == "local") {
+                cricket::AudioOptions options;
+                rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
+                  peer_connection_factory_->CreateAudioTrack(
+                    track_id,
+              peer_connection_factory_->CreateAudioSource(options)));
+                      stream->AddTrack(audio_track);
+              }
+              else {
+                ROS_WARN_STREAM("Unknown video source type: " << audio_type);
+              }
+
+            }
+            else if(action.type == ConfigureAction::kExpectStreamActionName) {
+              FIND_PROPERTY_OR_CONTINUE("id", stream_id);
+              if(expected_streams_.find(stream_id) != expected_streams_.end()) {
+                ROS_WARN_STREAM("Stream id: " << stream_id << " is already expected");
+                continue;
+              }
+              expected_streams_[stream_id] = std::map<std::string, std::string>();
+            }
+            else if(action.type == ConfigureAction::kExpectVideoTrackActionName) {
+              FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
+              FIND_PROPERTY_OR_CONTINUE("id", track_id);
+              FIND_PROPERTY_OR_CONTINUE("dest", dest);
+
+              if(expected_streams_.find(stream_id) == expected_streams_.end()) {
+                ROS_WARN_STREAM("Stream id: " << stream_id << " is not expected");
+                continue;
+              }
+              if(expected_streams_[stream_id].find(track_id) != expected_streams_[stream_id].end()) {
+                ROS_WARN_STREAM("Track id: " << track_id << " is already expected in stream id: " << stream_id);
+                continue;
+              }
+              expected_streams_[stream_id][track_id] = dest;
+            }
+            else {
+              ROS_WARN_STREAM("Unknown configure action type: " << action.type);
 	}
-	else if(action.type == ConfigureAction::kRemoveStreamActionName) {
-	  FIND_PROPERTY_OR_CONTINUE("id", stream_id);
-
-          rtc::scoped_refptr<webrtc::MediaStreamInterface> stream = peer_connection_factory_->CreateLocalMediaStream(stream_id);
-
-	  if(!stream) {
-	    ROS_WARN_STREAM("Stream not found with id: " << stream_id);
-	    continue;
-	  }
-          peer_connection_->RemoveStream(stream);
-	}
-	else if(action.type == ConfigureAction::kAddVideoTrackActionName) {
-	  FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
-	  FIND_PROPERTY_OR_CONTINUE("id", track_id);
-	  FIND_PROPERTY_OR_CONTINUE("src", src);
-
-	  std::string video_type;
-	  std::string video_path;
-	  if(!parseUri(src, &video_type, &video_path)) {
-	    ROS_WARN_STREAM("Invalid URI: " << src);
-	    continue;
-	  }
-
-          webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
-	  if(!stream) {
-	    ROS_WARN_STREAM("Stream not found with id: " << stream_id);
-	    continue;
-	  }
-
-	  if(video_type == "ros_image") {
-            ROS_DEBUG_STREAM("Subscribing to ROS topic: " << video_path);
-            rtc::scoped_refptr<RosVideoCapturer> capturer(new rtc::RefCountedObject<RosVideoCapturer>(itf_, video_path, transport_));
-            rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-              peer_connection_factory_->CreateVideoTrack(
-                track_id,
-                capturer));
-            stream->AddTrack(video_track);
-	  }
-	  else {
-	    ROS_WARN_STREAM("Unknown video source type: " << video_type);
-	  }
-
-	}
-	else if(action.type == ConfigureAction::kAddAudioTrackActionName) {
-	  FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
-	  FIND_PROPERTY_OR_CONTINUE("id", track_id);
-	  FIND_PROPERTY_OR_CONTINUE("src", src);
-
-	  std::string audio_type;
-	  std::string audio_path;
-	  if(!parseUri(src, &audio_type, &audio_path)) {
-	    ROS_WARN_STREAM("Invalid URI: " << src);
-	    continue;
-	  }
-
-          webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
-	  if(!stream) {
-	    ROS_WARN_STREAM("Stream not found with id: " << stream_id);
-	    continue;
-	  }
-
-	  if(audio_type == "local") {
-      cricket::AudioOptions options;
-	    rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
-	      peer_connection_factory_->CreateAudioTrack(
-	        track_id,
-		peer_connection_factory_->CreateAudioSource(options)));
-            stream->AddTrack(audio_track);
-	  }
-	  else {
-	    ROS_WARN_STREAM("Unknown video source type: " << audio_type);
-	  }
-
-	}
-	else if(action.type == ConfigureAction::kExpectStreamActionName) {
-	  FIND_PROPERTY_OR_CONTINUE("id", stream_id);
-	  if(expected_streams_.find(stream_id) != expected_streams_.end()) {
-	    ROS_WARN_STREAM("Stream id: " << stream_id << " is already expected");
-	    continue;
-	  }
-	  expected_streams_[stream_id] = std::map<std::string, std::string>();
-	}
-	else if(action.type == ConfigureAction::kExpectVideoTrackActionName) {
-	  FIND_PROPERTY_OR_CONTINUE("stream_id", stream_id);
-	  FIND_PROPERTY_OR_CONTINUE("id", track_id);
-	  FIND_PROPERTY_OR_CONTINUE("dest", dest);
-
-	  if(expected_streams_.find(stream_id) == expected_streams_.end()) {
-	    ROS_WARN_STREAM("Stream id: " << stream_id << " is not expected");
-	    continue;
-	  }
-	  if(expected_streams_[stream_id].find(track_id) != expected_streams_[stream_id].end()) {
-	    ROS_WARN_STREAM("Track id: " << track_id << " is already expected in stream id: " << stream_id);
-	    continue;
-	  }
-	  expected_streams_[stream_id][track_id] = dest;
-	}
-	else {
-	  ROS_WARN_STREAM("Unknown configure action type: " << action.type);
-	}
-      }
-      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
+      }      
+      webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options(0,0,false,false,false);
       peer_connection_->CreateOffer(webrtc_observer_proxy_.get(),options);
-
       // TODO check media constraints
     }
     else if (SdpMessage::isSdpAnswer(message_json))

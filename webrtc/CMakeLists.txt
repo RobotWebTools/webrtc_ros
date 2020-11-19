@@ -52,6 +52,11 @@ if(NOT ${get_gn_result} EQUAL 0)
 endif()
 
 message(STATUS "Configuring WebRTC build system")
+message(${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src/build/util/lastchange.py" "LASTCHANGE"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src/build/util/"
+)
 execute_process(
     COMMAND "build/prepare_webrtc_build" "${CMAKE_CURRENT_BINARY_DIR}/ninja"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

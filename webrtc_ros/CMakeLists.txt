@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(webrtc_ros)
 
-set(CMAKE_CXX_STANDARD 14)
 
 find_package(catkin REQUIRED COMPONENTS
   async_web_server_cpp
@@ -64,6 +63,8 @@ add_definitions(${webrtc_DEFINITIONS})
 # While most of ROS appears to work with the webrtc compiler options,
 # this is needed for async_web_server_cpp, which relies on Boost ASIO types
 # Boost ASIO cannot be mixed between c++11 and non-c++11 compilation units
+
+
 add_library(${PROJECT_NAME}_server_noncpp11
   src/webrtc_web_server.cpp
 )
@@ -71,6 +72,8 @@ add_dependencies(${PROJECT_NAME}_server_noncpp11 ${catkin_EXPORTED_TARGETS} ${${
 target_link_libraries(${PROJECT_NAME}_server_noncpp11
   ${catkin_LIBRARIES}
 )
+
+
 
 # This library is built with the same options used to build the webrtc library
 add_library(${PROJECT_NAME}_server
@@ -83,30 +86,35 @@ add_library(${PROJECT_NAME}_server
   src/webrtc_client.cpp
   src/webrtc_ros_message.cpp
   src/webrtc_ros_server.cpp
+  src/webrtc_ros_json_parser.cpp
 )
 add_dependencies(${PROJECT_NAME}_server ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_server
   ${catkin_LIBRARIES}
   ${webrtc_LIBRARIES}
   ${X11_LIBRARIES}
-  ${PROJECT_NAME}_server_noncpp11
 )
+
+set_target_properties(${PROJECT_NAME}_server PROPERTIES COMPILE_OPTIONS "-std=c++14")
+
 add_executable(${PROJECT_NAME}_server_node
   src/webrtc_ros_server_node.cpp
 )
 target_link_libraries(${PROJECT_NAME}_server_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_server
+  /usr/local/lib/libjsoncpp.a
+  ${PROJECT_NAME}_server_noncpp11
 )
+set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++14")
 
-add_library(${PROJECT_NAME}_server_nodelet
-  src/webrtc_ros_server_nodelet.cpp
-)
-target_link_libraries(${PROJECT_NAME}_server_nodelet
-  ${catkin_LIBRARIES}
-  ${PROJECT_NAME}_server
-)
-set_target_properties(${PROJECT_NAME}_server ${PROJECT_NAME}_server_node ${PROJECT_NAME}_server_nodelet PROPERTIES COMPILE_OPTIONS "-std=c++11")
+#add_library(${PROJECT_NAME}_server_nodelet
+#  src/webrtc_ros_server_nodelet.cpp
+#)
+#target_link_libraries(${PROJECT_NAME}_server_nodelet
+#  ${catkin_LIBRARIES}
+#  ${PROJECT_NAME}_server
+#)
 
 #############
 ## Install ##
@@ -116,7 +124,6 @@ set_target_properties(${PROJECT_NAME}_server ${PROJECT_NAME}_server_node ${PROJE
 install(TARGETS
   ${PROJECT_NAME}_server
   ${PROJECT_NAME}_server_node
-  ${PROJECT_NAME}_server_nodelet
   ${PROJECT_NAME}_server_noncpp11
 
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

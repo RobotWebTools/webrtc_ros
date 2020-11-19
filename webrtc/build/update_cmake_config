@@ -27,7 +27,7 @@ with open(os.path.join(args.build_dir, "obj", "webrtc.ninja"), "r") as f:
 webrtc_defs = [d for d in vars["defines"].split(' ') if d.startswith("-D")]
 webrtc_libs = ["webrtc"]
 
-for root, dirs, files in os.walk(os.path.join(args.build_dir, "obj", "webrtc")):
+for root, dirs, files in os.walk(os.path.join(args.build_dir, "obj")):
     libs = [f for f in files if f.startswith("lib") and f.endswith(".a")]
     for l in libs:
         name = l[3:-2]

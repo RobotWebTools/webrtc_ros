@@ -23,7 +23,7 @@ public:
   MessageHandler* handle_new_signaling_channel(SignalingChannel *channel);
   void cleanupWebrtcClient(WebrtcClient *client);
 
-  rtc::Thread signaling_thread_;
+  std::unique_ptr<rtc::Thread>signaling_thread_;
 private:
 
   std::condition_variable shutdown_cv_;

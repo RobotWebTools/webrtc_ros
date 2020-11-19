@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <webrtc_ros/webrtc_ros_server.h>
 #include "webrtc/rtc_base/ssl_adapter.h"
+
 #include "webrtc/rtc_base/bind.h"
 
 namespace webrtc_ros
@@ -8,12 +9,12 @@ namespace webrtc_ros
 
 MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, SignalingChannel *channel)
 {
-    return ((WebrtcRosServer*) _this)->signaling_thread_.Invoke<MessageHandler*>(RTC_FROM_HERE, rtc::Bind(&WebrtcRosServer::handle_new_signaling_channel,
+    return ((WebrtcRosServer*) _this)->signaling_thread_->Invoke<MessageHandler*>(RTC_FROM_HERE, rtc::Bind(&WebrtcRosServer::handle_new_signaling_channel,
             (WebrtcRosServer*)_this, channel));
 }
 
 WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
-  : nh_(nh), pnh_(pnh), itf_(image_transport::ImageTransport(nh_)), signaling_thread_(nullptr)
+  : nh_(nh), pnh_(pnh), itf_(image_transport::ImageTransport(nh_))
 {
   ROS_INFO("Init WEBRTC ROS SERVER.");
   rtc::InitializeSSL();
@@ -22,7 +23,8 @@ WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
   pnh_.param("port", port, 8080);
   pnh_.param("image_transport", image_transport_, std::string("raw"));
 
-  signaling_thread_.Start();
+  signaling_thread_ = rtc::Thread::CreateWithSocketServer();
+  signaling_thread_->Start();
   server_.reset(WebrtcWebServer::create(port, &WebrtcRosServer_handle_new_signaling_channel, this));
   ROS_INFO("Finished Init WEBRTC ROS SERVER.");
 }

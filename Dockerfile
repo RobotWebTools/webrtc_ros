@@ -49,7 +49,6 @@ RUN git clone https://github.com/GT-RAIL/async_web_server_cpp.git /home/webrtc_w
 
 RUN /ros_entrypoint.sh catkin_make_isolated \
     && sed -i '$isource "/home/webrtc_ws/devel_isolated/webrtc/setup.bash"' /ros_entrypoint.sh \
-    && sed -i '$isource "/home/webrtc_ws/devel_isolated/webrtc_ros/setup.bash"' /ros_entrypoint.sh \
-
+    && sed -i '$isource "/home/webrtc_ws/devel_isolated/webrtc_ros/setup.bash"' /ros_entrypoint.sh
 
 ENTRYPOINT ["/ros_entrypoint.sh"]

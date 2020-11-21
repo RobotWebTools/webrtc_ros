@@ -26,20 +26,6 @@ RUN git clone https://github.com/open-source-parsers/jsoncpp.git . && \
     make && \
     make install
 
-WORKDIR /home/3rdparty/abseil/
-RUN git clone https://github.com/abseil/abseil-cpp.git . && \
-    mkdir build && \
-    cd build && \
-    cmake -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-        -DCMAKE_INSTALL_PREFIX=/usr/local/stow/absl \
-        .. && \
-    ninja && \
-    ninja install && \
-    cd /usr/local/stow && \
-    stow absl
-
 ENV LD_LIBRARY_PATH /usr/local/lib/:$LD_LIBRARY_PATH
 
 WORKDIR /home/webrtc_ws

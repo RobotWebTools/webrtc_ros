@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(webrtc_ros)
 
-
 find_package(catkin REQUIRED COMPONENTS
   async_web_server_cpp
   cv_bridge
@@ -13,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(webrtc REQUIRED)
 find_package(X11 REQUIRED)
+find_package(jsoncpp REQUIRED)
 
 add_message_files(
     FILES
@@ -52,7 +52,6 @@ catkin_install_python(
 
 include_directories(
   include
-  /home/jakub/3rdparty/new_webrtc_ws/devel_isolated/webrtc/include/webrtc/
   ${catkin_INCLUDE_DIRS}
   ${webrtc_INCLUDE_DIRS}
 )
@@ -93,6 +92,7 @@ target_link_libraries(${PROJECT_NAME}_server
   ${catkin_LIBRARIES}
   ${webrtc_LIBRARIES}
   ${X11_LIBRARIES}
+  jsoncpp_object
 )
 
 set_target_properties(${PROJECT_NAME}_server PROPERTIES COMPILE_OPTIONS "-std=c++14")
@@ -103,7 +103,6 @@ add_executable(${PROJECT_NAME}_server_node
 target_link_libraries(${PROJECT_NAME}_server_node
   ${catkin_LIBRARIES}
   ${PROJECT_NAME}_server
-  /usr/local/lib/libjsoncpp.a
   ${PROJECT_NAME}_server_noncpp11
 )
 set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++14")

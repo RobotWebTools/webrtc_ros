@@ -69,7 +69,6 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf
   : nh_(nh), it_(nh_), itf_(itf), transport_(transport), signaling_channel_(signaling_channel),
     signaling_thread_(rtc::Thread::Current()), worker_thread_(rtc::Thread::CreateWithSocketServer())
 {
-  ROS_INFO("Creating WebrtcClient");
   worker_thread_->Start();
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory(
         worker_thread_.get(), worker_thread_.get(), worker_thread_.get(),

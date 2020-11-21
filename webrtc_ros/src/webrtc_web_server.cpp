@@ -104,7 +104,6 @@ private:
 async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocket(const async_web_server_cpp::HttpRequest& request,
 										  async_web_server_cpp::WebsocketConnectionPtr websocket)
 {
-  ROS_INFO_STREAM("Handling new WebRTC websocket");
   return WebsocketMessageHandlerWrapper(callback_(data_, new SignalingChannelImpl(websocket)));
 }
 

@@ -8,8 +8,6 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");
 
-  ROS_INFO("Node initialized.");
-
   webrtc_ros::WebrtcRosServer server(nh, pnh);
   server.run();
   ros::spin();

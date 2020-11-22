@@ -16,6 +16,8 @@ RUN apt-get update && \
 
 RUN apt-get install -y --no-install-recommends python2 gmodule-2.0 libgtk-3-dev libglib2.0-dev pulseaudio libasound2-dev libpulse-dev ros-noetic-image-transport ninja-build stow
 
+RUN apt-get install -y --no-install-recommends curl wget
+
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python2 1
 
 WORKDIR /home/3rdparty/jsoncpp/

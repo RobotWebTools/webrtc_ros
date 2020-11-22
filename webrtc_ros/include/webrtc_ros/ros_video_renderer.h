@@ -1,7 +1,7 @@
 #ifndef WEBRTC_ROS_ROS_VIDEO_RENDERER_H_
 #define WEBRTC_ROS_ROS_VIDEO_RENDERER_H_
 
-#include <webrtc/api/mediastreaminterface.h>
+#include <webrtc/api/media_stream_interface.h>
 #include <image_transport/image_transport.h>
 
 

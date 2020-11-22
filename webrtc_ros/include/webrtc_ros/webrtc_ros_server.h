@@ -4,7 +4,6 @@
 #include <ros/ros.h>
 #include <boost/shared_ptr.hpp>
 #include <webrtc_ros/webrtc_client.h>
-#include <webrtc_ros/ros_log_context.h>
 #include <webrtc_ros/webrtc_web_server.h>
 #include <condition_variable>
 
@@ -24,9 +23,8 @@ public:
   MessageHandler* handle_new_signaling_channel(SignalingChannel *channel);
   void cleanupWebrtcClient(WebrtcClient *client);
 
-  rtc::Thread signaling_thread_;
+  std::unique_ptr<rtc::Thread>signaling_thread_;
 private:
-  RosLogContextRef log_context_;
 
   std::condition_variable shutdown_cv_;
   std::mutex clients_mutex_;

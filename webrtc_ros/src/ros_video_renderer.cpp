@@ -16,7 +16,7 @@ void RosVideoRenderer::OnFrame(const webrtc::VideoFrame& frame)
 {
   std_msgs::Header header;
   header.stamp = ros::Time::now();
-  const rtc::scoped_refptr<webrtc::VideoFrameBuffer>& buffer = frame.video_frame_buffer();
+  const rtc::scoped_refptr<webrtc::I420BufferInterface>& buffer = frame.video_frame_buffer()->ToI420();
 
   cv::Mat bgra(buffer->height(), buffer->width(), CV_8UC4);
   // The ARGB function in libyuv appears to output BGRA...

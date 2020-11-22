@@ -8,13 +8,25 @@
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <webrtc_ros/ros_video_renderer.h>
-#include <webrtc/api/mediastreaminterface.h>
-#include <webrtc/api/peerconnectioninterface.h>
-#include <webrtc/api/test/fakeconstraints.h>
+#include <webrtc/api/media_stream_interface.h>
+#include <webrtc/api/peer_connection_interface.h>
+#include <webrtc/api/audio_options.h>
+#include <webrtc/pc/peer_connection_factory.h>
+#include <webrtc/api/create_peerconnection_factory.h>
+#include <webrtc/api/audio_codecs/builtin_audio_encoder_factory.h>
+#include <webrtc/api/audio_codecs/builtin_audio_decoder_factory.h>
+
+#include <webrtc/media/engine/internal_decoder_factory.h>
+#include <webrtc/media/engine/internal_encoder_factory.h>
+
+
+#include <webrtc/media/base/adapted_video_track_source.h>
+
+#include <webrtc/media/engine/multiplex_codec_factory.h>
 #include <webrtc_ros/configure_message.h>
 #include <webrtc_ros/webrtc_web_server.h>
 #include <webrtc_ros/image_transport_factory.h>
-#include <webrtc/base/thread.h>
+#include <webrtc/rtc_base/thread.h>
 
 
 namespace webrtc_ros
@@ -31,7 +43,7 @@ public:
   WebrtcClientObserverProxy(WebrtcClientWeakPtr client_weak);
 
   void OnSuccess(webrtc::SessionDescriptionInterface*) override;
-  void OnFailure(const std::string&) override;
+  void OnFailure(webrtc::RTCError error) override;
   void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>) override;
   void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>) override;
   void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface>) override;
@@ -82,12 +94,11 @@ private:
   boost::scoped_ptr<SignalingChannel> signaling_channel_;
 
   rtc::Thread *signaling_thread_;
+  std::unique_ptr<rtc::Thread> worker_thread_;
 
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
   std::map<std::string, std::vector<boost::shared_ptr<RosVideoRenderer>>> video_renderers_;
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;
-  webrtc::FakeConstraints peer_connection_constraints_;
-  webrtc::FakeConstraints media_constraints_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
 
   std::map<std::string, std::map<std::string, std::string>> expected_streams_;

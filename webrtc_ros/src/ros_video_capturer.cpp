@@ -1,5 +1,5 @@
 #include "webrtc_ros/ros_video_capturer.h"
-#include "webrtc/base/bind.h"
+#include "webrtc/rtc_base/bind.h"
 
 #include <ros/ros.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,25 +24,14 @@ RosVideoCapturer::~RosVideoCapturer()
 }
 
 
-cricket::CaptureState RosVideoCapturer::Start(const cricket::VideoFormat& capture_format)
+void RosVideoCapturer::Start()
 {
-  if (capture_state() == cricket::CS_RUNNING) {
-    ROS_WARN("Start called when it's already started.");
-    return capture_state();
-  }
-
   impl_->Start(this);
-
-  SetCaptureFormat(&capture_format);
-  return cricket::CS_RUNNING;
 }
-
 
 void RosVideoCapturer::Stop()
 {
   impl_->Stop();
-  SetCaptureFormat(NULL);
-  SetCaptureState(cricket::CS_STOPPED);
 }
 
 void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
@@ -73,7 +62,7 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   cv::Rect roi;
   int out_width, out_height;
   int64_t translated_camera_time_us;
-  if (AdaptFrame(bgr.cols, bgr.rows, camera_time_us, system_time_us, &out_width, &out_height, &roi.width, &roi.height, &roi.x, &roi.y, &translated_camera_time_us))
+  if (AdaptFrame(bgr.cols, bgr.rows, system_time_us, &out_width, &out_height, &roi.width, &roi.height, &roi.x, &roi.y))
   {
     cv::Mat yuv;
     if (out_width == roi.width && out_height == roi.height)
@@ -93,50 +82,37 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     std::shared_ptr<webrtc::VideoFrame> frame = std::make_shared<webrtc::VideoFrame>(
         webrtc::I420Buffer::Copy(out_width, out_height, y, out_width, u, out_width / 2, v, out_width / 2),
         webrtc::kVideoRotation_0,
-        translated_camera_time_us
+        system_time_us
     );
     // Apparently, the OnFrame() method could not be called from arbitrary threads in ancient times, and there
     // used to be all kinds of shenanigans here to make sure it is called from the original thread, causing
     // a subtle deadlock bug on object destruction.
     //
     // So I decided to be blunt and just call it like it is:
-    OnFrame(*frame, frame->width(), frame->height());
+    OnFrame(*frame);
   }
 }
 
-bool RosVideoCapturer::IsRunning()
-{
-  return capture_state() == cricket::CS_RUNNING;
-}
 
 
-bool RosVideoCapturer::GetPreferredFourccs(std::vector<uint32_t>* fourccs)
-{
-  if (!fourccs)
-    return false;
-  fourccs->push_back(cricket::FOURCC_I420);
-  return true;
-}
-
-
-bool RosVideoCapturer::GetBestCaptureFormat(const cricket::VideoFormat& desired, cricket::VideoFormat* best_format)
-{
-  if (!best_format)
-    return false;
-
-  best_format->width = desired.width;
-  best_format->height = desired.height;
-  best_format->fourcc = cricket::FOURCC_I420;
-  best_format->interval = desired.interval;
-  return true;
-}
-
-
-bool RosVideoCapturer::IsScreencast() const
+bool RosVideoCapturer::is_screencast() const
 {
   return false;
 }
 
+ 
+absl::optional<bool> RosVideoCapturer::needs_denoising() const
+{
+	return false;
+}
+webrtc::MediaSourceInterface::SourceState RosVideoCapturer::state() const
+{
+	return webrtc::MediaSourceInterface::kLive;
+}
+bool RosVideoCapturer::remote() const
+{
+	return false;
+}
 
 
 

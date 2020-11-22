@@ -2,7 +2,7 @@
 #define WEBRTC_ROS_SDP_MESSAGE_H_
 
 #include <webrtc_ros/webrtc_ros_message.h>
-#include <webrtc/base/json.h>
+#include <json/json.h>
 #include <webrtc/api/jsep.h>
 
 

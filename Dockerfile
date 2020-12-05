@@ -11,7 +11,8 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        git
+        git\
+        curl
 
 
 RUN apt-get install -y --no-install-recommends python2 gmodule-2.0 libgtk-3-dev libglib2.0-dev pulseaudio libasound2-dev libpulse-dev ros-noetic-image-transport ninja-build stow

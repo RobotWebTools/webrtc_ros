@@ -15,7 +15,7 @@ case "$a" in
 	;;
 	armhf|armv*)
 		a=arm
-		extras=" arm_float_abi=\"hard\""
+		extras=" use_system_libjpeg=true arm_float_abi=\"hard\""
 	;;
 	arm64|aarch64)
 		a=arm64

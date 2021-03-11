@@ -8,32 +8,13 @@ if ! gn --help &>/dev/null
 then
 	mkdir -p third_party/gn
 	a="$(dpkg-architecture -qDEB_HOST_ARCH || uname -m)"
-	case "$a" in
-		i?86)
-			cp "$rootdir/prebuilt/gn-linux32" third_party/gn/gn
-		;;
-		x86_64|amd64)
-			cp "$rootdir/prebuilt/gn-linux64" third_party/gn/gn
-		;;
-		armhf|armv*)
-			cp "$rootdir/prebuilt/gn-linux_armhf" third_party/gn/gn
-		;;
-		arm64|aarch64)
-			cp "$rootdir/prebuilt/gn-linux_arm64" third_party/gn/gn
-		;;
-		*)
-			echo "WARNING: unknown target platform: $a"
-		;;
-	esac
-	if ! gn --help &>/dev/null
-	then
-		rm -rf third_party/gn
-		echo "Prebuilt GN is not working, building from source"
-		git clone https://gn.googlesource.com/gn third_party/gn
-		cd third_party/gn
-		CC=gcc CXX=g++ LDFLAGS=-fuse-ld=gold python build/gen.py
-		"$rootdir/depot_tools/ninja" -C out gn
-		cp out/gn .
-	fi
+	rm -rf third_party/gn
+	echo "Building GN from source."
+	git clone https://gn.googlesource.com/gn third_party/gn
+	cd third_party/gn
+	git checkout 501b49a3ab4f0d099457b6e5b62c709a1d2311be
+	CC=gcc CXX=g++ LDFLAGS=-fuse-ld=gold python build/gen.py
+	"$rootdir/depot_tools/ninja" -C out gn
+	cp out/gn .
 fi
 

@@ -57,6 +57,7 @@ execute_process(
     COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src/build/util/lastchange.py" "LASTCHANGE"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src/build/util/"
 )
+
 execute_process(
     COMMAND "build/prepare_webrtc_build" "${CMAKE_CURRENT_BINARY_DIR}/ninja"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -67,7 +68,7 @@ if(NOT ${prepare_webrtc_build_result} EQUAL 0)
 endif()
 
 add_custom_target(webrtc ALL
-    COMMAND "build/depot_tools/ninja" -C "${CMAKE_CURRENT_BINARY_DIR}/ninja" webrtc stunserver turnserver
+    COMMAND "build/depot_tools/ninja" -C "${CMAKE_CURRENT_BINARY_DIR}/ninja"
     COMMAND "build/update_cmake_config" "${CMAKE_CURRENT_SOURCE_DIR}/build/webrtc/src" "${CMAKE_CURRENT_BINARY_DIR}/ninja" "${CMAKE_CURRENT_BINARY_DIR}/output" "${CMAKE_INSTALL_PREFIX}"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 )

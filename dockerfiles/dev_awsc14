@@ -1,0 +1,7 @@
+FROM webrtc_ros/develop
+
+LABEL description="A docker file to test the develop branch version of webrtc ROS with the fkie-forks/async_web_server_cpp:apache2_websocket_proxy_workaround"
+
+RUN cd catkin_ws/src && git clone https://github.com/fkie-forks/async_web_server_cpp.git && cd async_web_server_cpp && git checkout apache2_websocket_proxy_workaround
+
+RUN source "/opt/ros/$ROS_DISTRO/setup.bash" && cd catkin_ws && catkin_make && catkin_make install

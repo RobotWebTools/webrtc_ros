@@ -1,0 +1,12 @@
+FROM webrtc_ros/released
+
+LABEL description="A docker file to test the develop branch version of webrtc ROS"
+
+SHELL ["/bin/bash", "-c"]
+
+RUN mkdir catkin_ws/src -p
+RUN cd catkin_ws/src && git clone https://github.com/RobotWebTools/webrtc_ros.git && cd webrtc_ros && git checkout develop
+RUN cd catkin_ws/src/webrtc_ros/webrtc && touch CATKIN_IGNORE
+RUN source "/opt/ros/$ROS_DISTRO/setup.bash" && cd catkin_ws && catkin_make && catkin_make install
+
+CMD source "/opt/ros/$ROS_DISTRO/setup.bash" && source "/catkin_ws/install/setup.bash" && ./test-script.sh

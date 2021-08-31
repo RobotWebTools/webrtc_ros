@@ -1,5 +1,17 @@
 #!/bin/bash
 set -e
+for PYTHON in python python3
+do
+	if PYTHON=$(type -p $PYTHON) &>/dev/null
+	then
+		break
+	fi
+done
+if [ ! -x $PYTHON ]
+then
+	echo>&2 "cannot find Python executable"
+	exit 1
+fi
 rootdir="$(cd "$(dirname "$0")"; pwd)"
 export PATH="${rootdir}/depot_tools:$PATH"
 cd "$rootdir/webrtc/src"

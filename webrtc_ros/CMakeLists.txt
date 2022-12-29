@@ -1,15 +1,13 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5)
 project(webrtc_ros)
 
-find_package(catkin REQUIRED COMPONENTS
-  async_web_server_cpp
-  cv_bridge
-  image_transport
-  message_generation
-  nodelet
-  roscpp
-  std_msgs
-)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(async_web_server_cpp REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(message_generation REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(webrtc REQUIRED)
 find_package(X11 REQUIRED)
 find_package(jsoncpp REQUIRED)
@@ -29,21 +27,8 @@ generate_messages(
     std_msgs
 )
 
-catkin_package(
-  CATKIN_DEPENDS
-    async_web_server_cpp
-    cv_bridge
-    image_transport
-    message_runtime
-    nodelet
-    roscpp
-    std_msgs
-  DEPENDS webrtc
-)
-
-catkin_install_python(
-    PROGRAMS scripts/ice_server_service.py
-    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(DIRECTORY scripts
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ###########
@@ -52,7 +37,7 @@ catkin_install_python(
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
+  include/${PROJECT_NAME}
   ${webrtc_INCLUDE_DIRS}
 )
 add_definitions(${webrtc_DEFINITIONS})
@@ -67,11 +52,17 @@ add_definitions(${webrtc_DEFINITIONS})
 add_library(${PROJECT_NAME}_server_noncpp11
   src/webrtc_web_server.cpp
 )
-add_dependencies(${PROJECT_NAME}_server_noncpp11 ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_server_noncpp11
-  ${catkin_LIBRARIES}
-)
 
+ament_target_dependencies(
+  ${PROJECT_NAME}_server_noncpp11
+    async_web_server_cpp
+    cv_bridge
+    image_transport
+    message_runtime
+    rclcpp
+    std_msgs
+    webrtc
+)
 
 
 # This library is built with the same options used to build the webrtc library
@@ -87,12 +78,18 @@ add_library(${PROJECT_NAME}_server
   src/webrtc_ros_server.cpp
   src/webrtc_ros_json_parser.cpp
 )
-add_dependencies(${PROJECT_NAME}_server ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_server
-  ${catkin_LIBRARIES}
-  ${webrtc_LIBRARIES}
-  ${X11_LIBRARIES}
-  jsoncpp_object
+ament_target_dependencies(
+    ${PROJECT_NAME}_server
+    async_web_server_cpp
+    cv_bridge
+    image_transport
+    message_runtime
+    rclcpp
+    std_msgs
+    webrtc
+    ${webrtc_LIBRARIES}
+    ${X11_LIBRARIES}
+    jsoncpp_object
 )
 
 set_target_properties(${PROJECT_NAME}_server PROPERTIES COMPILE_OPTIONS "-std=c++14")
@@ -100,11 +97,12 @@ set_target_properties(${PROJECT_NAME}_server PROPERTIES COMPILE_OPTIONS "-std=c+
 add_executable(${PROJECT_NAME}_server_node
   src/webrtc_ros_server_node.cpp
 )
-target_link_libraries(${PROJECT_NAME}_server_node
-  ${catkin_LIBRARIES}
+ament_target_dependencies(
+    ${PROJECT_NAME}_server_node
   ${PROJECT_NAME}_server
   ${PROJECT_NAME}_server_noncpp11
-)
+}
+
 set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++14")
 
 #add_library(${PROJECT_NAME}_server_nodelet
@@ -118,33 +116,18 @@ set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-s
 #############
 ## Install ##
 #############
-
-# Mark nodes and libraries for installation
-install(TARGETS
-  ${PROJECT_NAME}_server
-  ${PROJECT_NAME}_server_node
-  ${PROJECT_NAME}_server_noncpp11
-
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# Mark nodelet plugin configuration for installation
-install(FILES
-  nodelet_plugins.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-# Mark cpp header files for installation
-install(DIRECTORY include/${PROJECT_NAME}/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
+install(TARGETS 
+    ${PROJECT_NAME}_server
+    ${PROJECT_NAME}_server_node
+    ${PROJECT_NAME}_server_noncpp11
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 # Install web files
 install(DIRECTORY web
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION share/${PROJECT_NAME}
   PATTERN "Gruntfile.js" EXCLUDE
   PATTERN "node_modules" EXCLUDE
   PATTERN "package.json" EXCLUDE

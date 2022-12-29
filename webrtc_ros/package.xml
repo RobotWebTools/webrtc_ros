@@ -16,18 +16,19 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>cv_bridge</depend>
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
   <depend version_gte="59.0.0">webrtc</depend>
   <depend>image_transport</depend>
   <depend>nodelet</depend>
   <depend>std_msgs</depend>
   <depend>async_web_server_cpp</depend>
 
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>message_generation</build_depend>
   <build_export_depend>message_runtime</build_export_depend>
   <exec_depend>message_runtime</exec_depend>
 
   <export>
-    <nodelet plugin="${prefix}/nodelet_plugins.xml" />
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

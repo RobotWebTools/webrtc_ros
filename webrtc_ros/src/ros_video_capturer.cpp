@@ -1,10 +1,7 @@
 #include "webrtc_ros/ros_video_capturer.h"
 #include "webrtc/rtc_base/bind.h"
 
-#include <ros/ros.h>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/core.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -34,7 +31,7 @@ void RosVideoCapturer::Stop()
   impl_->Stop();
 }
 
-void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
+void RosVideoCapturer::imageCallback(const sensor_msgs::msg::Image::ConstPtr& msg)
 {
   cv::Mat bgr;
   if (msg->encoding.find("F") != std::string::npos)
@@ -57,8 +54,8 @@ void RosVideoCapturer::imageCallback(const sensor_msgs::ImageConstPtr& msg)
   {
     bgr = cv_bridge::toCvShare(msg, "bgr8")->image;
   }
-  int64_t camera_time_us = msg->header.stamp.toNSec() / 1000;
-  int64_t system_time_us = ros::WallTime::now().toNSec() / 1000;
+  int64_t camera_time_us = msg->header.stamp.nanosec / 1000;
+  int64_t system_time_us = rclcpp::Clock().now().nanoseconds() / 1000;
   cv::Rect roi;
   int out_width, out_height;
   int64_t translated_camera_time_us;
@@ -123,7 +120,7 @@ void RosVideoCapturerImpl::Start(RosVideoCapturer *capturer)
 {
   std::unique_lock<std::mutex> lock(state_mutex_);
 
-  sub_ = it_.subscribe(topic_, boost::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), _1), transport_);
+  sub_ = it_.subscribe(topic_, std::bind(&RosVideoCapturerImpl::imageCallback, shared_from_this(), std::placeholders::_1), transport_);
   capturer_ = capturer;
 }
 
@@ -142,7 +139,7 @@ void RosVideoCapturerImpl::Stop()
 }
 
 
-void RosVideoCapturerImpl::imageCallback(const sensor_msgs::ImageConstPtr& msg)
+void RosVideoCapturerImpl::imageCallback(const sensor_msgs::msg::Image::ConstPtr& msg)
 {
   std::unique_lock<std::mutex> lock(state_mutex_);
   if(capturer_ == nullptr)

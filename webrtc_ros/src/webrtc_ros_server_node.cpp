@@ -1,15 +1,17 @@
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <webrtc_ros/webrtc_ros_server.h>
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "webrtc_ros_server");
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("webrtc_ros_server");
 
-  ros::NodeHandle nh;
-  ros::NodeHandle pnh("~");
-
-  webrtc_ros::WebrtcRosServer server(nh, pnh);
+  webrtc_ros::WebrtcRosServer server(node);
   server.run();
-  ros::spin();
+    
+  rclcpp::spin(node);
+
   server.stop();
+
+  rclcpp::shutdown();
 }

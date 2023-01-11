@@ -1,16 +1,17 @@
-#include <ros/ros.h>
-#include <ros/package.h>
+#include <rclcpp/rclcpp.hpp>
 #include <webrtc_ros/webrtc_web_server.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <sensor_msgs/Image.h>
-#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/msg/image.h>
+#include <sensor_msgs/msg/camera_info.h>
 #include <async_web_server_cpp/http_reply.hpp>
 #include <async_web_server_cpp/websocket_request_handler.hpp>
 #include <async_web_server_cpp/http_server.hpp>
 #include <async_web_server_cpp/websocket_connection.hpp>
+
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 namespace webrtc_ros
 {
@@ -44,18 +45,20 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
     callback_(callback), data_(data)
 {
   std::vector<async_web_server_cpp::HttpHeader> any_origin_headers;
+  std::string webrtc_ros_path = ament_index_cpp::get_package_share_directory("webrtc_ros");
+
   any_origin_headers.push_back(async_web_server_cpp::HttpHeader("Access-Control-Allow-Origin", "*"));
   handler_group_.addHandlerForPath("/", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/html",
-				   ros::package::getPath("webrtc_ros") + "/web/index.html", any_origin_headers));
-  handler_group_.addHandlerForPath("/list_streams.json", boost::bind(&WebrtcWebServerImpl::handle_list_streams, this, _1, _2, _3, _4));
+				   webrtc_ros_path + "/web/index.html", any_origin_headers));
+  handler_group_.addHandlerForPath("/list_streams.json", std::bind(&WebrtcWebServerImpl::handle_list_streams, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
   handler_group_.addHandlerForPath("/viewer", async_web_server_cpp::HttpReply::from_file(async_web_server_cpp::HttpReply::ok, "text/html",
-				   ros::package::getPath("webrtc_ros") + "/web/viewer.html", any_origin_headers));
-  handler_group_.addHandlerForPath("/webrtc", async_web_server_cpp::WebsocketHttpRequestHandler(boost::bind(&WebrtcWebServerImpl::handle_webrtc_websocket, this, _1, _2)));
+				   webrtc_ros_path + "/web/viewer.html", any_origin_headers));
+  handler_group_.addHandlerForPath("/webrtc", async_web_server_cpp::WebsocketHttpRequestHandler(std::bind(&WebrtcWebServerImpl::handle_webrtc_websocket, this, std::placeholders::_1, std::placeholders::_2)));
   handler_group_.addHandlerForPath("/.+", async_web_server_cpp::HttpReply::from_filesystem(async_web_server_cpp::HttpReply::ok,
-											   "/", ros::package::getPath("webrtc_ros") + "/web",
+											   "/", webrtc_ros_path + "/web",
 											   false, any_origin_headers));
   server_.reset(new async_web_server_cpp::HttpServer("0.0.0.0", boost::lexical_cast<std::string>(port),
-                boost::bind(ros_connection_logger, handler_group_, _1, _2, _3, _4), 1));
+                std::bind(ros_connection_logger, handler_group_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), 1));
 }
 
 ~WebrtcWebServerImpl()
@@ -67,7 +70,7 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
 void run()
 {
   server_->run();
-  ROS_INFO("Waiting For connections");
+  // RCLCPP_INFO(_node->get_logger(),"Waiting For connections");
 }
 
 void stop()
@@ -92,7 +95,7 @@ private:
 	type = MessageHandler::CLOSE;
       }
       else {
-	ROS_WARN_STREAM("Unexpected websocket message type: " << message.type << ": " << message.content);
+	// ROS_WARN_STREAM("Unexpected websocket message type: " << message.type << ": " << message.content);
 	return;
       }
       callback_->handle_message(type, message.content);
@@ -110,24 +113,27 @@ async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocke
 bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
     async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end)
 {
-  std::string image_message_type = ros::message_traits::datatype<sensor_msgs::Image>();
-  std::string camera_info_message_type = ros::message_traits::datatype<sensor_msgs::CameraInfo>();
+  auto node = std::make_shared<rclcpp::Node>("webrtc_web_server");
+  auto graph = node->get_node_graph_interface();
+  auto topics = graph->get_topic_names_and_types(true);
 
-  ros::master::V_TopicInfo topics;
-  ros::master::getTopics(topics);
-  ros::master::V_TopicInfo::iterator it;
+
+  std::string image_message_type = "sensor_msgs::msg::Image";
+  std::string camera_info_message_type = "sensor_msgs::msg::CameraInfo";
+
   std::vector<std::string> image_topics;
   std::vector<std::string> camera_info_topics;
-  for (it = topics.begin(); it != topics.end(); ++it)
-  {
-    const ros::master::TopicInfo &topic = *it;
-    if (topic.datatype == image_message_type)
-    {
-      image_topics.push_back(topic.name);
-    }
-    else if (topic.datatype == camera_info_message_type)
-    {
-      camera_info_topics.push_back(topic.name);
+
+  for (const auto& topic : topics) {
+    for (const auto& messageType : topic.second) {
+      if (messageType.compare(image_message_type) == 0)
+      {
+        image_topics.push_back(messageType);
+      }
+      else if (messageType.compare(camera_info_message_type) == 0)
+      {
+        camera_info_topics.push_back(messageType);
+      }
     }
   }
 
@@ -189,14 +195,14 @@ static bool ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler
                                   async_web_server_cpp::HttpConnectionPtr connection,
                                   const char* begin, const char* end)
 {
-  ROS_INFO_STREAM(connection->socket().remote_endpoint() << ": " << request.method << " " << request.uri);
+  RCLCPP_INFO_STREAM(rclcpp::get_logger("webrtc"), connection->socket().remote_endpoint().address().to_string() << ": " << request.method << " " << request.uri);
   try
   {
     return forward(request, connection, begin, end);
   }
   catch (std::exception &e)
   {
-    ROS_WARN_STREAM("Error Handling Request: " << e.what());
+    RCLCPP_WARN_STREAM(rclcpp::get_logger("webrtc"), "Error Handling Request: " << e.what());
   }
   return false;
 }

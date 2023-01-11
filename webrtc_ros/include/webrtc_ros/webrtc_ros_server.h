@@ -1,7 +1,7 @@
 #ifndef WEBRTC_ROS_WEBRTC_ROS_SERVER_H_
 #define WEBRTC_ROS_WEBRTC_ROS_SERVER_H_
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <boost/shared_ptr.hpp>
 #include <webrtc_ros/webrtc_client.h>
 #include <webrtc_ros/webrtc_web_server.h>
@@ -15,7 +15,7 @@ MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, Signal
 class WebrtcRosServer
 {
 public:
-  WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh);
+  WebrtcRosServer(rclcpp::Node::SharedPtr nh);
   ~WebrtcRosServer();
   void run();
   void stop();
@@ -30,8 +30,7 @@ private:
   std::mutex clients_mutex_;
   std::map<WebrtcClient*, WebrtcClientWeakPtr> clients_;
 
-  ros::NodeHandle nh_;
-  ros::NodeHandle pnh_;
+  rclcpp::Node::SharedPtr nh_;
   std::string image_transport_;
   ImageTransportFactory itf_;
 

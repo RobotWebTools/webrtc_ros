@@ -6,30 +6,12 @@ find_package(rclcpp REQUIRED)
 find_package(async_web_server_cpp REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
-find_package(message_generation REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(webrtc_ros_msgs REQUIRED)
 find_package(webrtc REQUIRED)
 find_package(X11 REQUIRED)
 find_package(jsoncpp REQUIRED)
 
-add_message_files(
-    FILES
-    IceServer.msg
-)
-
-add_service_files(
-    FILES
-    GetIceServers.srv
-)
-
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
-
-install(DIRECTORY scripts
-  DESTINATION share/${PROJECT_NAME}
-)
 
 ###########
 ## Build ##
@@ -38,35 +20,17 @@ install(DIRECTORY scripts
 include_directories(
   include
   include/${PROJECT_NAME}
+  ${OpenCV_INCLUDE_DIRS}
+  ${webrtc_ros_msgs_INCLUDE_DIRS}
   ${webrtc_INCLUDE_DIRS}
+  
 )
 add_definitions(${webrtc_DEFINITIONS})
 
-# This library contains code that cannot be compiled with c++11 enabled
-# This is due to ABI incompatibilities between the two
-# While most of ROS appears to work with the webrtc compiler options,
-# this is needed for async_web_server_cpp, which relies on Boost ASIO types
-# Boost ASIO cannot be mixed between c++11 and non-c++11 compilation units
 
-
-add_library(${PROJECT_NAME}_server_noncpp11
+add_executable(${PROJECT_NAME}_server_node
+  src/webrtc_ros_server_node.cpp
   src/webrtc_web_server.cpp
-)
-
-ament_target_dependencies(
-  ${PROJECT_NAME}_server_noncpp11
-    async_web_server_cpp
-    cv_bridge
-    image_transport
-    message_runtime
-    rclcpp
-    std_msgs
-    webrtc
-)
-
-
-# This library is built with the same options used to build the webrtc library
-add_library(${PROJECT_NAME}_server
   src/configure_message.cpp
   src/ice_candidate_message.cpp
   src/image_transport_factory.cpp
@@ -78,48 +42,38 @@ add_library(${PROJECT_NAME}_server
   src/webrtc_ros_server.cpp
   src/webrtc_ros_json_parser.cpp
 )
+
+target_include_directories(${PROJECT_NAME}_server_node
+    PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
 ament_target_dependencies(
-    ${PROJECT_NAME}_server
+  ${PROJECT_NAME}_server_node
     async_web_server_cpp
     cv_bridge
     image_transport
-    message_runtime
     rclcpp
     std_msgs
-    webrtc
-    ${webrtc_LIBRARIES}
-    ${X11_LIBRARIES}
-    jsoncpp_object
+    webrtc_ros_msgs
+    
 )
 
-set_target_properties(${PROJECT_NAME}_server PROPERTIES COMPILE_OPTIONS "-std=c++14")
-
-add_executable(${PROJECT_NAME}_server_node
-  src/webrtc_ros_server_node.cpp
+target_link_libraries(${PROJECT_NAME}_server_node 
+  ${webrtc_LIBRARIES}
+  webrtc
+  jsoncpp_lib
+  ${X11_LIBRARIES}
 )
-ament_target_dependencies(
-    ${PROJECT_NAME}_server_node
-  ${PROJECT_NAME}_server
-  ${PROJECT_NAME}_server_noncpp11
-}
 
-set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++14")
-
-#add_library(${PROJECT_NAME}_server_nodelet
-#  src/webrtc_ros_server_nodelet.cpp
-#)
-#target_link_libraries(${PROJECT_NAME}_server_nodelet
-#  ${catkin_LIBRARIES}
-#  ${PROJECT_NAME}_server
-#)
+set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-std=c++17")
 
 #############
 ## Install ##
 #############
 install(TARGETS 
-    ${PROJECT_NAME}_server
     ${PROJECT_NAME}_server_node
-    ${PROJECT_NAME}_server_noncpp11
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -137,9 +91,16 @@ install(DIRECTORY web
 # Install license files
 install(FILES
   LICENSE
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION share/${PROJECT_NAME}/
 )
 install(FILES
   LICENSE_webrtc_adapter
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION share/${PROJECT_NAME}/
 )
+
+install(DIRECTORY scripts
+  DESTINATION share/${PROJECT_NAME}/scripts
+)
+
+
+ament_package()

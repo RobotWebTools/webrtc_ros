@@ -1,4 +1,4 @@
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <webrtc_ros/webrtc_client.h>
 #include <webrtc_ros/webrtc_ros_message.h>
 #include <webrtc_ros/sdp_message.h>
@@ -7,7 +7,10 @@
 #include <webrtc/api/video/video_source_interface.h>
 #include <webrtc/rtc_base/bind.h>
 #include <webrtc_ros/ros_video_capturer.h>
-#include <webrtc_ros/GetIceServers.h>
+#include <webrtc_ros_msgs/srv/get_ice_servers.hpp>
+
+#include <chrono>
+using namespace std::chrono_literals;
 
 namespace webrtc_ros
 {
@@ -65,11 +68,14 @@ void WebrtcClientObserverProxy::OnSignalingChange(webrtc::PeerConnectionInterfac
 }
 
 
-WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel* signaling_channel)
-  : nh_(nh), it_(nh_), itf_(itf), transport_(transport), signaling_channel_(signaling_channel),
+WebrtcClient::WebrtcClient(rclcpp::Node::SharedPtr nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel* signaling_channel)
+  : nh_(nh), itf_(itf), transport_(transport), signaling_channel_(signaling_channel),
     signaling_thread_(rtc::Thread::Current()), worker_thread_(rtc::Thread::CreateWithSocketServer())
 {
   worker_thread_->Start();
+
+  it_ = std::make_shared<image_transport::ImageTransport>(nh);
+  
   peer_connection_factory_  = webrtc::CreatePeerConnectionFactory(
         worker_thread_.get(), worker_thread_.get(), worker_thread_.get(),
         nullptr, webrtc::CreateBuiltinAudioEncoderFactory(),
@@ -83,21 +89,21 @@ WebrtcClient::WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf
         nullptr, nullptr);
   if (!peer_connection_factory_.get())
   {
-    ROS_WARN("Could not create peer connection factory");
+    RCLCPP_WARN(nh_->get_logger(), "Could not create peer connection factory");
     invalidate();
     return;
   }
-  ping_timer_ = nh_.createWallTimer(ros::WallDuration(10.0), boost::bind(&WebrtcClient::ping_timer_callback, this, _1));
+  ping_timer_ = nh_->create_wall_timer(10.0s, std::bind(&WebrtcClient::ping_timer_callback, this));
 }
 WebrtcClient::~WebrtcClient()
 {
   if(valid()) {
-    ROS_FATAL("WebrtcClient destructor should only be called once it's invalidated");
+    RCLCPP_FATAL(nh_->get_logger(), "WebrtcClient destructor should only be called once it's invalidated");
   }
-  ROS_INFO("Destroying Webrtc Client");
+  RCLCPP_INFO(nh_->get_logger(),"Destroying Webrtc Client");
 }
 
-void WebrtcClient::init(boost::shared_ptr<WebrtcClient>& keep_alive_ptr)
+void WebrtcClient::init(std::shared_ptr<WebrtcClient>& keep_alive_ptr)
 {
   keep_alive_this_ = keep_alive_ptr;
 }
@@ -114,21 +120,28 @@ bool WebrtcClient::valid()
 bool WebrtcClient::initPeerConnection()
 {
   if(!valid()) {
-    ROS_ERROR("Tried to initialize invalidated webrtc client");
+    RCLCPP_ERROR(nh_->get_logger(),"Tried to initialize invalidated webrtc client");
     return false;
   }
   if (!peer_connection_)
   {
     webrtc::PeerConnectionInterface::RTCConfiguration config;
-    if(ros::service::exists("get_ice_servers", false)){
-      GetIceServers serv;
-      if(ros::service::call("get_ice_servers", serv)){
-        for(int i=0; i<serv.response.servers.size(); i++){
+
+    auto iceClient = nh_->create_client<webrtc_ros_msgs::srv::GetIceServers>("get_ice_servers");
+
+    if (iceClient->wait_for_service(10s)){
+      auto request = std::make_shared<webrtc_ros_msgs::srv::GetIceServers::Request>();
+      auto result = iceClient->async_send_request(request);
+
+      // Wait for the result.
+      if (rclcpp::spin_until_future_complete(nh_, result) == rclcpp::FutureReturnCode::SUCCESS)
+      {      
+        for(int i=0; i<result.get()->servers.size(); i++){
           webrtc::PeerConnectionInterface::IceServer server;
-          server.uri = serv.response.servers[i].uri;
-          if(!serv.response.servers[i].username.empty() && !serv.response.servers[i].password.empty()){
-            server.username = serv.response.servers[i].username;
-            server.password = serv.response.servers[i].password;
+          server.uri = result.get()->servers[i].uri;
+          if(!result.get()->servers[i].username.empty() && !result.get()->servers[i].password.empty()){
+            server.username = result.get()->servers[i].username;
+            server.password = result.get()->servers[i].password;
           }
           config.servers.push_back(server);
         }
@@ -145,7 +158,7 @@ bool WebrtcClient::initPeerConnection()
     );
     if (!peer_connection_.get())
     {
-      ROS_WARN("Could not create peer connection");
+      RCLCPP_WARN(nh_->get_logger(), "Could not create peer connection");
       invalidate();
       return false;
     }
@@ -176,7 +189,7 @@ MessageHandler* WebrtcClient::createMessageHandler()
   return new MessageHandlerImpl(keep_alive_this_);
 }
 
-void WebrtcClient::ping_timer_callback(const ros::WallTimerEvent& event)
+void WebrtcClient::ping_timer_callback()
 {
   try
   {
@@ -187,7 +200,7 @@ void WebrtcClient::ping_timer_callback(const ros::WallTimerEvent& event)
     //signaling channel probably broken
     if (valid())
     {
-      ROS_WARN("Connection broken");
+      RCLCPP_WARN(nh_->get_logger(), "Connection broken");
       invalidate();
     }
   }
@@ -200,11 +213,11 @@ class DummySetSessionDescriptionObserver
 public:
   virtual void OnSuccess()
   {
-    //ROS_DEBUG(__FUNCTION__);
+    //// RCLCPP_DEBUG(_node->get_logger(),__FUNCTION__);
   }
   virtual void OnFailure(webrtc::RTCError error)
   {
-    //ROS_WARN_STREAM(__FUNCTION__ << " " << error);
+    //RCLCPP_WARN_STREAM(nh_->get_logger(), __FUNCTION__ << " " << error);
   }
 
 protected:
@@ -230,10 +243,10 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
   {
     Json::Reader reader;
     Json::Value message_json;
-    ROS_INFO("JSON: %s", raw.c_str());
+    RCLCPP_INFO(nh_->get_logger(),"JSON: %s", raw.c_str());
     if (!reader.parse(raw, message_json))
     {
-      ROS_WARN_STREAM("Could not parse message: " << raw);
+      RCLCPP_WARN_STREAM(nh_->get_logger(), "Could not parse message: " << raw);
       invalidate();
       return;
     }
@@ -243,17 +256,17 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       ConfigureMessage message;
       if (!message.fromJson(message_json))
       {
-        ROS_WARN("Can't parse received configure message.");
+        RCLCPP_WARN(nh_->get_logger(), "Can't parse received configure message.");
         return;
       }
 
       if (!initPeerConnection())
       {
-        ROS_WARN("Failed to initialize peer connection");
+        RCLCPP_WARN(nh_->get_logger(), "Failed to initialize peer connection");
         return;
       }
 
-      ROS_DEBUG("Configuring webrtc connection");
+      // RCLCPP_DEBUG(_node->get_logger(),"Configuring webrtc connection");
 
       for(const ConfigureAction& action: message.actions)
       {
@@ -261,7 +274,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
             // is not specified
           #define FIND_PROPERTY_OR_CONTINUE(key, name)				\
             if(action.properties.find(key) == action.properties.end()) {	\
-              ROS_WARN_STREAM("No " << #name << " specified");		\
+              RCLCPP_WARN_STREAM(nh_->get_logger(), "No " << #name << " specified");		\
               continue;							\
             }								\
             std::string name = action.properties.at(key)
@@ -274,7 +287,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 
                     if (!peer_connection_->AddStream(stream))
                     {
-                      ROS_WARN("Adding stream to PeerConnection failed");
+                      RCLCPP_WARN(nh_->get_logger(), "Adding stream to PeerConnection failed");
                 continue;
                     }
             }
@@ -284,7 +297,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
                     rtc::scoped_refptr<webrtc::MediaStreamInterface> stream = peer_connection_factory_->CreateLocalMediaStream(stream_id);
 
               if(!stream) {
-                ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Stream not found with id: " << stream_id);
                 continue;
               }
                     peer_connection_->RemoveStream(stream);
@@ -297,18 +310,18 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
               std::string video_type;
               std::string video_path;
               if(!parseUri(src, &video_type, &video_path)) {
-                ROS_WARN_STREAM("Invalid URI: " << src);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Invalid URI: " << src);
                 continue;
               }
 
                     webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
               if(!stream) {
-                ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Stream not found with id: " << stream_id);
                 continue;
               }
 
               if(video_type == "ros_image") {
-                      ROS_DEBUG_STREAM("Subscribing to ROS topic: " << video_path);
+                      RCLCPP_DEBUG_STREAM(nh_->get_logger(), "Subscribing to ROS topic: " << video_path);
                       rtc::scoped_refptr<RosVideoCapturer> capturer(new rtc::RefCountedObject<RosVideoCapturer>(itf_, video_path, transport_));
                       rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
                         peer_connection_factory_->CreateVideoTrack(
@@ -318,7 +331,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
                       capturer->Start();
               }
               else {
-                ROS_WARN_STREAM("Unknown video source type: " << video_type);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Unknown video source type: " << video_type);
               }
 
             }
@@ -330,13 +343,13 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
               std::string audio_type;
               std::string audio_path;
               if(!parseUri(src, &audio_type, &audio_path)) {
-                ROS_WARN_STREAM("Invalid URI: " << src);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Invalid URI: " << src);
                 continue;
               }
 
                     webrtc::MediaStreamInterface* stream = peer_connection_->local_streams()->find(stream_id);
               if(!stream) {
-                ROS_WARN_STREAM("Stream not found with id: " << stream_id);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Stream not found with id: " << stream_id);
                 continue;
               }
 
@@ -349,14 +362,14 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
                       stream->AddTrack(audio_track);
               }
               else {
-                ROS_WARN_STREAM("Unknown video source type: " << audio_type);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Unknown video source type: " << audio_type);
               }
 
             }
             else if(action.type == ConfigureAction::kExpectStreamActionName) {
               FIND_PROPERTY_OR_CONTINUE("id", stream_id);
               if(expected_streams_.find(stream_id) != expected_streams_.end()) {
-                ROS_WARN_STREAM("Stream id: " << stream_id << " is already expected");
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Stream id: " << stream_id << " is already expected");
                 continue;
               }
               expected_streams_[stream_id] = std::map<std::string, std::string>();
@@ -367,17 +380,17 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
               FIND_PROPERTY_OR_CONTINUE("dest", dest);
 
               if(expected_streams_.find(stream_id) == expected_streams_.end()) {
-                ROS_WARN_STREAM("Stream id: " << stream_id << " is not expected");
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Stream id: " << stream_id << " is not expected");
                 continue;
               }
               if(expected_streams_[stream_id].find(track_id) != expected_streams_[stream_id].end()) {
-                ROS_WARN_STREAM("Track id: " << track_id << " is already expected in stream id: " << stream_id);
+                RCLCPP_WARN_STREAM(nh_->get_logger(), "Track id: " << track_id << " is already expected in stream id: " << stream_id);
                 continue;
               }
               expected_streams_[stream_id][track_id] = dest;
             }
             else {
-              ROS_WARN_STREAM("Unknown configure action type: " << action.type);
+              RCLCPP_WARN_STREAM(nh_->get_logger(), "Unknown configure action type: " << action.type);
 	}
       }      
       webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options(0,0,false,false,false);
@@ -390,18 +403,18 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
 
       if (!message.fromJson(message_json))
       {
-        ROS_WARN("Can't parse received session description message.");
+        RCLCPP_WARN(nh_->get_logger(), "Can't parse received session description message.");
         return;
       }
 
       webrtc::SessionDescriptionInterface* session_description(message.createSessionDescription());
       if (!session_description)
       {
-        ROS_WARN("Can't create session description");
+        RCLCPP_WARN(nh_->get_logger(), "Can't create session description");
         return;
       }
 
-      ROS_DEBUG_STREAM("Received remote description: " << message.sdp);
+      RCLCPP_DEBUG_STREAM(nh_->get_logger(), "Received remote description: " << message.sdp);
       rtc::scoped_refptr<DummySetSessionDescriptionObserver> dummy_set_description_observer(new rtc::RefCountedObject<DummySetSessionDescriptionObserver>());
       peer_connection_->SetRemoteDescription(dummy_set_description_observer, session_description);
     }
@@ -410,29 +423,29 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
       IceCandidateMessage message;
       if (!message.fromJson(message_json))
       {
-        ROS_WARN("Can't parse received ice candidate message.");
+        RCLCPP_WARN(nh_->get_logger(), "Can't parse received ice candidate message.");
         return;
       }
 
       std::unique_ptr<webrtc::IceCandidateInterface> candidate(message.createIceCandidate());
       if (!candidate.get())
       {
-        ROS_WARN("Can't parse received candidate message.");
+        RCLCPP_WARN(nh_->get_logger(), "Can't parse received candidate message.");
         return;
       }
       if (!peer_connection_->AddIceCandidate(candidate.get()))
       {
-        ROS_WARN("Failed to apply the received candidate");
+        RCLCPP_WARN(nh_->get_logger(), "Failed to apply the received candidate");
         return;
       }
-      ROS_DEBUG_STREAM("Received remote candidate :" << message.toJson());
+      RCLCPP_DEBUG_STREAM(nh_->get_logger(), "Received remote candidate :" << message.toJson());
       return;
     }
     else
     {
       std::string message_type;
       WebrtcRosMessage::getType(message_json, &message_type);
-      ROS_WARN_STREAM("Unexpected message type: " << message_type << ": " << raw);
+      RCLCPP_WARN_STREAM(nh_->get_logger(), "Unexpected message type: " << message_type << ": " << raw);
     }
   }
   else if (type == MessageHandler::PONG)
@@ -445,7 +458,7 @@ void WebrtcClient::handle_message(MessageHandler::Type type, const std::string& 
   }
   else
   {
-    ROS_WARN_STREAM("Unexpected signaling message type: " << type << ": " << raw);
+    RCLCPP_WARN_STREAM(nh_->get_logger(), "Unexpected signaling message type: " << type << ": " << raw);
   }
 }
 
@@ -457,17 +470,17 @@ void WebrtcClient::OnSessionDescriptionSuccess(webrtc::SessionDescriptionInterfa
   SdpMessage message;
   if (message.fromSessionDescription(*description))
   {
-    ROS_DEBUG_STREAM("Created local description: " << message.sdp);
+    RCLCPP_DEBUG_STREAM(nh_->get_logger(), "Created local description: " << message.sdp);
     signaling_channel_->sendTextMessage(message.toJson());
   }
   else
   {
-    ROS_WARN("Failed to serialize description");
+    RCLCPP_WARN(nh_->get_logger(), "Failed to serialize description");
   }
 }
 void WebrtcClient::OnSessionDescriptionFailure(const std::string& error)
 {
-  ROS_WARN_STREAM("Could not create local description: " << error);
+  RCLCPP_WARN_STREAM(nh_->get_logger(), "Could not create local description: " << error);
   invalidate();
 }
 void WebrtcClient::OnIceCandidate(const webrtc::IceCandidateInterface* candidate)
@@ -475,12 +488,12 @@ void WebrtcClient::OnIceCandidate(const webrtc::IceCandidateInterface* candidate
   IceCandidateMessage message;
   if (message.fromIceCandidate(*candidate))
   {
-    ROS_DEBUG_STREAM("Got local ICE candidate: " << message.toJson());
+    RCLCPP_DEBUG_STREAM(nh_->get_logger(), "Got local ICE candidate: " << message.toJson());
     signaling_channel_->sendTextMessage(message.toJson());
   }
   else
   {
-    ROS_WARN("Failed to serialize local candidate");
+    RCLCPP_WARN(nh_->get_logger(), "Failed to serialize local candidate");
   }
 }
 
@@ -495,29 +508,29 @@ void WebrtcClient::OnAddRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInter
 	std::string video_type;
 	std::string video_path;
 	if(!parseUri(dest, &video_type, &video_path)) {
-	  ROS_WARN_STREAM("Invalid URI: " << dest);
+	  RCLCPP_WARN_STREAM(nh_->get_logger(), "Invalid URI: " << dest);
 	  continue;
 	}
 
 	if(video_type == "ros_image") {
-	  boost::shared_ptr<RosVideoRenderer> renderer(new RosVideoRenderer(it_, video_path));
+	  auto renderer = std::make_shared<RosVideoRenderer>(it_, video_path);
 	  track->AddOrUpdateSink(renderer.get(), rtc::VideoSinkWants());
 	  video_renderers_[stream_id].push_back(renderer);
 	}
 	else {
-	  ROS_WARN_STREAM("Unknown video destination type: " << video_type);
+	  RCLCPP_WARN_STREAM(nh_->get_logger(), "Unknown video destination type: " << video_type);
 	}
 
       }
       else {
-	ROS_WARN_STREAM("Unexpected video track: " << track->id());
+	RCLCPP_WARN_STREAM(nh_->get_logger(), "Unexpected video track: " << track->id());
       }
     }
     // Currently audio tracks play to system default output without any action taken
     // It does not appear to be simple to change this
   }
   else {
-    ROS_WARN_STREAM("Unexpected stream: " << stream_id);
+    RCLCPP_WARN_STREAM(nh_->get_logger(), "Unexpected stream: " << stream_id);
   }
 }
 void WebrtcClient::OnRemoveRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> media_stream)

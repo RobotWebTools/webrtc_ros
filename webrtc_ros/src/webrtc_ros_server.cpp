@@ -1,4 +1,4 @@
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <webrtc_ros/webrtc_ros_server.h>
 #include "webrtc/rtc_base/ssl_adapter.h"
 
@@ -13,14 +13,14 @@ MessageHandler* WebrtcRosServer_handle_new_signaling_channel(void* _this, Signal
             (WebrtcRosServer*)_this, channel));
 }
 
-WebrtcRosServer::WebrtcRosServer(ros::NodeHandle& nh, ros::NodeHandle& pnh)
-  : nh_(nh), pnh_(pnh), itf_(image_transport::ImageTransport(nh_))
+WebrtcRosServer::WebrtcRosServer(rclcpp::Node::SharedPtr nh)
+  : nh_(nh), itf_(nh, std::make_shared<image_transport::ImageTransport>(nh))
 {
   rtc::InitializeSSL();
 
   int port;
-  pnh_.param("port", port, 8080);
-  pnh_.param("image_transport", image_transport_, std::string("raw"));
+  nh_->get_parameter_or<int>("port", port, 8080);
+  nh_->get_parameter_or<std::string>("image_transport", image_transport_, std::string("raw"));
 
   signaling_thread_ = rtc::Thread::CreateWithSocketServer();
   signaling_thread_->Start();
@@ -38,8 +38,9 @@ void WebrtcRosServer::cleanupWebrtcClient(WebrtcClient *client) {
 
 MessageHandler* WebrtcRosServer::handle_new_signaling_channel(SignalingChannel *channel)
 {
-  boost::shared_ptr<WebrtcClient> client(new WebrtcClient(nh_, itf_, image_transport_, channel),
-					 boost::bind(&WebrtcRosServer::cleanupWebrtcClient, this, _1));
+  auto client = std::make_shared<WebrtcClient>(nh_, itf_, image_transport_, channel);
+
+	// TODO: Handle cleanup std::bind(&WebrtcRosServer::cleanupWebrtcClient, this, std::placeholders::_1));
   // hold a shared ptr until the object is initialized (holds a ptr to itself)
   client->init(client);
   {
@@ -63,7 +64,7 @@ WebrtcRosServer::~WebrtcRosServer()
     }
   }
   for(WebrtcClientWeakPtr& client_weak : to_invalidate) {
-    boost::shared_ptr<WebrtcClient> client = client_weak.lock();
+    std::shared_ptr<WebrtcClient> client = client_weak.lock();
     if (client)
       client->invalidate();
   }

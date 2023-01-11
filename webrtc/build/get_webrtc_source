@@ -2,7 +2,7 @@
 set -e
 run_updates=0
 rootdir="$(cd "$(dirname "$0")"; pwd)"
-revision="src@f183d1d9966b312006e395dc4c270639b35d26de" # Chromium M86
+revision="src@93081d594f7efff72958a79251f53731b99e902b" # Chromium M108
 export PATH="$rootdir/depot_tools:$PATH"
 if [ ! -d "$rootdir/webrtc" ]
 then

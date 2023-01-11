@@ -1,12 +1,9 @@
 #ifndef WEBRTC_ROS_WEBRTC_CLIENT_H_
 #define WEBRTC_ROS_WEBRTC_CLIENT_H_
 
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <image_transport/image_transport.hpp>
+
 #include <webrtc_ros/ros_video_renderer.h>
 #include <webrtc/api/media_stream_interface.h>
 #include <webrtc/api/peer_connection_interface.h>
@@ -33,8 +30,8 @@ namespace webrtc_ros
 {
 
 class WebrtcClient;
-typedef boost::shared_ptr<WebrtcClient> WebrtcClientPtr;
-typedef boost::weak_ptr<WebrtcClient> WebrtcClientWeakPtr;
+typedef std::shared_ptr<WebrtcClient> WebrtcClientPtr;
+typedef std::weak_ptr<WebrtcClient> WebrtcClientWeakPtr;
 
 class WebrtcClientObserverProxy : public webrtc::PeerConnectionObserver,
   public webrtc::CreateSessionDescriptionObserver
@@ -60,14 +57,14 @@ private:
 };
 
 class MessageHandlerImpl;
-class WebrtcClient : private boost::noncopyable
+class WebrtcClient
 {
 public:
-  WebrtcClient(ros::NodeHandle& nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel *signaling_channel);
+  WebrtcClient(rclcpp::Node::SharedPtr nh, const ImageTransportFactory& itf, const std::string& transport, SignalingChannel *signaling_channel);
   ~WebrtcClient();
   MessageHandler* createMessageHandler();
 
-  void init(boost::shared_ptr<WebrtcClient>& keep_alive_ptr);
+  void init(std::shared_ptr<WebrtcClient>& keep_alive_ptr);
   void invalidate();
   bool valid();
 
@@ -77,7 +74,7 @@ private:
 
   bool initPeerConnection();
 
-  void ping_timer_callback(const ros::WallTimerEvent&);
+  void ping_timer_callback();
 
   void handle_message(MessageHandler::Type type, const std::string& message);
 
@@ -87,23 +84,23 @@ private:
   void OnRemoveRemoteStream(rtc::scoped_refptr<webrtc::MediaStreamInterface>);
   void OnIceCandidate(const webrtc::IceCandidateInterface*);
 
-  ros::NodeHandle nh_;
-  image_transport::ImageTransport it_;
+  rclcpp::Node::SharedPtr nh_;
+  std::shared_ptr<image_transport::ImageTransport> it_;
   ImageTransportFactory itf_;
   std::string transport_;
-  boost::scoped_ptr<SignalingChannel> signaling_channel_;
+  std::unique_ptr<SignalingChannel> signaling_channel_;
 
   rtc::Thread *signaling_thread_;
   std::unique_ptr<rtc::Thread> worker_thread_;
 
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peer_connection_factory_;
-  std::map<std::string, std::vector<boost::shared_ptr<RosVideoRenderer>>> video_renderers_;
+  std::map<std::string, std::vector<std::shared_ptr<RosVideoRenderer>>> video_renderers_;
   rtc::scoped_refptr<WebrtcClientObserverProxy> webrtc_observer_proxy_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
 
   std::map<std::string, std::map<std::string, std::string>> expected_streams_;
 
-  ros::WallTimer ping_timer_;
+  rclcpp::TimerBase::SharedPtr ping_timer_;
 
   friend WebrtcClientObserverProxy;
   friend MessageHandlerImpl;

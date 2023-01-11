@@ -25,7 +25,7 @@ public:
   RosVideoCapturer(const ImageTransportFactory& it, const std::string& topic, const std::string& transport);
   ~RosVideoCapturer() override;
 
-  void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+  void imageCallback(const sensor_msgs::msg::Image::ConstPtr& msg);
   void Start();
 
   void Stop();
@@ -50,7 +50,7 @@ class RosVideoCapturerImpl : public boost::enable_shared_from_this<RosVideoCaptu
 public:
   RosVideoCapturerImpl(const ImageTransportFactory& it, const std::string& topic, const std::string& transport);
 
-  void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+  void imageCallback(const sensor_msgs::msg::Image::ConstPtr& msg);
 
   void Start(RosVideoCapturer *capturer);
   void Stop();

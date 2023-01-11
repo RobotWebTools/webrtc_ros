@@ -1,21 +1,23 @@
 #include <webrtc_ros/ros_video_renderer.h>
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <webrtc/3rdparty/libyuv/convert_from.h>
 
 namespace webrtc_ros
 {
 
-RosVideoRenderer::RosVideoRenderer(const image_transport::ImageTransport& it, const std::string& topic)
-  : it_(it), topic_(topic)
+RosVideoRenderer::RosVideoRenderer(std::shared_ptr<image_transport::ImageTransport> it, const std::string& topic)
+  : it_(it)
+  , topic_(topic)
 {
-  pub_ = it_.advertise(topic_, 1);
+  pub_ = it_->advertise(topic_, 1);
 }
 
 void RosVideoRenderer::OnFrame(const webrtc::VideoFrame& frame)
 {
-  std_msgs::Header header;
-  header.stamp = ros::Time::now();
+  std_msgs::msg::Header header;
+  header.stamp = rclcpp::Clock().now();
+
   const rtc::scoped_refptr<webrtc::I420BufferInterface>& buffer = frame.video_frame_buffer()->ToI420();
 
   cv::Mat bgra(buffer->height(), buffer->width(), CV_8UC4);

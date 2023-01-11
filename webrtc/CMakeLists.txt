@@ -21,16 +21,6 @@ if(NOT ${get_depot_tools_result} EQUAL 0)
     message(FATAL_ERROR "cannot fetch depot_tools")
 endif()
 
-message(STATUS "Fetching Ninja build tool")
-execute_process(
-    COMMAND "build/get_ninja"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    RESULT_VARIABLE get_ninja_result
-)
-if(NOT ${get_ninja_result} EQUAL 0)
-    message(FATAL_ERROR "cannot fetch Ninja build tool")
-endif()
-
 message(STATUS "Fetching WebRTC source code")
 execute_process(
     COMMAND "build/get_webrtc_source"

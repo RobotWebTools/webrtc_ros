@@ -3,8 +3,9 @@
 namespace webrtc_ros
 {
 
-ImageTransportFactory::ImageTransportFactory(const image_transport::ImageTransport& it)
-: data_(std::make_shared<Data>(it))
+ImageTransportFactory::ImageTransportFactory(rclcpp::Node::SharedPtr node, std::shared_ptr<image_transport::ImageTransport> it)
+: node_(node)
+, data_(std::make_shared<Data>(it))
 {
 }
 
@@ -16,24 +17,28 @@ ImageTransportFactory::Subscriber ImageTransportFactory::subscribe (const std::s
     if (it != data_->topics_.end()) d = it->second.lock();
     if (!d)  // Either never subscribed, or all subscribers have been destroyed
     {
-        d = std::make_shared<Dispatcher>(data_->it_, topic, transport);
+        d = std::make_shared<Dispatcher>(node_, data_->it_, topic, transport);
         data_->topics_[topic] = d;
     }
     return Subscriber(cb, d);
 }
 
-ImageTransportFactory::Dispatcher::Dispatcher(image_transport::ImageTransport& it, const std::string& topic, const std::string& transport)
-: sub_(it.subscribe(topic, 1, boost::bind(&Dispatcher::dispatch, this, _1), ros::VoidPtr(), image_transport::TransportHints(transport))),
-  next_id_(1)
+ImageTransportFactory::Dispatcher::Dispatcher(rclcpp::Node::SharedPtr node, std::shared_ptr<image_transport::ImageTransport>& it, const std::string& topic, const std::string& transport)
+: next_id_(1)
+, node_(node)
 {
-    ROS_INFO("Creating [%s] image_transport for [%s]", transport.c_str(), topic.c_str());
+    image_transport::TransportHints hints(node.get());
+    sub_ = it->subscribe(topic, 1, &Dispatcher::dispatch, this, &hints);
+    RCLCPP_INFO(node_->get_logger(), "Creating [%s] image_transport for [%s]", transport.c_str(), topic.c_str());
 }
 
 ImageTransportFactory::Dispatcher::~Dispatcher()
 {
-    ROS_INFO("Destroying [%s] image_transport for [%s]", sub_.getTransport().c_str(), sub_.getTopic().c_str());
+    RCLCPP_INFO(node_->get_logger(),"Destroying [%s] image_transport for [%s]", sub_.getTransport().c_str(), sub_.getTopic().c_str());
     if (callbacks_.size() > 0)
-        ROS_ERROR("BUG in ImageTransportFactory: %zu orphaned subscriber(s)", callbacks_.size());
+    {
+        RCLCPP_ERROR(node_->get_logger(),"BUG in ImageTransportFactory: %zu orphaned subscriber(s)", callbacks_.size());
+    }
 }
 
 ImageTransportFactory::ID ImageTransportFactory::Dispatcher::addCallback (Callback cb)
@@ -41,7 +46,7 @@ ImageTransportFactory::ID ImageTransportFactory::Dispatcher::addCallback (Callba
     std::lock_guard<std::mutex> lock{cb_mutex_};
     ID id = next_id_++;
     callbacks_[id] = cb;
-    ROS_INFO("Creating new callback %u for [%s]", id, sub_.getTopic().c_str());
+    // RCLCPP_INFO(_node->get_logger(),"Creating new callback %u for [%s]", id, sub_.getTopic().c_str());
     return id;
 }
 
@@ -51,12 +56,12 @@ void ImageTransportFactory::Dispatcher::removeCallback (ID id)
     auto it = callbacks_.find(id);
     if (it != callbacks_.end())
     {
-        ROS_INFO("Destroying callback %u for [%s]", id, sub_.getTopic().c_str());
+        RCLCPP_INFO(node_->get_logger(),"Destroying callback %u for [%s]", id, sub_.getTopic().c_str());
         callbacks_.erase(it);
     }
 }
 
-void ImageTransportFactory::Dispatcher::dispatch (const sensor_msgs::ImageConstPtr& msg)
+void ImageTransportFactory::Dispatcher::dispatch (const sensor_msgs::msg::Image::ConstSharedPtr& msg)
 {
     std::lock_guard<std::mutex> lock{cb_mutex_};
     for (auto it : callbacks_)

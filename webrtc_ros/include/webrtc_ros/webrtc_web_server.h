@@ -28,10 +28,12 @@ public:
 typedef MessageHandler* (*SignalingChannelCallback)(void*, SignalingChannel*);
 
 class WebrtcWebServer {
+protected:
+  rclcpp::Node::SharedPtr nh_;
 public:
-  static WebrtcWebServer* create(int port, SignalingChannelCallback callback, void* data);
+  static WebrtcWebServer* create(rclcpp::Node::SharedPtr nh, int port, SignalingChannelCallback callback, void* data);
 
-  WebrtcWebServer();
+  WebrtcWebServer(rclcpp::Node::SharedPtr nh);
   virtual ~WebrtcWebServer();
 
   virtual void run() = 0;

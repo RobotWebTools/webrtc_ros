@@ -34,14 +34,16 @@ private:
 MessageHandler::MessageHandler() {}
 MessageHandler::~MessageHandler() {}
 
-WebrtcWebServer::WebrtcWebServer() {}
+WebrtcWebServer::WebrtcWebServer(rclcpp::Node::SharedPtr nh)
+: nh_(nh) {}
 WebrtcWebServer::~WebrtcWebServer() {}
 
 class WebrtcWebServerImpl : public WebrtcWebServer
 {
 public:
-WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
-  : handler_group_(async_web_server_cpp::HttpReply::stock_reply(async_web_server_cpp::HttpReply::not_found)),
+WebrtcWebServerImpl(rclcpp::Node::SharedPtr nh, int port, SignalingChannelCallback callback, void* data)
+  : WebrtcWebServer(nh), 
+    handler_group_(async_web_server_cpp::HttpReply::stock_reply(async_web_server_cpp::HttpReply::not_found)),
     callback_(callback), data_(data)
 {
   std::vector<async_web_server_cpp::HttpHeader> any_origin_headers;
@@ -70,7 +72,7 @@ WebrtcWebServerImpl(int port, SignalingChannelCallback callback, void* data)
 void run()
 {
   server_->run();
-  // RCLCPP_INFO(_node->get_logger(),"Waiting For connections");
+  RCLCPP_INFO(nh_->get_logger(),"Waiting For connections");
 }
 
 void stop()
@@ -220,8 +222,8 @@ static bool ros_connection_logger(async_web_server_cpp::HttpServerRequestHandler
 
 
 
-WebrtcWebServer* WebrtcWebServer::create(int port, SignalingChannelCallback callback, void* data) {
-  return new WebrtcWebServerImpl(port, callback, data);
+WebrtcWebServer* WebrtcWebServer::create(rclcpp::Node::SharedPtr nh, int port, SignalingChannelCallback callback, void* data) {
+  return new WebrtcWebServerImpl(nh, port, callback, data);
 }
 
 

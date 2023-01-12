@@ -19,12 +19,12 @@ WebrtcRosServer::WebrtcRosServer(rclcpp::Node::SharedPtr nh)
   rtc::InitializeSSL();
 
   int port;
-  nh_->get_parameter_or<int>("port", port, 8080);
-  nh_->get_parameter_or<std::string>("image_transport", image_transport_, std::string("raw"));
+  nh_->get_parameter_or<int>("~port", port, 8080);
+  nh_->get_parameter_or<std::string>("~image_transport", image_transport_, std::string("raw"));
 
   signaling_thread_ = rtc::Thread::CreateWithSocketServer();
   signaling_thread_->Start();
-  server_.reset(WebrtcWebServer::create(port, &WebrtcRosServer_handle_new_signaling_channel, this));
+  server_.reset(WebrtcWebServer::create(nh_, port, &WebrtcRosServer_handle_new_signaling_channel, this));
 }
 
 void WebrtcRosServer::cleanupWebrtcClient(WebrtcClient *client) {

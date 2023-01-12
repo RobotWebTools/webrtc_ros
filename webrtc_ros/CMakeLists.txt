@@ -72,12 +72,9 @@ set_target_properties(${PROJECT_NAME}_server_node PROPERTIES COMPILE_OPTIONS "-s
 #############
 ## Install ##
 #############
-install(TARGETS 
-    ${PROJECT_NAME}_server_node
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+install(TARGETS
+  ${PROJECT_NAME}_server_node
+  DESTINATION lib/${PROJECT_NAME})
 
 # Install web files
 install(DIRECTORY web
@@ -86,6 +83,12 @@ install(DIRECTORY web
   PATTERN "node_modules" EXCLUDE
   PATTERN "package.json" EXCLUDE
   PATTERN ".gitignore" EXCLUDE
+)
+
+# Install launch files
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/launch
 )
 
 # Install license files

@@ -9,7 +9,9 @@ int main(int argc, char **argv)
   webrtc_ros::WebrtcRosServer server(node);
   server.run();
     
-  rclcpp::spin(node);
+  rclcpp::executors::MultiThreadedExecutor spinner(rclcpp::ExecutorOptions(), 10);
+  spinner.add_node(node);
+  spinner.spin();
 
   server.stop();
 

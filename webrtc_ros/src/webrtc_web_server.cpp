@@ -115,26 +115,28 @@ async_web_server_cpp::WebsocketConnection::MessageHandler handle_webrtc_websocke
 bool handle_list_streams(const async_web_server_cpp::HttpRequest &request,
     async_web_server_cpp::HttpConnectionPtr connection, const char* begin, const char* end)
 {
+  std::string topicPrefix = "rt";  // get_topic_names_and_types prepends this; needs to be removed.
   auto node = std::make_shared<rclcpp::Node>("webrtc_web_server");
   auto graph = node->get_node_graph_interface();
   auto topics = graph->get_topic_names_and_types(true);
 
 
-  std::string image_message_type = "sensor_msgs::msg::Image";
-  std::string camera_info_message_type = "sensor_msgs::msg::CameraInfo";
+  std::string image_message_type = "sensor_msgs::msg::dds_::Image_";
+  std::string camera_info_message_type = "sensor_msgs::msg::dds_::CameraInfo_";
 
   std::vector<std::string> image_topics;
   std::vector<std::string> camera_info_topics;
 
   for (const auto& topic : topics) {
+    std::string realTopic = topic.first.substr(topicPrefix.length());
     for (const auto& messageType : topic.second) {
       if (messageType.compare(image_message_type) == 0)
       {
-        image_topics.push_back(messageType);
+        image_topics.push_back(realTopic);
       }
       else if (messageType.compare(camera_info_message_type) == 0)
       {
-        camera_info_topics.push_back(messageType);
+        camera_info_topics.push_back(realTopic);
       }
     }
   }

@@ -14,7 +14,11 @@ ImageTransportFactory::Subscriber ImageTransportFactory::subscribe (const std::s
     std::lock_guard<std::mutex> lock{data_->state_mutex_};
     auto it = data_->topics_.find(topic);
     std::shared_ptr<Dispatcher> d;
-    if (it != data_->topics_.end()) d = it->second.lock();
+    if (it != data_->topics_.end())
+    {
+        d = it->second.lock();
+    }
+    
     if (!d)  // Either never subscribed, or all subscribers have been destroyed
     {
         d = std::make_shared<Dispatcher>(node_, data_->it_, topic, transport);
@@ -28,7 +32,7 @@ ImageTransportFactory::Dispatcher::Dispatcher(rclcpp::Node::SharedPtr node, std:
 , node_(node)
 {
     image_transport::TransportHints hints(node.get());
-    sub_ = it->subscribe(topic, 1, &Dispatcher::dispatch, this, &hints);
+    sub_ = it->subscribe(topic, 10, &Dispatcher::dispatch, this, &hints);
     RCLCPP_INFO(node_->get_logger(), "Creating [%s] image_transport for [%s]", transport.c_str(), topic.c_str());
 }
 
@@ -46,7 +50,7 @@ ImageTransportFactory::ID ImageTransportFactory::Dispatcher::addCallback (Callba
     std::lock_guard<std::mutex> lock{cb_mutex_};
     ID id = next_id_++;
     callbacks_[id] = cb;
-    // RCLCPP_INFO(_node->get_logger(),"Creating new callback %u for [%s]", id, sub_.getTopic().c_str());
+    RCLCPP_INFO(node_->get_logger(),"Creating new callback %u for [%s]", id, sub_.getTopic().c_str());
     return id;
 }
 

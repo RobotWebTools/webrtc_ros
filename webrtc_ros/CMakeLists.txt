@@ -88,7 +88,7 @@ install(DIRECTORY web
 # Install launch files
 install(DIRECTORY
   launch
-  DESTINATION share/${PROJECT_NAME}/launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 # Install license files

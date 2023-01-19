@@ -19,8 +19,8 @@ WebrtcRosServer::WebrtcRosServer(rclcpp::Node::SharedPtr nh)
   rtc::InitializeSSL();
 
   int port;
-  nh_->get_parameter_or<int>("~port", port, 8080);
-  nh_->get_parameter_or<std::string>("~image_transport", image_transport_, std::string("raw"));
+  nh_->get_parameter_or<int>("port", port, 8080);
+  nh_->get_parameter_or<std::string>("image_transport", image_transport_, std::string("raw"));
 
   signaling_thread_ = rtc::Thread::CreateWithSocketServer();
   signaling_thread_->Start();

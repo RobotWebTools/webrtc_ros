@@ -3,7 +3,7 @@ window.WebrtcRos = (function() {
 		return "webrtc_ros-stream-"+Math.floor(Math.random()*1000000000).toString();
 	};
 	var WebrtcRosConnection = function(signalingServerPath, configuration) {
-		this.signalingServerPath = signalingServerPath || (location.protocol === 'https:' ? 'wss://' : 'ws://')+window.location.host+"/webrtc";
+		this.signalingServerPath = signalingServerPath || (window.location.protocol === 'https:' ? 'wss://' : 'ws://')+window.location.host+"/webrtc";
 		this.onConfigurationNeeded = undefined;
 		this.signalingChannel = null;
 		this.peerConnection = null;

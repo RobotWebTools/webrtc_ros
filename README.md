@@ -7,7 +7,7 @@ The node hosts a webserver that serves a simple test page and offers a websocket
 
 For full documentation, see [the ROS wiki](http://wiki.ros.org/webrtc_ros).
 
-This project is released as part of the [Robot Web Tools](http://robotwebtools.org/) effort.
+This project is released as part of the [Robot Web Tools](https://robotwebtools.github.io/) effort.
 
 ### License
 webrtc_ros is released with a BSD license. For full terms and conditions, see the [LICENSE](LICENSE) file.
